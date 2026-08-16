@@ -1,0 +1,1336 @@
+{
+ "meta": {
+  "name": "清源河模拟流域",
+  "note": "示意坐标（km 网格）；企业/断面为模拟数据，用于演示与算法验证",
+  "indicators": [
+   "cod",
+   "ammonia",
+   "tp",
+   "cr6",
+   "ph"
+  ]
+ },
+ "nodes": [
+  {
+   "id": "m00",
+   "name": "清源河主河道 0 号段",
+   "kind": "source",
+   "x": 0.0,
+   "y": 0.0,
+   "flow": 25.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m01",
+   "name": "清源河主河道 1 号段",
+   "kind": "segment",
+   "x": 6.0,
+   "y": 0.0,
+   "flow": 25.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m02",
+   "name": "清源河主河道 2 号段",
+   "kind": "segment",
+   "x": 12.0,
+   "y": 0.0,
+   "flow": 25.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m03",
+   "name": "清源河主河道 3 号段",
+   "kind": "segment",
+   "x": 18.0,
+   "y": 0.0,
+   "flow": 25.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m04",
+   "name": "清源河主河道 4 号段",
+   "kind": "segment",
+   "x": 24.0,
+   "y": 0.0,
+   "flow": 33.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m05",
+   "name": "清源河主河道 5 号段",
+   "kind": "segment",
+   "x": 30.0,
+   "y": 0.0,
+   "flow": 33.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m06",
+   "name": "清源河主河道 6 号段",
+   "kind": "segment",
+   "x": 36.0,
+   "y": 0.0,
+   "flow": 33.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m07",
+   "name": "清源河主河道 7 号段",
+   "kind": "segment",
+   "x": 42.0,
+   "y": 0.0,
+   "flow": 33.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m08",
+   "name": "清源河主河道 8 号段",
+   "kind": "segment",
+   "x": 48.0,
+   "y": 0.0,
+   "flow": 45.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m09",
+   "name": "清源河主河道 9 号段",
+   "kind": "segment",
+   "x": 54.0,
+   "y": 0.0,
+   "flow": 45.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m10",
+   "name": "清源河主河道 10 号段",
+   "kind": "segment",
+   "x": 60.0,
+   "y": 0.0,
+   "flow": 45.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m11",
+   "name": "清源河主河道 11 号段",
+   "kind": "segment",
+   "x": 66.0,
+   "y": 0.0,
+   "flow": 51.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m12",
+   "name": "清源河主河道 12 号段",
+   "kind": "segment",
+   "x": 72.0,
+   "y": 0.0,
+   "flow": 51.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m13",
+   "name": "清源河主河道 13 号段",
+   "kind": "segment",
+   "x": 78.0,
+   "y": 0.0,
+   "flow": 51.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "m14",
+   "name": "清源河主河道 14 号段",
+   "kind": "outlet",
+   "x": 84.0,
+   "y": 0.0,
+   "flow": 51.0,
+   "velocity": 0.6,
+   "k": 0.15
+  },
+  {
+   "id": "t1_00",
+   "name": "t1 支流 0 号段",
+   "kind": "source",
+   "x": 11.2,
+   "y": 4.0,
+   "flow": 8.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t1_01",
+   "name": "t1 支流 1 号段",
+   "kind": "segment",
+   "x": 15.2,
+   "y": 4.0,
+   "flow": 8.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t1_02",
+   "name": "t1 支流 2 号段",
+   "kind": "segment",
+   "x": 19.2,
+   "y": 4.0,
+   "flow": 8.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t1_03",
+   "name": "t1 支流 3 号段",
+   "kind": "segment",
+   "x": 23.2,
+   "y": 4.0,
+   "flow": 8.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t2_00",
+   "name": "t2 支流 0 号段",
+   "kind": "source",
+   "x": 31.2,
+   "y": -4.0,
+   "flow": 12.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t2_01",
+   "name": "t2 支流 1 号段",
+   "kind": "segment",
+   "x": 35.2,
+   "y": -4.0,
+   "flow": 12.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t2_02",
+   "name": "t2 支流 2 号段",
+   "kind": "segment",
+   "x": 39.2,
+   "y": -4.0,
+   "flow": 12.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t2_03",
+   "name": "t2 支流 3 号段",
+   "kind": "segment",
+   "x": 43.2,
+   "y": -4.0,
+   "flow": 12.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t2_04",
+   "name": "t2 支流 4 号段",
+   "kind": "segment",
+   "x": 47.2,
+   "y": -4.0,
+   "flow": 12.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t3_00",
+   "name": "t3 支流 0 号段",
+   "kind": "source",
+   "x": 57.2,
+   "y": 8.0,
+   "flow": 6.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t3_01",
+   "name": "t3 支流 1 号段",
+   "kind": "segment",
+   "x": 61.2,
+   "y": 8.0,
+   "flow": 6.0,
+   "velocity": 0.4,
+   "k": 0.2
+  },
+  {
+   "id": "t3_02",
+   "name": "t3 支流 2 号段",
+   "kind": "segment",
+   "x": 65.2,
+   "y": 8.0,
+   "flow": 6.0,
+   "velocity": 0.4,
+   "k": 0.2
+  }
+ ],
+ "edges": [
+  {
+   "from_node": "m00",
+   "to_node": "m01",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m01",
+   "to_node": "m02",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m02",
+   "to_node": "m03",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m03",
+   "to_node": "m04",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m04",
+   "to_node": "m05",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m05",
+   "to_node": "m06",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m06",
+   "to_node": "m07",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m07",
+   "to_node": "m08",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m08",
+   "to_node": "m09",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m09",
+   "to_node": "m10",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m10",
+   "to_node": "m11",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m11",
+   "to_node": "m12",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m12",
+   "to_node": "m13",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "m13",
+   "to_node": "m14",
+   "distance_m": 6000.0
+  },
+  {
+   "from_node": "t1_00",
+   "to_node": "t1_01",
+   "distance_m": 4000.0
+  },
+  {
+   "from_node": "t1_01",
+   "to_node": "t1_02",
+   "distance_m": 4000.0
+  },
+  {
+   "from_node": "t1_02",
+   "to_node": "t1_03",
+   "distance_m": 4000.0
+  },
+  {
+   "from_node": "t1_03",
+   "to_node": "m04",
+   "distance_m": 800.0
+  },
+  {
+   "from_node": "t2_00",
+   "to_node": "t2_01",
+   "distance_m": 4000.0
+  },
+  {
+   "from_node": "t2_01",
+   "to_node": "t2_02",
+   "distance_m": 4000.0
+  },
+  {
+   "from_node": "t2_02",
+   "to_node": "t2_03",
+   "distance_m": 4000.0
+  },
+  {
+   "from_node": "t2_03",
+   "to_node": "t2_04",
+   "distance_m": 4000.0
+  },
+  {
+   "from_node": "t2_04",
+   "to_node": "m08",
+   "distance_m": 800.0
+  },
+  {
+   "from_node": "t3_00",
+   "to_node": "t3_01",
+   "distance_m": 4000.0
+  },
+  {
+   "from_node": "t3_01",
+   "to_node": "t3_02",
+   "distance_m": 4000.0
+  },
+  {
+   "from_node": "t3_02",
+   "to_node": "m11",
+   "distance_m": 800.0
+  }
+ ],
+ "stations": [
+  {
+   "id": "st_01",
+   "node_id": "m02",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_02",
+   "node_id": "m04",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_03",
+   "node_id": "m06",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_04",
+   "node_id": "m08",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_05",
+   "node_id": "m10",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_06",
+   "node_id": "m12",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_07",
+   "node_id": "m14",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_08",
+   "node_id": "t1_02",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_09",
+   "node_id": "t2_03",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_10",
+   "node_id": "t3_01",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  }
+ ],
+ "enterprises": [
+  {
+   "id": "ent_01",
+   "name": "华美电镀厂",
+   "industry": "electroplating",
+   "node_id": "t1_01",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.6,
+    "seasonal_amp": 0.3,
+    "q_waste": 0.01,
+    "treat_rate": 0.01
+   }
+  },
+  {
+   "id": "ent_02",
+   "name": "耀光金属表面处理",
+   "industry": "electroplating",
+   "node_id": "m03",
+   "discharge_pattern": {
+    "continuous": false,
+    "active_hours": [
+     22,
+     3
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.7,
+    "seasonal_amp": 0.2,
+    "event_only": true,
+    "q_waste": 0.01,
+    "treat_rate": 0.01
+   }
+  },
+  {
+   "id": "ent_03",
+   "name": "蓝海电镀园",
+   "industry": "electroplating",
+   "node_id": "m09",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.2,
+    "weekend_scale": 0.8,
+    "seasonal_amp": 0.2,
+    "q_waste": 0.01,
+    "treat_rate": 0.01
+   }
+  },
+  {
+   "id": "ent_04",
+   "name": "彩云印染厂",
+   "industry": "dyeing",
+   "node_id": "t2_01",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.7,
+    "seasonal_amp": 0.4,
+    "q_waste": 0.01,
+    "treat_rate": 0.02
+   }
+  },
+  {
+   "id": "ent_05",
+   "name": "天虹纺织染整",
+   "industry": "dyeing",
+   "node_id": "m06",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.5,
+    "seasonal_amp": 0.4,
+    "q_waste": 0.01,
+    "treat_rate": 0.02
+   }
+  },
+  {
+   "id": "ent_06",
+   "name": "晨光纸业",
+   "industry": "paper",
+   "node_id": "m01",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.8,
+    "seasonal_amp": 0.3,
+    "q_waste": 0.01,
+    "treat_rate": 0.02
+   }
+  },
+  {
+   "id": "ent_07",
+   "name": "绿洲纸业",
+   "industry": "paper",
+   "node_id": "t3_00",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.9,
+    "seasonal_amp": 0.3,
+    "q_waste": 0.01,
+    "treat_rate": 0.02
+   }
+  },
+  {
+   "id": "ent_08",
+   "name": "东升化工",
+   "industry": "chemical",
+   "node_id": "m05",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.3,
+    "weekend_scale": 0.7,
+    "seasonal_amp": 0.2,
+    "q_waste": 0.01,
+    "treat_rate": 0.01
+   }
+  },
+  {
+   "id": "ent_09",
+   "name": "恒泰精细化工",
+   "industry": "chemical",
+   "node_id": "t2_02",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.9,
+    "seasonal_amp": 0.2,
+    "q_waste": 0.01,
+    "treat_rate": 0.01
+   }
+  },
+  {
+   "id": "ent_10",
+   "name": "新宇制药",
+   "industry": "pharma",
+   "node_id": "m10",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.7,
+    "seasonal_amp": 0.3,
+    "q_waste": 0.01,
+    "treat_rate": 0.02
+   }
+  },
+  {
+   "id": "ent_11",
+   "name": "康达生物制药",
+   "industry": "pharma",
+   "node_id": "t1_03",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.8,
+    "seasonal_amp": 0.3,
+    "q_waste": 0.01,
+    "treat_rate": 0.02
+   }
+  },
+  {
+   "id": "ent_12",
+   "name": "味全食品",
+   "industry": "food",
+   "node_id": "m07",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.8,
+    "seasonal_amp": 0.3,
+    "q_waste": 0.01,
+    "treat_rate": 0.03
+   }
+  },
+  {
+   "id": "ent_13",
+   "name": "绿源食品",
+   "industry": "food",
+   "node_id": "t2_00",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 0.8,
+    "seasonal_amp": 0.3,
+    "q_waste": 0.01,
+    "treat_rate": 0.03
+   }
+  },
+  {
+   "id": "ent_14",
+   "name": "丰润酿造",
+   "industry": "food",
+   "node_id": "m13",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 1.3,
+    "seasonal_amp": 0.3,
+    "q_waste": 0.01,
+    "treat_rate": 0.03
+   }
+  },
+  {
+   "id": "ent_15",
+   "name": "城东污水处理厂",
+   "industry": "wwtp",
+   "node_id": "m12",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 1.0,
+    "seasonal_amp": 0.1,
+    "q_waste": 0.6,
+    "treat_rate": 1.0
+   }
+  },
+  {
+   "id": "ent_16",
+   "name": "城西污水处理厂",
+   "industry": "wwtp",
+   "node_id": "t1_00",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 1.0,
+    "seasonal_amp": 0.1,
+    "q_waste": 0.6,
+    "treat_rate": 1.0
+   }
+  },
+  {
+   "id": "ent_17",
+   "name": "高新污水处理厂",
+   "industry": "wwtp",
+   "node_id": "t2_04",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 1.0,
+    "seasonal_amp": 0.1,
+    "q_waste": 0.6,
+    "treat_rate": 1.0
+   }
+  },
+  {
+   "id": "ent_18",
+   "name": "滨江污水处理厂",
+   "industry": "wwtp",
+   "node_id": "m02",
+   "discharge_pattern": {
+    "continuous": true,
+    "active_hours": [
+     0,
+     24
+    ],
+    "night_boost": 1.0,
+    "weekend_scale": 1.0,
+    "seasonal_amp": 0.1,
+    "q_waste": 0.6,
+    "treat_rate": 1.0
+   }
+  }
+ ],
+ "fingerprints": [
+  {
+   "enterprise_id": "ent_01",
+   "spectrum": [
+    {
+     "lex": 320.0,
+     "lem": 418.0,
+     "amp": 1.0,
+     "sigma": 22
+    },
+    {
+     "lex": 281.7,
+     "lem": 344.3,
+     "amp": 0.732,
+     "sigma": 18
+    },
+    {
+     "lex": 367.3,
+     "lem": 446.7,
+     "amp": 0.398,
+     "sigma": 25
+    }
+   ],
+   "pollutants": {
+    "cod": 0.4774,
+    "ammonia": 0.1175,
+    "tp": 0.029,
+    "cr6": 0.3761
+   }
+  },
+  {
+   "enterprise_id": "ent_02",
+   "spectrum": [
+    {
+     "lex": 326.3,
+     "lem": 416.1,
+     "amp": 1.149,
+     "sigma": 22
+    },
+    {
+     "lex": 282.6,
+     "lem": 339.0,
+     "amp": 0.692,
+     "sigma": 18
+    },
+    {
+     "lex": 361.9,
+     "lem": 442.8,
+     "amp": 0.322,
+     "sigma": 25
+    }
+   ],
+   "pollutants": {
+    "cod": 0.5306,
+    "ammonia": 0.1159,
+    "tp": 0.0256,
+    "cr6": 0.3279
+   }
+  },
+  {
+   "enterprise_id": "ent_03",
+   "spectrum": [
+    {
+     "lex": 327.8,
+     "lem": 411.4,
+     "amp": 0.962,
+     "sigma": 22
+    },
+    {
+     "lex": 277.7,
+     "lem": 334.1,
+     "amp": 0.557,
+     "sigma": 18
+    },
+    {
+     "lex": 355.1,
+     "lem": 442.3,
+     "amp": 0.309,
+     "sigma": 25
+    }
+   ],
+   "pollutants": {
+    "cod": 0.5211,
+    "ammonia": 0.1039,
+    "tp": 0.0237,
+    "cr6": 0.3513
+   }
+  },
+  {
+   "enterprise_id": "ent_04",
+   "spectrum": [
+    {
+     "lex": 313.4,
+     "lem": 376.0,
+     "amp": 0.861,
+     "sigma": 20
+    },
+    {
+     "lex": 275.8,
+     "lem": 322.0,
+     "amp": 0.486,
+     "sigma": 18
+    },
+    {
+     "lex": 342.0,
+     "lem": 425.4,
+     "amp": 0.444,
+     "sigma": 22
+    }
+   ],
+   "pollutants": {
+    "cod": 0.774,
+    "ammonia": 0.1316,
+    "tp": 0.0493,
+    "cr6": 0.0451
+   }
+  },
+  {
+   "enterprise_id": "ent_05",
+   "spectrum": [
+    {
+     "lex": 306.5,
+     "lem": 372.5,
+     "amp": 1.074,
+     "sigma": 20
+    },
+    {
+     "lex": 272.1,
+     "lem": 323.7,
+     "amp": 0.575,
+     "sigma": 18
+    },
+    {
+     "lex": 344.9,
+     "lem": 430.7,
+     "amp": 0.435,
+     "sigma": 22
+    }
+   ],
+   "pollutants": {
+    "cod": 0.7502,
+    "ammonia": 0.1469,
+    "tp": 0.0563,
+    "cr6": 0.0467
+   }
+  },
+  {
+   "enterprise_id": "ent_06",
+   "spectrum": [
+    {
+     "lex": 282.2,
+     "lem": 342.5,
+     "amp": 1.12,
+     "sigma": 24
+    },
+    {
+     "lex": 324.4,
+     "lem": 398.3,
+     "amp": 0.445,
+     "sigma": 20
+    }
+   ],
+   "pollutants": {
+    "cod": 0.8318,
+    "ammonia": 0.1105,
+    "tp": 0.0397,
+    "cr6": 0.018
+   }
+  },
+  {
+   "enterprise_id": "ent_07",
+   "spectrum": [
+    {
+     "lex": 283.8,
+     "lem": 346.1,
+     "amp": 0.895,
+     "sigma": 24
+    },
+    {
+     "lex": 330.9,
+     "lem": 403.7,
+     "amp": 0.384,
+     "sigma": 20
+    }
+   ],
+   "pollutants": {
+    "cod": 0.8526,
+    "ammonia": 0.0998,
+    "tp": 0.0326,
+    "cr6": 0.015
+   }
+  },
+  {
+   "enterprise_id": "ent_08",
+   "spectrum": [
+    {
+     "lex": 300.1,
+     "lem": 381.5,
+     "amp": 0.726,
+     "sigma": 26
+    },
+    {
+     "lex": 276.8,
+     "lem": 327.4,
+     "amp": 1.049,
+     "sigma": 18
+    },
+    {
+     "lex": 347.2,
+     "lem": 426.5,
+     "amp": 0.573,
+     "sigma": 22
+    }
+   ],
+   "pollutants": {
+    "cod": 0.7216,
+    "ammonia": 0.2033,
+    "tp": 0.0335,
+    "cr6": 0.0416
+   }
+  },
+  {
+   "enterprise_id": "ent_09",
+   "spectrum": [
+    {
+     "lex": 306.3,
+     "lem": 386.2,
+     "amp": 0.903,
+     "sigma": 26
+    },
+    {
+     "lex": 277.5,
+     "lem": 327.6,
+     "amp": 1.134,
+     "sigma": 18
+    },
+    {
+     "lex": 341.8,
+     "lem": 422.0,
+     "amp": 0.508,
+     "sigma": 22
+    }
+   ],
+   "pollutants": {
+    "cod": 0.6904,
+    "ammonia": 0.2157,
+    "tp": 0.0412,
+    "cr6": 0.0528
+   }
+  },
+  {
+   "enterprise_id": "ent_10",
+   "spectrum": [
+    {
+     "lex": 292.8,
+     "lem": 353.0,
+     "amp": 1.06,
+     "sigma": 20
+    },
+    {
+     "lex": 312.6,
+     "lem": 394.2,
+     "amp": 0.55,
+     "sigma": 24
+    },
+    {
+     "lex": 260.0,
+     "lem": 306.5,
+     "amp": 0.34,
+     "sigma": 16
+    }
+   ],
+   "pollutants": {
+    "cod": 0.7753,
+    "ammonia": 0.2002,
+    "tp": 0.0244,
+    "cr6": 0.0
+   }
+  },
+  {
+   "enterprise_id": "ent_11",
+   "spectrum": [
+    {
+     "lex": 288.3,
+     "lem": 351.0,
+     "amp": 0.856,
+     "sigma": 20
+    },
+    {
+     "lex": 305.6,
+     "lem": 388.8,
+     "amp": 0.532,
+     "sigma": 24
+    },
+    {
+     "lex": 257.0,
+     "lem": 302.7,
+     "amp": 0.409,
+     "sigma": 16
+    }
+   ],
+   "pollutants": {
+    "cod": 0.7859,
+    "ammonia": 0.1933,
+    "tp": 0.0208,
+    "cr6": 0.0
+   }
+  },
+  {
+   "enterprise_id": "ent_12",
+   "spectrum": [
+    {
+     "lex": 271.3,
+     "lem": 341.2,
+     "amp": 0.587,
+     "sigma": 18
+    },
+    {
+     "lex": 317.0,
+     "lem": 394.0,
+     "amp": 1.113,
+     "sigma": 22
+    }
+   ],
+   "pollutants": {
+    "cod": 0.7735,
+    "ammonia": 0.162,
+    "tp": 0.0645,
+    "cr6": 0.0
+   }
+  },
+  {
+   "enterprise_id": "ent_13",
+   "spectrum": [
+    {
+     "lex": 267.2,
+     "lem": 335.8,
+     "amp": 0.69,
+     "sigma": 18
+    },
+    {
+     "lex": 319.5,
+     "lem": 392.0,
+     "amp": 1.084,
+     "sigma": 22
+    }
+   ],
+   "pollutants": {
+    "cod": 0.7766,
+    "ammonia": 0.1554,
+    "tp": 0.0679,
+    "cr6": 0.0
+   }
+  },
+  {
+   "enterprise_id": "ent_14",
+   "spectrum": [
+    {
+     "lex": 268.9,
+     "lem": 332.4,
+     "amp": 0.59,
+     "sigma": 18
+    },
+    {
+     "lex": 326.1,
+     "lem": 393.8,
+     "amp": 0.866,
+     "sigma": 22
+    }
+   ],
+   "pollutants": {
+    "cod": 0.7461,
+    "ammonia": 0.1694,
+    "tp": 0.0845,
+    "cr6": 0.0
+   }
+  },
+  {
+   "enterprise_id": "ent_15",
+   "spectrum": [
+    {
+     "lex": 260.3,
+     "lem": 292.6,
+     "amp": 0.598,
+     "sigma": 16
+    },
+    {
+     "lex": 336.9,
+     "lem": 403.4,
+     "amp": 0.476,
+     "sigma": 24
+    }
+   ],
+   "pollutants": {
+    "cod": 0.6471,
+    "ammonia": 0.2297,
+    "tp": 0.1232,
+    "cr6": 0.0
+   }
+  },
+  {
+   "enterprise_id": "ent_16",
+   "spectrum": [
+    {
+     "lex": 266.4,
+     "lem": 296.2,
+     "amp": 0.738,
+     "sigma": 16
+    },
+    {
+     "lex": 337.5,
+     "lem": 408.9,
+     "amp": 0.573,
+     "sigma": 24
+    }
+   ],
+   "pollutants": {
+    "cod": 0.673,
+    "ammonia": 0.2221,
+    "tp": 0.1048,
+    "cr6": 0.0
+   }
+  },
+  {
+   "enterprise_id": "ent_17",
+   "spectrum": [
+    {
+     "lex": 267.7,
+     "lem": 301.6,
+     "amp": 0.792,
+     "sigma": 16
+    },
+    {
+     "lex": 332.4,
+     "lem": 412.5,
+     "amp": 0.506,
+     "sigma": 24
+    }
+   ],
+   "pollutants": {
+    "cod": 0.7038,
+    "ammonia": 0.2048,
+    "tp": 0.0914,
+    "cr6": 0.0
+   }
+  },
+  {
+   "enterprise_id": "ent_18",
+   "spectrum": [
+    {
+     "lex": 263.2,
+     "lem": 306.3,
+     "amp": 0.639,
+     "sigma": 16
+    },
+    {
+     "lex": 325.5,
+     "lem": 412.6,
+     "amp": 0.425,
+     "sigma": 24
+    }
+   ],
+   "pollutants": {
+    "cod": 0.6995,
+    "ammonia": 0.2,
+    "tp": 0.1005,
+    "cr6": 0.0
+   }
+  }
+ ]
+}

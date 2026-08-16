@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "note": "行业模板：EEM 荧光峰参数 + 原水浓度（mg/L，ph 为偏离中性值的增量，负数=酸性）。正常排放浓度 = 原水浓度 × 处理率 treat_rate；事件（偷排/泄漏/失效）按原水浓度注入。"
+  },
+  "electroplating": {
+    "label": "电镀",
+    "peaks": [
+      {"lex": 320, "lem": 410, "amp": 1.0, "sigma": 22},
+      {"lex": 275, "lem": 340, "amp": 0.65, "sigma": 18},
+      {"lex": 360, "lem": 450, "amp": 0.35, "sigma": 25}
+    ],
+    "outfall_conc": {"cod": 200, "ammonia": 10, "tp": 0.6, "cr6": 120, "ph": -1.5}
+  },
+  "dyeing": {
+    "label": "印染",
+    "peaks": [
+      {"lex": 310, "lem": 380, "amp": 1.0, "sigma": 20},
+      {"lex": 280, "lem": 330, "amp": 0.5, "sigma": 18},
+      {"lex": 350, "lem": 430, "amp": 0.4, "sigma": 22}
+    ],
+    "outfall_conc": {"cod": 800, "ammonia": 25, "tp": 3, "cr6": 2, "ph": 0.4}
+  },
+  "paper": {
+    "label": "造纸",
+    "peaks": [
+      {"lex": 290, "lem": 350, "amp": 1.0, "sigma": 24},
+      {"lex": 330, "lem": 400, "amp": 0.45, "sigma": 20}
+    ],
+    "outfall_conc": {"cod": 1000, "ammonia": 15, "tp": 2, "cr6": 0.5, "ph": 0.3}
+  },
+  "chemical": {
+    "label": "化工",
+    "peaks": [
+      {"lex": 300, "lem": 380, "amp": 0.8, "sigma": 26},
+      {"lex": 270, "lem": 320, "amp": 1.0, "sigma": 18},
+      {"lex": 340, "lem": 420, "amp": 0.5, "sigma": 22}
+    ],
+    "outfall_conc": {"cod": 500, "ammonia": 50, "tp": 1.5, "cr6": 2, "ph": -0.6}
+  },
+  "pharma": {
+    "label": "制药",
+    "peaks": [
+      {"lex": 285, "lem": 345, "amp": 1.0, "sigma": 20},
+      {"lex": 310, "lem": 390, "amp": 0.6, "sigma": 24},
+      {"lex": 265, "lem": 310, "amp": 0.4, "sigma": 16}
+    ],
+    "outfall_conc": {"cod": 1500, "ammonia": 80, "tp": 1, "cr6": 0, "ph": 0}
+  },
+  "food": {
+    "label": "食品",
+    "peaks": [
+      {"lex": 275, "lem": 340, "amp": 0.6, "sigma": 18},
+      {"lex": 325, "lem": 400, "amp": 1.0, "sigma": 22}
+    ],
+    "outfall_conc": {"cod": 600, "ammonia": 30, "tp": 6, "cr6": 0, "ph": -0.2}
+  },
+  "wwtp": {
+    "label": "污水处理厂",
+    "peaks": [
+      {"lex": 260, "lem": 300, "amp": 0.7, "sigma": 16},
+      {"lex": 330, "lem": 405, "amp": 0.5, "sigma": 24}
+    ],
+    "outfall_conc": {"cod": 60, "ammonia": 6, "tp": 1.5, "cr6": 0, "ph": 0}
+  }
+}
