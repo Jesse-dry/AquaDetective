@@ -1,3 +1,4 @@
 # 根级兜底忽略（backend/.gitignore 覆盖 backend/ 内部）
 *.bundle
 .DS_Store
+CLAUDE.md
