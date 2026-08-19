@@ -127,8 +127,71 @@ AquaDetective/
 │   └── README.md             # 后端详细说明
 ├── docs/
 │   ├── 设计方案.md           # 产品与系统总方案
+│   ├── 前端开发方案.md        # 前端分工方案
 │   └── 后端开发方案.md        # 后端分工方案与 API 契约
-└── README.md                 # 本文件
+├── README.md                 # 本文件
+└── frontend/
+    ├── package.json / pnpm-lock.yaml
+    ├── vite.config.ts            # proxy /api 与 /ws 到 localhost:8000
+    ├── index.html
+    ├── .env.example              # VITE_API_BASE / VITE_WS_BASE / VITE_MOCK
+    ├── public/
+    │   └── mock/                 # Mock 数据(契约冻结前并行开发用)
+    │       ├── watershed.json
+    │       ├── series.json
+    │       ├── eem.json
+    │       ├── report.md
+    │       └── recordings.json
+    ├── src/
+    │   ├── main.tsx
+    │   ├── App.tsx               # 路由
+    │   ├── api/                  # API 层(与契约一一对应)
+    │   │   ├── client.ts         # fetch 封装(基址/超时/错误统一处理)
+    │   │   ├── watershed.ts
+    │   │   ├── series.ts
+    │   │   ├── events.ts
+    │   │   ├── investigate.ts
+    │   │   ├── report.ts
+    │   │   └── simulate.ts
+    │   ├── ws/
+    │   │   ├── connection.ts     # WS 连接管理(自动重连、心跳)
+    │   │   ├── messages.ts       # 消息类型定义(TypeScript 镜像契约)
+    │   │   └── mockStream.ts     # 按契约回放 mock 推理流(演示兜底)
+    │   ├── types/                # 契约 TS 类型(nodes/edges/steps/...)
+    │   ├── store/                # Zustand
+    │   │   ├── watershedStore.ts # 流域拓扑缓存
+    │   │   ├── alertStore.ts     # 事件告警列表
+    │   │   ├── investigationStore.ts # 当前调查:步骤流/假设/结论
+    │   │   └── uiStore.ts        # 大屏模式/选中断面/时间窗
+    │   ├── pages/
+    │   │   ├── DashboardPage.tsx # 大屏主页(地图 + 告警 + 推理面板)
+    │   │   ├── StationPage.tsx   # 断面详情(时序曲线 + EEM)
+    │   │   ├── ReportPage.tsx    # 报告页(Markdown 渲染 + 打印)
+    │   │   ├── ReplayPage.tsx    # 历史调查回放(答辩用)
+    │   │   └── BenchmarkPage.tsx # 真实数据对标页(W5)
+    │   ├── components/
+    │   │   ├── map/
+    │   │   │   ├── WatershedMap.tsx   # 流域底图
+    │   │   │   ├── StationLayer.tsx   # 断面状态着色(绿/黄/红)
+    │   │   │   ├── EnterpriseLayer.tsx# 企业/排污口标注
+    │   │   │   └── DispersionLayer.tsx# 扩散动画(浓度随时间流动)
+    │   │   ├── reasoning/
+    │   │   │   ├── ReasoningPanel.tsx # 推理流式面板(核心)
+    │   │   │   ├── StepCard.tsx       # 单步"线索→推理→证据"卡片
+    │   │   │   ├── EvidenceChip.tsx   # 证据条(eem_score 等)
+    │   │   │   ├── HypothesisBoard.tsx# 假设排行榜(分数实时变化)
+    │   │   │   └── AgentTalk.tsx      # Agent 会议气泡对话
+    │   │   ├── charts/
+    │   │   │   ├── SeriesChart.tsx    # 断面时序曲线
+    │   │   │   ├── EemContour.tsx     # EEM 等高线图(并排对比)
+    │   │   │   └── ConfidenceBar.tsx  # 嫌疑企业置信度条形图
+    │   │   ├── alert/
+    │   │   │   └── AlertList.tsx      # 告警面板(可触发调查)
+    │   │   └── demo/
+    │   │       ├── ScenarioBar.tsx    # 三条演示脚本一键启动/重置
+    │   │       └── InjectDialog.tsx   # 手动注入事件表单
+    │   └── styles/               # Tailwind 配置与全局样式
+    └── tests/                    # 见第 8 节
 ```
 
 ## API 一览（前缀 `/api/v1`）
@@ -168,4 +231,4 @@ AquaDetective/
 ## 团队
 
 - 后端：Jesse
-- 前端：招募中 / 待定
+- 前端：advent
