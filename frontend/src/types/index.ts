@@ -57,8 +57,15 @@ export interface Watershed {
 
 // ---------- /series ----------
 export interface SeriesPoint {
-  ts: number // 毫秒 epoch,前端只做格式化
+  ts: number // 秒级 epoch,前端展示时 ×1000
   value: number
+}
+
+export interface SeriesResponse {
+  station: string
+  indicator: string
+  count: number
+  data: SeriesPoint[]
 }
 
 // ---------- /events ----------
@@ -69,8 +76,8 @@ export type EventStatus = 'open' | 'investigating' | 'resolved'
 export interface PollutionEvent {
   id: string
   station_id: string
-  indicators: string[]
-  onset_ts: number
+  indicators: string[] // 后端可能给 JSON 字符串,api 层已归一化为数组
+  onset_ts: number // 秒级 epoch,api 层已归一化为毫秒
   severity: Severity
   etype: EventType
   truth_source?: string
@@ -81,42 +88,50 @@ export interface PollutionEvent {
 export interface Investigation {
   id: string
   event_id: string
-  started_at: number
+  started_at: number // 秒级 epoch
   status: 'running' | 'resolved' | 'failed'
   conclusion: ConclusionData | null
+  stream?: WsMessage[] // 后端附带完整推理记录,WS 断线补齐用
 }
 
-// ---------- WS 消息(固定 6 类) ----------
+// ---------- WS 消息(固定 6 类;另有控制消息 connected/error,渲染层忽略) ----------
 export interface Evidence {
-  kind: string // eem_score / pollutant_score / topology / dispersion / pattern ...
-  target: string
-  value: number
+  kind: string // eem_score / pollutant_score / topology / dispersion / pattern / event
+  target?: string // parse 步的事件证据无 target
+  value: number | Record<string, unknown> // 大多数为 0~1 分值;parse 步为事件原始字段
+  detail?: string
+  rank?: number
 }
 
 export interface StepData {
   step_id: string
-  phase: string // topology_filter / dispersion_check / fingerprint_match / pattern_check ...
+  phase: string // 后端直接给中文标签:事件解析 / 证据校核·eem / 排除假设 ...
   clue: string
   reasoning: string
   evidence: Evidence[]
-  status: string // verified / rejected / ...
+  status: string // verified / rejected
 }
 
 export interface HypothesisData {
   id: string
-  target: string // 企业 id
+  target: string // 注意:后端推的是企业名称,不是 id
+  industry?: string
+  reasons?: string
   score: number
-  status: string // candidate / eliminated / confirmed
+  status: string // candidate / rejected
 }
 
 export interface AgentTalkData {
-  agent: string // monitor / investigator / compliance / responder / reporter
+  agent: string // 后端给中文名:监测Agent / 溯源侦探 / 法规Agent / 处置Agent / 报告Agent
   text: string
 }
 
 export interface ConclusionData {
-  source_id: string
+  source_id: string | null
+  source_name?: string | null
+  industry?: string
   confidence: number
+  status?: string
   evidence_summary: string
 }
 
@@ -141,13 +156,12 @@ export type WsMessage =
 export interface EemMatrix {
   lex: number[] // 激发波长轴
   lem: number[] // 发射波长轴
-  matrix: number[][] // matrix[i][j],i 对应 lem 行,j 对应 lex 列
+  eem: number[][] // eem[i][j],i 对应 lem 行,j 对应 lex 列
+  dominant?: string // 权重最大企业 id
 }
 
 // ---------- /recordings ----------
-export interface Recording {
-  id: string
-  event_id: string
-  started_at: number
-  status: string
+// GET /recordings 返回 { recordings: string[] }(仅调查 id 列表)
+export interface RecordingList {
+  recordings: string[]
 }

@@ -1,12 +1,18 @@
 import type { AgentTalkData } from '../../types'
 
 // Agent 会议气泡:不同 Agent 不同颜色,"会议"即多条交替气泡
+// 后端 agent 字段为中文名,英文 id 兼容保留
 const AGENT_STYLE: Record<string, { name: string; color: string }> = {
   monitor: { name: '监测 Agent', color: 'bg-sky-500/20 text-sky-300' },
   investigator: { name: '溯源侦探', color: 'bg-amber-500/20 text-amber-300' },
   compliance: { name: '法规 Agent', color: 'bg-violet-500/20 text-violet-300' },
   responder: { name: '处置 Agent', color: 'bg-emerald-500/20 text-emerald-300' },
   reporter: { name: '报告 Agent', color: 'bg-rose-500/20 text-rose-300' },
+  '监测Agent': { name: '监测 Agent', color: 'bg-sky-500/20 text-sky-300' },
+  '溯源Agent': { name: '溯源侦探', color: 'bg-amber-500/20 text-amber-300' },
+  '法规Agent': { name: '法规 Agent', color: 'bg-violet-500/20 text-violet-300' },
+  '处置Agent': { name: '处置 Agent', color: 'bg-emerald-500/20 text-emerald-300' },
+  '报告Agent': { name: '报告 Agent', color: 'bg-rose-500/20 text-rose-300' },
 }
 
 export function AgentTalk({ talk }: { talk: AgentTalkData }) {

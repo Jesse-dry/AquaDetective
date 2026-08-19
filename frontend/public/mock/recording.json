@@ -1,6 +1,6 @@
 {
- "id": "inv_001",
- "messages": [
+ "investigation_id": "inv_001",
+ "stream": [
   {
    "type": "step",
    "data": {

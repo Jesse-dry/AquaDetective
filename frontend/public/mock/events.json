@@ -5,7 +5,7 @@
   "indicators": [
    "cr6"
   ],
-  "onset_ts": 1755475200000,
+  "onset_ts": 1755475200,
   "severity": "high",
   "etype": "periodic",
   "truth_source": "ent_01",
@@ -18,7 +18,7 @@
    "cod",
    "ammonia"
   ],
-  "onset_ts": 1755561600000,
+  "onset_ts": 1755561600,
   "severity": "high",
   "etype": "sudden",
   "truth_source": "ent_02",
@@ -31,7 +31,7 @@
    "ammonia",
    "tp"
   ],
-  "onset_ts": 1755648000000,
+  "onset_ts": 1755648000,
   "severity": "medium",
   "etype": "gradual",
   "truth_source": "ent_03",

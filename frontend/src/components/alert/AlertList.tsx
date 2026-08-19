@@ -40,9 +40,9 @@ export function AlertList() {
       stream.start({ onMessage: inv.applyMessage })
       return
     }
-    const { id } = await startInvestigation(eventId)
-    inv.start(id)
-    const conn = new InvestigationConnection(id, {
+    const { investigation_id } = await startInvestigation(eventId)
+    inv.start(investigation_id)
+    const conn = new InvestigationConnection(investigation_id, {
       onMessage: inv.applyMessage,
       onStatus: inv.setConnStatus,
     })

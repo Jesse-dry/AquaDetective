@@ -1,15 +1,24 @@
 import type { Evidence } from '../../types'
 
-// 证据条:eem_score / pollutant_score / topology / dispersion / pattern
+// 证据条:eem_score / pollutant_score / topology / dispersion / pattern / event
 const KIND_LABEL: Record<string, string> = {
   eem_score: '光谱指纹',
   pollutant_score: '污染物指纹',
   topology: '拓扑可达',
   dispersion: '扩散校核',
   pattern: '排放规律',
+  event: '事件',
 }
 
 export function EvidenceChip({ evidence }: { evidence: Evidence }) {
+  // parse 步的事件证据 value 为对象(原始字段),只展示类别标签
+  if (typeof evidence.value !== 'number') {
+    return (
+      <span className="inline-flex items-center rounded border border-edge bg-edge/40 px-2 py-0.5 text-xs text-slate-400">
+        {KIND_LABEL[evidence.kind] ?? evidence.kind}
+      </span>
+    )
+  }
   const pct = Math.round(evidence.value * 100)
   const tone =
     evidence.value >= 0.85 ? 'bg-danger/20 text-danger border-danger/40'
@@ -18,7 +27,7 @@ export function EvidenceChip({ evidence }: { evidence: Evidence }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs ${tone}`}>
       <span>{KIND_LABEL[evidence.kind] ?? evidence.kind}</span>
-      <span className="font-semibold">{evidence.target}</span>
+      {evidence.target && <span className="font-semibold">{evidence.target}</span>}
       <span className="tabular-nums">{pct}%</span>
     </span>
   )

@@ -11,7 +11,7 @@ export function EemContour({ title, eem }: { title: string; eem: EemMatrix | nul
     const chart = echarts.init(ref.current)
     const data: [number, number, number][] = []
     let max = 0
-    eem.matrix.forEach((row, i) =>
+    eem.eem.forEach((row, i) =>
       row.forEach((v, j) => {
         data.push([eem.lex[j], eem.lem[i], v])
         if (v > max) max = v

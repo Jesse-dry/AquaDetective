@@ -1,8 +1,1 @@
-[
- {
-  "id": "inv_001",
-  "event_id": "evt_001",
-  "started_at": 1755480000000,
-  "status": "resolved"
- }
-]
+{"recordings": ["inv_001"]}

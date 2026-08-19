@@ -24,7 +24,7 @@ export async function apiGet<T>(path: string, mockFile?: string): Promise<T> {
 export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   if (IS_MOCK) {
     // Mock 模式下写操作直接回显成功,由调用方走 mock 流程
-    return { id: 'mock_inv_001' } as T
+    return { investigation_id: 'mock_inv_001' } as T
   }
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)

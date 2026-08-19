@@ -1,5 +1,5 @@
 import { apiGet } from './client'
-import type { SeriesPoint } from '../types'
+import type { SeriesResponse } from '../types'
 
 export interface SeriesQuery {
   station: string
@@ -10,6 +10,7 @@ export interface SeriesQuery {
 }
 
 // GET /series?station=&indicator=&from=&to=
+// 后端返回 { station, indicator, count, data:[{ts(秒), value}] }
 export function getSeries(q: SeriesQuery) {
   const params = new URLSearchParams()
   params.set('station', q.station)
@@ -17,5 +18,5 @@ export function getSeries(q: SeriesQuery) {
   if (q.from !== undefined) params.set('from', String(q.from))
   if (q.to !== undefined) params.set('to', String(q.to))
   if (q.step !== undefined) params.set('step', String(q.step))
-  return apiGet<SeriesPoint[]>(`/series?${params.toString()}`, 'series.json')
+  return apiGet<SeriesResponse>(`/series?${params.toString()}`, 'series.json')
 }

@@ -14,7 +14,7 @@
   "type": "hypothesis",
   "data": {
    "id": "h1",
-   "target": "ent_01",
+   "target": "耀光金属表面处理",
    "score": 0.4,
    "status": "candidate"
   }
@@ -23,7 +23,7 @@
   "type": "hypothesis",
   "data": {
    "id": "h2",
-   "target": "ent_02",
+   "target": "恒泰精细化工",
    "score": 0.3,
    "status": "candidate"
   }
@@ -32,7 +32,7 @@
   "type": "hypothesis",
   "data": {
    "id": "h3",
-   "target": "ent_04",
+   "target": "青云印染",
    "score": 0.25,
    "status": "candidate"
   }
@@ -63,9 +63,9 @@
   "type": "hypothesis",
   "data": {
    "id": "h2",
-   "target": "ent_02",
+   "target": "恒泰精细化工",
    "score": 0.05,
-   "status": "eliminated"
+   "status": "rejected"
   }
  },
  {
@@ -99,7 +99,7 @@
   "type": "hypothesis",
   "data": {
    "id": "h1",
-   "target": "ent_01",
+   "target": "耀光金属表面处理",
    "score": 0.86,
    "status": "candidate"
   }
@@ -108,9 +108,9 @@
   "type": "hypothesis",
   "data": {
    "id": "h3",
-   "target": "ent_04",
+   "target": "青云印染",
    "score": 0.18,
-   "status": "eliminated"
+   "status": "rejected"
   }
  },
  {
@@ -134,7 +134,7 @@
   "type": "hypothesis",
   "data": {
    "id": "h1",
-   "target": "ent_01",
+   "target": "耀光金属表面处理",
    "score": 0.93,
    "status": "confirmed"
   }
@@ -165,7 +165,8 @@
   "data": {
    "source_id": "ent_01",
    "confidence": 0.93,
-   "evidence_summary": "拓扑可达(0.92) + 光谱指纹 0.91 + 污染物指纹 0.88 + 夜间排放规律 0.89,四路证据闭环,锁定耀光金属表面处理夜间偷排。"
+   "evidence_summary": "拓扑可达(0.92) + 光谱指纹 0.91 + 污染物指纹 0.88 + 夜间排放规律 0.89,四路证据闭环,锁定耀光金属表面处理夜间偷排。",
+   "source_name": "耀光金属表面处理"
   }
  },
  {

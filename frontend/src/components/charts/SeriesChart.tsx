@@ -22,7 +22,7 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
 
   useEffect(() => {
     if (!stationId || !chartRef.current) return
-    getSeries({ station: stationId, indicator, step: 10 }).then((points) => {
+    getSeries({ station: stationId, indicator, step: 10 }).then((resp) => {
       chartRef.current?.setOption({
         backgroundColor: 'transparent',
         grid: { left: 48, right: 16, top: 24, bottom: 24 },
@@ -44,7 +44,8 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
           showSymbol: false,
           sampling: 'lttb',
           lineStyle: { color: '#38bdf8', width: 1.5 },
-          data: points.map((p) => [p.ts, p.value]),
+          // 后端 ts 为秒级 epoch,ECharts time 轴需要毫秒
+          data: resp.data.map((p) => [p.ts * 1000, p.value]),
         }],
       })
     }).catch(() => {})

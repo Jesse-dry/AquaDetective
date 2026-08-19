@@ -7,13 +7,14 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-      },
+      // 注意顺序:WS 规则必须在前,否则会被 /api 规则抢先匹配导致 upgrade 失败
       '/api/v1/ws': {
         target: 'ws://localhost:8000',
         ws: true,
+      },
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
       },
     },
   },
