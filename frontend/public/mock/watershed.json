@@ -1,0 +1,378 @@
+{
+ "nodes": [
+  {
+   "id": "n_01",
+   "name": "上游源头",
+   "kind": "source",
+   "x": 120.1,
+   "y": 30.32,
+   "flow": 12.0,
+   "velocity": 0.8,
+   "k": 0.1
+  },
+  {
+   "id": "n_02",
+   "name": "干流一段",
+   "kind": "segment",
+   "x": 120.13,
+   "y": 30.3,
+   "flow": 12.5,
+   "velocity": 0.8,
+   "k": 0.1
+  },
+  {
+   "id": "n_03",
+   "name": "干流二段",
+   "kind": "segment",
+   "x": 120.16,
+   "y": 30.28,
+   "flow": 13.0,
+   "velocity": 0.9,
+   "k": 0.1
+  },
+  {
+   "id": "n_04",
+   "name": "清汊汇流口",
+   "kind": "confluence",
+   "x": 120.19,
+   "y": 30.26,
+   "flow": 18.0,
+   "velocity": 1.0,
+   "k": 0.1
+  },
+  {
+   "id": "n_05",
+   "name": "干流三段",
+   "kind": "segment",
+   "x": 120.22,
+   "y": 30.24,
+   "flow": 18.5,
+   "velocity": 1.0,
+   "k": 0.12
+  },
+  {
+   "id": "n_06",
+   "name": "干流四段",
+   "kind": "segment",
+   "x": 120.25,
+   "y": 30.22,
+   "flow": 19.0,
+   "velocity": 1.1,
+   "k": 0.12
+  },
+  {
+   "id": "n_07",
+   "name": "入河口",
+   "kind": "outlet",
+   "x": 120.28,
+   "y": 30.2,
+   "flow": 19.5,
+   "velocity": 1.1,
+   "k": 0.12
+  },
+  {
+   "id": "n_08",
+   "name": "支流源头",
+   "kind": "source",
+   "x": 120.17,
+   "y": 30.31,
+   "flow": 5.0,
+   "velocity": 0.6,
+   "k": 0.08
+  },
+  {
+   "id": "n_09",
+   "name": "支流一段",
+   "kind": "segment",
+   "x": 120.18,
+   "y": 30.285,
+   "flow": 5.2,
+   "velocity": 0.6,
+   "k": 0.08
+  },
+  {
+   "id": "n_10",
+   "name": "工业园区段",
+   "kind": "segment",
+   "x": 120.14,
+   "y": 30.25,
+   "flow": 12.8,
+   "velocity": 0.85,
+   "k": 0.1
+  }
+ ],
+ "edges": [
+  {
+   "from_node": "n_01",
+   "to_node": "n_02",
+   "distance_m": 3600
+  },
+  {
+   "from_node": "n_02",
+   "to_node": "n_03",
+   "distance_m": 3400
+  },
+  {
+   "from_node": "n_03",
+   "to_node": "n_04",
+   "distance_m": 3300
+  },
+  {
+   "from_node": "n_04",
+   "to_node": "n_05",
+   "distance_m": 3300
+  },
+  {
+   "from_node": "n_05",
+   "to_node": "n_06",
+   "distance_m": 3300
+  },
+  {
+   "from_node": "n_06",
+   "to_node": "n_07",
+   "distance_m": 3300
+  },
+  {
+   "from_node": "n_08",
+   "to_node": "n_09",
+   "distance_m": 2700
+  },
+  {
+   "from_node": "n_09",
+   "to_node": "n_04",
+   "distance_m": 2600
+  },
+  {
+   "from_node": "n_02",
+   "to_node": "n_10",
+   "distance_m": 2900
+  },
+  {
+   "from_node": "n_10",
+   "to_node": "n_04",
+   "distance_m": 5200
+  }
+ ],
+ "stations": [
+  {
+   "id": "st_01",
+   "node_id": "n_02",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_02",
+   "node_id": "n_10",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_03",
+   "node_id": "n_05",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  },
+  {
+   "id": "st_04",
+   "node_id": "n_06",
+   "interval_min": 15,
+   "indicators": [
+    "cod",
+    "ammonia",
+    "tp",
+    "cr6",
+    "ph"
+   ]
+  }
+ ],
+ "enterprises": [
+  {
+   "id": "ent_01",
+   "name": "耀光金属表面处理",
+   "industry": "electroplating",
+   "node_id": "n_10",
+   "discharge_pattern": {
+    "hours": [
+     22,
+     23,
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "id": "ent_02",
+   "name": "恒泰精细化工",
+   "industry": "chemical",
+   "node_id": "n_03",
+   "discharge_pattern": {
+    "hours": [
+     8,
+     9,
+     10,
+     14,
+     15
+    ]
+   }
+  },
+  {
+   "id": "ent_03",
+   "name": "城东污水处理厂",
+   "industry": "wwtp",
+   "node_id": "n_05",
+   "discharge_pattern": {
+    "hours": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23
+    ]
+   }
+  },
+  {
+   "id": "ent_04",
+   "name": "青云印染",
+   "industry": "dyeing",
+   "node_id": "n_09",
+   "discharge_pattern": {
+    "hours": [
+     9,
+     10,
+     11,
+     13,
+     14,
+     15,
+     16
+    ]
+   }
+  }
+ ],
+ "fingerprints": [
+  {
+   "enterprise_id": "ent_01",
+   "spectrum": [
+    {
+     "lex": 320,
+     "lem": 410,
+     "amp": 0.95,
+     "sigma": 18
+    },
+    {
+     "lex": 275,
+     "lem": 340,
+     "amp": 0.6,
+     "sigma": 14
+    }
+   ],
+   "pollutants": {
+    "cr6": 0.55,
+    "ni": 0.25,
+    "cn": 0.1,
+    "cod": 0.05,
+    "ammonia": 0.05
+   }
+  },
+  {
+   "enterprise_id": "ent_02",
+   "spectrum": [
+    {
+     "lex": 290,
+     "lem": 380,
+     "amp": 0.85,
+     "sigma": 16
+    },
+    {
+     "lex": 350,
+     "lem": 450,
+     "amp": 0.5,
+     "sigma": 20
+    }
+   ],
+   "pollutants": {
+    "cod": 0.5,
+    "ammonia": 0.3,
+    "toc": 0.15,
+    "tp": 0.05
+   }
+  },
+  {
+   "enterprise_id": "ent_03",
+   "spectrum": [
+    {
+     "lex": 280,
+     "lem": 350,
+     "amp": 0.7,
+     "sigma": 15
+    }
+   ],
+   "pollutants": {
+    "ammonia": 0.45,
+    "cod": 0.3,
+    "tp": 0.2,
+    "toc": 0.05
+   }
+  },
+  {
+   "enterprise_id": "ent_04",
+   "spectrum": [
+    {
+     "lex": 310,
+     "lem": 400,
+     "amp": 0.75,
+     "sigma": 17
+    },
+    {
+     "lex": 260,
+     "lem": 330,
+     "amp": 0.4,
+     "sigma": 12
+    }
+   ],
+   "pollutants": {
+    "cod": 0.45,
+    "aniline": 0.3,
+    "chroma": 0.2,
+    "ammonia": 0.05
+   }
+  }
+ ]
+}

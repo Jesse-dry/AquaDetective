@@ -1,0 +1,11 @@
+{
+ "id": "mock_inv_001",
+ "event_id": "evt_001",
+ "started_at": 1755480000000,
+ "status": "resolved",
+ "conclusion": {
+  "source_id": "ent_01",
+  "confidence": 0.93,
+  "evidence_summary": "四路证据闭环"
+ }
+}

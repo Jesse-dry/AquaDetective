@@ -1,0 +1,180 @@
+{
+ "id": "inv_001",
+ "messages": [
+  {
+   "type": "step",
+   "data": {
+    "step_id": "stp_01",
+    "phase": "parse_event",
+    "clue": "st_02 断面 Cr⁶⁺ 浓度 0.003 → 0.55 mg/L,超标 11 倍,夜间 22:00 后起跳",
+    "reasoning": "事件为周期性夜间抬升,突变形态指向间歇性排放而非持续性泄漏;超标指标单一且为重金属,初步指向电镀/金属加工类行业。",
+    "evidence": [],
+    "status": "verified"
+   }
+  },
+  {
+   "type": "hypothesis",
+   "data": {
+    "id": "h1",
+    "target": "ent_01",
+    "score": 0.4,
+    "status": "candidate"
+   }
+  },
+  {
+   "type": "hypothesis",
+   "data": {
+    "id": "h2",
+    "target": "ent_02",
+    "score": 0.3,
+    "status": "candidate"
+   }
+  },
+  {
+   "type": "hypothesis",
+   "data": {
+    "id": "h3",
+    "target": "ent_04",
+    "score": 0.25,
+    "status": "candidate"
+   }
+  },
+  {
+   "type": "step",
+   "data": {
+    "step_id": "stp_02",
+    "phase": "topology_filter",
+    "clue": "以 st_02 为起点按流速 0.85 m/s 反推 6 小时时间窗",
+    "reasoning": "可达上游节点仅覆盖工业园区段与干流一段;恒泰精细化工位于干流二段下游方向不可达,先行排除。",
+    "evidence": [
+     {
+      "kind": "topology",
+      "target": "ent_01 耀光金属",
+      "value": 0.92
+     },
+     {
+      "kind": "topology",
+      "target": "ent_02 恒泰化工",
+      "value": 0.05
+     }
+    ],
+    "status": "verified"
+   }
+  },
+  {
+   "type": "hypothesis",
+   "data": {
+    "id": "h2",
+    "target": "ent_02",
+    "score": 0.05,
+    "status": "eliminated"
+   }
+  },
+  {
+   "type": "step",
+   "data": {
+    "step_id": "stp_03",
+    "phase": "fingerprint_match",
+    "clue": "现场 EEM 在 λex=320/λem=410 处出现强峰,与电镀类指纹方向一致",
+    "reasoning": "现场光谱与指纹库双通道比对:光谱余弦相似度与特征污染物比例向量均指向耀光金属表面处理,且远超 0.85 判定线。",
+    "evidence": [
+     {
+      "kind": "eem_score",
+      "target": "ent_01 耀光金属",
+      "value": 0.91
+     },
+     {
+      "kind": "eem_score",
+      "target": "ent_04 青云印染",
+      "value": 0.42
+     },
+     {
+      "kind": "pollutant_score",
+      "target": "ent_01 耀光金属",
+      "value": 0.88
+     }
+    ],
+    "status": "verified"
+   }
+  },
+  {
+   "type": "hypothesis",
+   "data": {
+    "id": "h1",
+    "target": "ent_01",
+    "score": 0.86,
+    "status": "candidate"
+   }
+  },
+  {
+   "type": "hypothesis",
+   "data": {
+    "id": "h3",
+    "target": "ent_04",
+    "score": 0.18,
+    "status": "eliminated"
+   }
+  },
+  {
+   "type": "step",
+   "data": {
+    "step_id": "stp_04",
+    "phase": "pattern_check",
+    "clue": "超标集中在 22:00~03:00,与该企业申报排水时段不符",
+    "reasoning": "排放规律分析显示事件时序与耀光金属历史夜间排水窗口高度相关,呈典型偷排特征,时间维度佐证成立。",
+    "evidence": [
+     {
+      "kind": "pattern",
+      "target": "ent_01 耀光金属",
+      "value": 0.89
+     }
+    ],
+    "status": "verified"
+   }
+  },
+  {
+   "type": "hypothesis",
+   "data": {
+    "id": "h1",
+    "target": "ent_01",
+    "score": 0.93,
+    "status": "confirmed"
+   }
+  },
+  {
+   "type": "agent_talk",
+   "data": {
+    "agent": "compliance",
+    "text": "按 GB 3838-2002 Ⅲ 类标准,Cr⁶⁺ 限值 0.05 mg/L,本次峰值超标 11 倍,适用《水污染防治法》第八十三条。"
+   }
+  },
+  {
+   "type": "agent_talk",
+   "data": {
+    "agent": "investigator",
+    "text": "同意。证据链完整:拓扑可达 + 双指纹高分 + 夜间规律佐证,建议立即锁定并启动处置。"
+   }
+  },
+  {
+   "type": "agent_talk",
+   "data": {
+    "agent": "responder",
+    "text": "处置建议:立即现场采样固定证据,责令停产整改,下游 st_03/st_04 加密监测至 5 分钟级。"
+   }
+  },
+  {
+   "type": "conclusion",
+   "data": {
+    "source_id": "ent_01",
+    "confidence": 0.93,
+    "evidence_summary": "拓扑可达(0.92) + 光谱指纹 0.91 + 污染物指纹 0.88 + 夜间排放规律 0.89,四路证据闭环,锁定耀光金属表面处理夜间偷排。"
+   }
+  },
+  {
+   "type": "report_ready",
+   "data": {
+    "report_id": "inv_001"
+   }
+  }
+ ]
+}

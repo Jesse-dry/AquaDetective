@@ -1,0 +1,24 @@
+{
+ "enterprise_id": "ent_01",
+ "spectrum": [
+  {
+   "lex": 320,
+   "lem": 410,
+   "amp": 0.95,
+   "sigma": 18
+  },
+  {
+   "lex": 275,
+   "lem": 340,
+   "amp": 0.6,
+   "sigma": 14
+  }
+ ],
+ "pollutants": {
+  "cr6": 0.55,
+  "ni": 0.25,
+  "cn": 0.1,
+  "cod": 0.05,
+  "ammonia": 0.05
+ }
+}

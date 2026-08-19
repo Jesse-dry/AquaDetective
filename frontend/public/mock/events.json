@@ -1,0 +1,40 @@
+[
+ {
+  "id": "evt_001",
+  "station_id": "st_02",
+  "indicators": [
+   "cr6"
+  ],
+  "onset_ts": 1755475200000,
+  "severity": "high",
+  "etype": "periodic",
+  "truth_source": "ent_01",
+  "status": "open"
+ },
+ {
+  "id": "evt_002",
+  "station_id": "st_03",
+  "indicators": [
+   "cod",
+   "ammonia"
+  ],
+  "onset_ts": 1755561600000,
+  "severity": "high",
+  "etype": "sudden",
+  "truth_source": "ent_02",
+  "status": "open"
+ },
+ {
+  "id": "evt_003",
+  "station_id": "st_04",
+  "indicators": [
+   "ammonia",
+   "tp"
+  ],
+  "onset_ts": 1755648000000,
+  "severity": "medium",
+  "etype": "gradual",
+  "truth_source": "ent_03",
+  "status": "open"
+ }
+]

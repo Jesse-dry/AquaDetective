@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 打印样式:报告导出 PDF 时白底、隐藏交互元素 */
+@media print {
+  body {
+    background: #fff;
+  }
+}
