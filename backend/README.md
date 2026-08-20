@@ -8,7 +8,12 @@ LangGraph 多智能体编排（监测 / 溯源侦探 / 法规 / 处置 / 报告�
 
 ```bash
 cd backend
-pip install -e ".[dev]"        # 或 uv sync
+# 推荐：按已验证版本安装
+pip install -r requirements.lock
+pip install -e . --no-deps
+
+# 开发依赖也可直接解析安装
+# pip install -e ".[dev]"
 
 # 1) 生成模拟数据（流域 + 90 天时序 + 3 条预置污染事件）
 python -m app.data.seed

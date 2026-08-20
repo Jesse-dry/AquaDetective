@@ -67,7 +67,12 @@ AquaDetective 是一个面向流域水环境管理的智能体系统，模拟真
 
 ```bash
 cd backend
-pip install -e ".[dev]"        # 或 uv sync
+# 推荐：按已验证版本安装
+pip install -r requirements.lock
+pip install -e . --no-deps
+
+# 开发依赖也可直接解析安装
+# pip install -e ".[dev]"
 
 # 1) 生成模拟数据（流域 + 90 天时序 + 3 条预置污染事件，约 3 秒）
 python -m app.data.seed
@@ -76,7 +81,7 @@ python -m app.data.seed
 uvicorn app.main:app --reload --port 8000
 # API 文档: http://127.0.0.1:8000/docs
 
-# 3) 跑测试（20 个引擎/数据单测）
+# 3) 跑测试（22 个引擎/数据单测）
 pytest tests                 # 或 python scripts/run_tests.py（无 pytest 依赖的轻量 runner）
 ```
 
@@ -119,8 +124,9 @@ python scripts/smoke_investigate.py evt_001
 
 ## 验证结果
 
-- 引擎单测 **20/20 通过**（异常检测/扩散/指纹/拓扑/规律/数据生成，含可复现性与边界用例）
-- 三条预置事件全部正确锁定真凶：**耀光金属 98% / 恒泰化工 94% / 城东污水厂 99%**，
+- 引擎单测 **22/22 通过**（异常检测/扩散/指纹/拓扑/规律/数据生成，含真值隔离与边界用例）
+- 模拟观测先独立落库，调查引擎不读取 `truth_source`；真值只用于调查结束后的评测
+- 三条预置事件全部正确锁定真凶：**耀光金属 96% / 恒泰化工 95% / 城东污水厂 97%**，
   与第二名嫌疑拉开清晰分差
 - LangGraph 状态机接线验证通过（7 超步全链路：解析 → 假设 → 校核 → 结论 → 法规 → 处置 → 报告）
 - 端到端 API 实测通过：事件注入、世界重置、WS 流式推送、调查回放、报告生成
@@ -138,7 +144,7 @@ AquaDetective/
 │   │   ├── api/              # REST + WebSocket
 │   │   └── main.py           # 入口
 │   ├── scripts/              # 验证/演示脚本（smoke、e2e、verify_*）
-│   ├── tests/                # 20 个单测
+│   ├── tests/                # 22 个单测
 │   └── README.md             # 后端详细说明
 ├── docs/
 │   ├── 设计方案.md           # 产品与系统总方案

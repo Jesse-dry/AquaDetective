@@ -53,6 +53,12 @@ CREATE TABLE IF NOT EXISTS events (
   truth_source TEXT,             -- Ground Truth 企业 id（演示验证用，可为空）
   status TEXT DEFAULT 'open'     -- open|investigating|resolved
 );
+CREATE TABLE IF NOT EXISTS event_observations (
+  event_id TEXT PRIMARY KEY REFERENCES events(id),
+  station_id TEXT NOT NULL,
+  eem TEXT NOT NULL,              -- JSON: {lex, lem, eem}，不包含来源标签
+  pollutants TEXT NOT NULL        -- JSON: 现场特征污染物比例向量
+);
 CREATE TABLE IF NOT EXISTS investigations (
   id TEXT PRIMARY KEY,
   event_id TEXT NOT NULL REFERENCES events(id),

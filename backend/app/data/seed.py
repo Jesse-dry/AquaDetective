@@ -13,6 +13,7 @@ import numpy as np
 from ..config import settings
 from ..db import db_is_empty, get_conn, init_db
 from . import watershed_builder
+from .event_observations import backfill_event_observations, upsert_event_observation
 from .series_generator import T0, alert_station_for, apply_event, generate_all
 
 # 预置演示事件（Ground Truth 已知）
@@ -42,7 +43,7 @@ def run(settings_=settings, days: int = 90, seed: int | None = None) -> dict:
     ws = watershed_builder.save_watershed(settings_.watershed_config_abs)
     conn = get_conn(str(settings_.db_path_abs))
     init_db(conn)
-    for tbl in ["readings", "events", "investigations", "fingerprints",
+    for tbl in ["readings", "event_observations", "events", "investigations", "fingerprints",
                 "enterprises", "stations", "edges", "nodes"]:
         conn.execute(f"DELETE FROM {tbl}")
     conn.executemany(
@@ -84,6 +85,9 @@ def run(settings_=settings, days: int = 90, seed: int | None = None) -> dict:
     conn.executemany(
         "INSERT INTO events (id,station_id,indicators,onset_ts,severity,etype,truth_source,status) "
         "VALUES (?,?,?,?,?,?,?,?)", event_rows)
+    for ev, row in zip(SCRIPTED_EVENTS, event_rows):
+        upsert_event_observation(
+            conn, ws, ev["id"], row[1], ev["source_id"], seed)
     conn.commit()
     conn.close()
     print(f"done in {time.time()-t0:.1f}s: readings={n_rows:,} events={len(event_rows)}")
@@ -99,6 +103,8 @@ def ensure_db(settings_=settings) -> None:
         conn.close()
         run(settings_)
     else:
+        ws = watershed_builder.load_watershed(settings_.watershed_config_abs)
+        backfill_event_observations(conn, ws, settings_.seed)
         conn.close()
 
 

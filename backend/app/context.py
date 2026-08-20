@@ -1,8 +1,13 @@
 """共享运行时上下文：流域配置、DB 路径、LLM 客户端（懒加载单例）。"""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from .config import settings
 from .data.watershed_builder import load_watershed
+
+if TYPE_CHECKING:
+    from .agents.llm import LLMClient
 
 _watershed: dict | None = None
 _llm: "LLMClient | None" = None

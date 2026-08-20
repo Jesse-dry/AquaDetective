@@ -64,6 +64,36 @@ def observed_eem(watershed: dict, station_id: str, seed: int = 0,
     }
 
 
+def observed_pollutants(watershed: dict, station_id: str, seed: int = 0,
+                        event_source: str | None = None) -> dict[str, float]:
+    """模拟现场污染物比例观测，供数据生成阶段持久化。
+
+    `event_source` 只能由模拟器传入。调查阶段读取已持久化的观测，不能用来源标签
+    重新生成证据。
+    """
+    rng = np.random.default_rng(seed)
+    if event_source:
+        fp = fingerprint_of(watershed, event_source)
+        if fp is None:
+            raise ValueError(f"enterprise {event_source} 无指纹")
+        vec = {k: max(0.0, v * (1 + 0.08 * rng.normal()))
+               for k, v in fp["pollutants"].items()}
+    else:
+        atten = impact_matrix(watershed)
+        fp_by_id = {fp["enterprise_id"]: fp for fp in watershed["fingerprints"]}
+        vec: dict[str, float] = {}
+        for ent in watershed["enterprises"]:
+            fac = atten.get((ent["id"], station_id))
+            if not fac:
+                continue
+            for key, value in fp_by_id[ent["id"]]["pollutants"].items():
+                vec[key] = vec.get(key, 0.0) + value * fac
+    total = sum(vec.values())
+    if total <= 1e-12:
+        raise ValueError(f"station {station_id} 上游无污染物观测")
+    return {key: round(value / total, 6) for key, value in vec.items()}
+
+
 def rank_eem(query_eem: np.ndarray, watershed: dict) -> list[dict]:
     """现场 EEM vs 指纹库，返回按分数降序的企业列表。"""
     return match_eem(query_eem, library_eems(watershed))

@@ -9,9 +9,10 @@ from fastapi import APIRouter, HTTPException
 
 from ..config import settings
 from ..context import get_db_path, get_watershed
-from ..db import get_conn
 from ..data import seed as seed_mod
+from ..data.event_observations import upsert_event_observation
 from ..data.series_generator import T0, alert_station_for, apply_event
+from ..db import get_conn
 
 router = APIRouter(tags=["simulate"])
 
@@ -62,6 +63,7 @@ def inject_event(body: dict):
         "VALUES (?,?,?,?,?,?,?,?)",
         (ev_id, alert, json.dumps(inds), T0 + spec["onset_day"] * 86400,
          severity, etype, source_id, "open"))
+    upsert_event_observation(conn, ws, ev_id, alert, source_id, settings.seed)
     conn.commit()
     conn.close()
     return {"ok": True, "event_id": ev_id, "alert_station": alert, "summary": summary}

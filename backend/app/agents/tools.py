@@ -5,10 +5,19 @@
 from __future__ import annotations
 
 import json
+from itertools import pairwise
 
+import networkx as nx
 import numpy as np
 
-from ..data.fingerprint_lib import fingerprint_of, observed_eem, rank_eem, rank_pollutants
+from ..data.event_observations import load_event_observation
+from ..data.fingerprint_lib import (
+    fingerprint_of,
+    observed_eem,
+    observed_pollutants,
+    rank_eem,
+    rank_pollutants,
+)
 from ..db import get_conn
 from ..engine.dispersion import simulate_puff
 from ..engine.pattern import analyze_periodicity
@@ -41,7 +50,7 @@ def parse_indicators(ev: dict) -> list[str]:
     if isinstance(v, str):
         try:
             v = json.loads(v)
-        except Exception:
+        except json.JSONDecodeError:
             v = [v]
     return v or []
 
@@ -79,30 +88,25 @@ def spill_curves(ws: dict, source_node: str, mass_kg: float) -> dict:
 def travel_hours(ws: dict, ent_node: str, station_node: str) -> float | None:
     G = build_graph(ws)
     try:
-        path = nx_shortest(G, ent_node, station_node)
-    except Exception:
+        path = nx.shortest_path(G, ent_node, station_node)
+    except (nx.NetworkXNoPath, nx.NodeNotFound):
         return None
     h = sum((G.edges[a, b]["distance_m"] / G.nodes[a]["velocity"]) / 3600.0
-            for a, b in zip(path, path[1:]))
+            for a, b in pairwise(path))
     return round(h, 2)
-
-
-def nx_shortest(G, s, t):
-    import networkx as nx
-    return nx.shortest_path(G, s, t)
 
 
 def observed_eem_at(db_path: str, ws: dict, station_id: str,
                     event_id: str | None = None, seed: int = 7) -> dict:
-    """断面"现场"EEM；若事件有 Ground Truth 源，现场以该源指纹为主导。"""
-    source = None
+    """读取事件发生时保存的现场 EEM；缺失时只返回无标签背景观测。"""
     if event_id:
         conn = get_conn(db_path)
-        row = conn.execute("SELECT truth_source FROM events WHERE id=?", (event_id,)).fetchone()
+        observation = load_event_observation(conn, event_id)
         conn.close()
-        if row and row["truth_source"]:
-            source = row["truth_source"]
-    return observed_eem(ws, station_id, seed=seed, event_source=source)
+        if observation and observation["station_id"] == station_id:
+            return observation["eem"]
+    background = observed_eem(ws, station_id, seed=seed)
+    return {key: background[key] for key in ("lex", "lem", "eem")}
 
 
 def match_eem_at(db_path: str, ws: dict, station_id: str,
@@ -114,30 +118,16 @@ def match_eem_at(db_path: str, ws: dict, station_id: str,
 
 def match_pollutants_at(db_path: str, ws: dict, station_id: str,
                         event_id: str | None = None) -> list[dict]:
-    """现场污染物比例向量：以事件源原水比例（微扰）为观测；无事件源则背景混合。"""
-    rng = np.random.default_rng(7)
-    source = None
+    """现场污染物匹配；事件证据来自持久化观测，不读取评测真值。"""
+    vec = None
     if event_id:
         conn = get_conn(db_path)
-        row = conn.execute("SELECT truth_source FROM events WHERE id=?", (event_id,)).fetchone()
+        observation = load_event_observation(conn, event_id)
         conn.close()
-        if row and row["truth_source"]:
-            source = row["truth_source"]
-    if source:
-        fp = fingerprint_of(ws, source)
-        vec = {k: v * (1 + 0.08 * rng.normal()) for k, v in fp["pollutants"].items()}
-    else:
-        atten = impact_matrix(ws)
-        fp_by_id = {fp["enterprise_id"]: fp for fp in ws["fingerprints"]}
-        vec = {}
-        for ent in ws["enterprises"]:
-            fac = atten.get((ent["id"], station_id))
-            if not fac:
-                continue
-            for k, v in fp_by_id[ent["id"]]["pollutants"].items():
-                vec[k] = vec.get(k, 0.0) + v * fac
-    s = sum(vec.values())
-    vec = {k: v / s for k, v in vec.items()}
+        if observation and observation["station_id"] == station_id:
+            vec = observation["pollutants"]
+    if vec is None:
+        vec = observed_pollutants(ws, station_id, seed=7)
     return rank_pollutants(vec, ws)
 
 
