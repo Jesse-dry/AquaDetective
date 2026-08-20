@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '0.0.0.0', 
     port: 5173,
     proxy: {
       // 注意顺序:WS 规则必须在前,否则会被 /api 规则抢先匹配导致 upgrade 失败
