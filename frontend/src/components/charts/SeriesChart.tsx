@@ -44,8 +44,7 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
           showSymbol: false,
           sampling: 'lttb',
           lineStyle: { color: '#38bdf8', width: 1.5 },
-          // 后端 ts 为秒级 epoch,ECharts time 轴需要毫秒
-          data: resp.data.map((p) => [p.ts * 1000, p.value]),
+          data: resp.data.map((p) => [p.ts , p.value]),
         }],
       })
     }).catch(() => {})

@@ -77,7 +77,21 @@ uvicorn app.main:app --reload --port 8000
 # API 文档: http://127.0.0.1:8000/docs
 
 # 3) 跑测试（20 个引擎/数据单测）
-python scripts/run_tests.py    # 或 pytest tests
+pytest tests                 # 或 python scripts/run_tests.py（无 pytest 依赖的轻量 runner）
+```
+
+### 启动前端
+
+```bash
+cd frontend
+npm install
+
+# 开发(Mock 模式 VITE_MOCK=1 时无需后端,推理流走 public/mock 回放)
+npm run dev          # http://localhost:5173
+# /api 与 /api/v1/ws 由 Vite proxy 转发到 localhost:8000(需先启动后端)
+
+npm run build        # tsc 类型检查 + 生产构建
+npm run test         # vitest(store 与 WS 消息守卫单测)
 ```
 
 ### 配置 LLM（可选）
@@ -100,7 +114,7 @@ python scripts/smoke_investigate.py evt_001
 | evt_002 | 突发泄漏 | 恒泰精细化工储罐泄漏 | 高斯烟团随水流推进，COD 17→61、氨氮 0.66→4.9；传播时间校核锁定最近源 |
 | evt_003 | 渐变恶化 | 城东污水处理厂处理能力下降 | 30 天缓慢爬坡，考验趋势检测（CUSUM/季节基线） |
 
-现场演示时可用 `POST /api/v1/simulate/reset` 一键重置世界，或 `POST /simulate/inject`
+现场演示时可用 `POST /api/v1/simulate/reset` 一键重置世界，或 `POST /api/v1/simulate/inject`
 随时注入新事件（模拟真实事故的即时响应）。
 
 ## 验证结果
@@ -110,6 +124,7 @@ python scripts/smoke_investigate.py evt_001
   与第二名嫌疑拉开清晰分差
 - LangGraph 状态机接线验证通过（7 超步全链路：解析 → 假设 → 校核 → 结论 → 法规 → 处置 → 报告）
 - 端到端 API 实测通过：事件注入、世界重置、WS 流式推送、调查回放、报告生成
+- 前端单测 **7/7 通过**（WS 消息守卫、step 去重、状态分发）；前后端联调全链路实测通过
 
 ## 目录结构
 
@@ -130,14 +145,14 @@ AquaDetective/
 │   ├── 前端开发方案.md        # 前端分工方案
 │   └── 后端开发方案.md        # 后端分工方案与 API 契约
 ├── README.md                 # 本文件
-└── frontend/
+└── frontend/                 # 前端（React + Vite）
     ├── package.json / pnpm-lock.yaml
     ├── vite.config.ts            # proxy /api 与 /ws 到 localhost:8000
     ├── index.html
     ├── .env.example              # VITE_API_BASE / VITE_WS_BASE / VITE_MOCK
     ├── public/
-    │   └── mock/                 # Mock 数据(契约冻结前并行开发用)
-    │       ├── watershed.json
+    │   └── mock/                 # Mock 数据(契约冻结前并行开发用,VITE_MOCK=1 时生
+    │       ├── watershed.json      效,演示离线兜底)
     │       ├── series.json
     │       ├── eem.json
     │       ├── report.md
@@ -145,7 +160,7 @@ AquaDetective/
     ├── src/
     │   ├── main.tsx
     │   ├── App.tsx               # 路由
-    │   ├── api/                  # API 层(与契约一一对应)
+    │   ├── api/                  # API 层,REST 封装,与 13 个端点一一对应
     │   │   ├── client.ts         # fetch 封装(基址/超时/错误统一处理)
     │   │   ├── watershed.ts
     │   │   ├── series.ts
@@ -157,8 +172,8 @@ AquaDetective/
     │   │   ├── connection.ts     # WS 连接管理(自动重连、心跳)
     │   │   ├── messages.ts       # 消息类型定义(TypeScript 镜像契约)
     │   │   └── mockStream.ts     # 按契约回放 mock 推理流(演示兜底)
-    │   ├── types/                # 契约 TS 类型(nodes/edges/steps/...)
-    │   ├── store/                # Zustand
+    │   ├── types/                # 契约 TS 类型:单一事实来源(nodes/edges/steps/...)
+    │   ├── store/                # Zustand(流域/告警/调查/UI/扩散回放)
     │   │   ├── watershedStore.ts # 流域拓扑缓存
     │   │   ├── alertStore.ts     # 事件告警列表
     │   │   ├── investigationStore.ts # 当前调查:步骤流/假设/结论
@@ -191,7 +206,7 @@ AquaDetective/
     │   │       ├── ScenarioBar.tsx    # 三条演示脚本一键启动/重置
     │   │       └── InjectDialog.tsx   # 手动注入事件表单
     │   └── styles/               # Tailwind 配置与全局样式
-    └── tests/                    # 见第 8 节
+    └── tests/                    # vitest 单测
 ```
 
 ## API 一览（前缀 `/api/v1`）
@@ -200,6 +215,7 @@ AquaDetective/
 |---|---|---|
 | GET | `/watershed` | 全流域拓扑（节点/边/断面/企业/指纹） |
 | GET | `/watershed/enterprises/{id}/fingerprint` | 企业双指纹 |
+| GET | `/watershed/enterprises/{id}/eem` | 企业档案 EEM（与现场同网格，并排对比） |
 | GET | `/stations/{id}/eem?event_id=` | 断面"现场"EEM 荧光矩阵（61×71） |
 | GET | `/series?station=&indicator=&from=&to=` | 断面时序数据 |
 | GET | `/events?status=` | 污染事件列表（告警面板） |
@@ -220,13 +236,14 @@ AquaDetective/
 | 计算 | NumPy · SciPy · NetworkX |
 | 数据 | SQLite（运行时）· JSON（流域配置） |
 | LLM | OpenAI 兼容接口（可切换本地模型，失败自动降级） |
-| 前端 | 待定（React + MapLibre + ECharts 候选） |
+| 前端 | React 18 · TypeScript · Vite · MapLibre · ECharts · Tailwind · Zustand |
 
 ## 当前状态与路线图
 
-- ✅ **已完成**：数据引擎、计算引擎、多智能体推理、REST + WebSocket API、测试与验证脚本
-- 🔄 **进行中**：前端大屏（地图/推理流/指纹比对图）、与 LLM 真实链路联调
-- 📋 **后续规划**：法规 RAG 向量检索化、评分权重调优、真实公开数据对标页、答辩演示打磨
+- ✅ **已完成**：数据引擎、计算引擎、多智能体推理、REST + WebSocket API、
+  前端大屏（地图/推理流/扩散回放/指纹比对/报告/回放/对标页）、测试与验证脚本
+- 🔄 **进行中**：与 LLM 真实链路联调
+- 📋 **后续规划**：法规 RAG 向量检索化、评分权重调优、答辩演示打磨
 
 ## 团队
 

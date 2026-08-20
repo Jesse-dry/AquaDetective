@@ -65,9 +65,9 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       active: true,
       eventId: ev.id,
       indicator,
-      t0Ms: from * 1000,
-      t1Ms: to * 1000,
-      cursorMs: from * 1000,
+      t0Ms: from,
+      t1Ms: to,
+      cursorMs: from,
       playing: true,
       series: Object.fromEntries(entries),
     })
@@ -88,7 +88,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     const cursors = { ...s.cursors }
     for (const [sid, points] of Object.entries(s.series)) {
       let idx = cursors[sid] ?? 0
-      while (idx < points.length && points[idx].ts * 1000 <= cursorMs) idx += 1
+      while (idx < points.length && points[idx].ts <= cursorMs) idx += 1
       cursors[sid] = idx
       const current = idx > 0 ? points[idx - 1].value : 0
       // 显示归一化:当前值 / 窗内峰值(纯渲染缩放,不改变数据)

@@ -17,7 +17,7 @@ function normalize(ev: RawEvent): PollutionEvent {
       indicators = [ev.indicators]
     }
   }
-  return { ...ev, indicators, onset_ts: ev.onset_ts * 1000 }
+  return { ...ev, indicators, onset_ts: ev.onset_ts }
 }
 
 // GET /events?status=
