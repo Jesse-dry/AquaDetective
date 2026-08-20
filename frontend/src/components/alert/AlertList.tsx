@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { useAlertStore } from '../../store/alertStore'
 import { useInvestigationStore } from '../../store/investigationStore'
+import { usePlaybackStore } from '../../store/playbackStore'
+import { useWatershedStore } from '../../store/watershedStore'
 import { startInvestigation } from '../../api/events'
 import { IS_MOCK } from '../../api/client'
 import { MockStream } from '../../ws/mockStream'
@@ -21,6 +23,8 @@ let activeConn: InvestigationConnection | MockStream | null = null
 export function AlertList() {
   const { events, refresh } = useAlertStore()
   const inv = useInvestigationStore()
+  const loadPlayback = usePlaybackStore((s) => s.load)
+  const stationIds = useWatershedStore((s) => s.data?.stations.map((st) => st.id) ?? [])
 
   useEffect(() => {
     refresh()
@@ -83,6 +87,13 @@ export function AlertList() {
               🔍 开始侦查
             </button>
           )}
+          <button
+            onClick={() => loadPlayback(ev, stationIds)}
+            disabled={stationIds.length === 0}
+            className="mt-1.5 w-full rounded bg-edge px-2 py-1 text-xs text-slate-300 hover:bg-slate-600 disabled:opacity-50"
+          >
+            ▶ 扩散回放
+          </button>
           {ev.status === 'investigating' && (
             <p className="mt-2 text-center text-xs text-warn">侦查中…</p>
           )}

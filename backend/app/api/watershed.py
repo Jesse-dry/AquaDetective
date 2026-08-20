@@ -31,3 +31,15 @@ def station_eem(station_id: str, event_id: str | None = None, seed: int = 7):
     if not any(s["id"] == station_id for s in ws["stations"]):
         raise HTTPException(404, "断面不存在")
     return tools.observed_eem_at(get_db_path(), ws, station_id, event_id, seed=seed)
+
+
+@router.get("/watershed/enterprises/{ent_id}/eem")
+def enterprise_eem(ent_id: str):
+    """企业档案 EEM:由指纹库光谱峰参数确定性合成(与现场 EEM 同网格)。"""
+    from ..engine.fingerprint import LEX, LEM, synthesize_eem
+    ws = get_watershed()
+    fp = next((f for f in ws["fingerprints"] if f["enterprise_id"] == ent_id), None)
+    if not fp:
+        raise HTTPException(404, "指纹不存在")
+    eem = synthesize_eem(fp["spectrum"])
+    return {"lex": LEX.tolist(), "lem": LEM.tolist(), "eem": eem.tolist()}

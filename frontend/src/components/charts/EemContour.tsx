@@ -11,9 +11,10 @@ export function EemContour({ title, eem }: { title: string; eem: EemMatrix | nul
     const chart = echarts.init(ref.current)
     const data: [number, number, number][] = []
     let max = 0
+    // 后端矩阵方向:eem[i][j],i = lex 行,j = lem 列
     eem.eem.forEach((row, i) =>
       row.forEach((v, j) => {
-        data.push([eem.lex[j], eem.lem[i], v])
+        data.push([eem.lex[i], eem.lem[j], v])
         if (v > max) max = v
       }),
     )

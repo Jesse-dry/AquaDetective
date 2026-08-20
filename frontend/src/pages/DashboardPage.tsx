@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useWatershedStore } from '../store/watershedStore'
 import { useUiStore } from '../store/uiStore'
 import { WatershedMap } from '../components/map/WatershedMap'
+import { DispersionLayer } from '../components/map/DispersionLayer'
 import { AlertList } from '../components/alert/AlertList'
 import { ReasoningPanel } from '../components/reasoning/ReasoningPanel'
 import { SeriesChart } from '../components/charts/SeriesChart'
@@ -39,8 +40,9 @@ export function DashboardPage() {
         <aside className="min-h-0 rounded-lg border border-edge bg-ink">
           <AlertList />
         </aside>
-        <section className="min-h-0">
+        <section className="relative min-h-0">
           <WatershedMap />
+          <DispersionLayer />
         </section>
         <aside className="min-h-0 rounded-lg border border-edge bg-ink">
           <ReasoningPanel />

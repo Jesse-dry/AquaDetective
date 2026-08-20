@@ -5,6 +5,7 @@ import { useWatershedStore } from '../../store/watershedStore'
 import { useAlertStore } from '../../store/alertStore'
 import { useUiStore } from '../../store/uiStore'
 import { useInvestigationStore } from '../../store/investigationStore'
+import { usePlaybackStore } from '../../store/playbackStore'
 
 // 流域底图:空白深色样式 + GeoJSON 绘制节点/边/断面/企业
 // 坐标直接使用契约 (x, y) 平面坐标,fitBounds 自适应
@@ -23,6 +24,8 @@ export function WatershedMap() {
   const events = useAlertStore((s) => s.events)
   const conclusion = useInvestigationStore((s) => s.conclusion)
   const selectStation = useUiStore((s) => s.selectStation)
+  const playbackActive = usePlaybackStore((s) => s.active)
+  const playbackHeat = usePlaybackStore((s) => s.heat)
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
@@ -62,10 +65,13 @@ export function WatershedMap() {
     const stationFeatures = watershed.stations.flatMap((s) => {
       const n = nodeById.get(s.node_id)
       if (!n) return []
+      // 扩散回放中携带热力值(触发 heat 着色),平时不带
+      const properties: Record<string, unknown> = { id: s.id, alert: openStationIds.has(s.id) }
+      if (playbackActive) properties.heat = playbackHeat[s.id] ?? 0
       return [{
         type: 'Feature' as const,
         geometry: { type: 'Point' as const, coordinates: [n.x, n.y] },
-        properties: { id: s.id, alert: openStationIds.has(s.id) },
+        properties,
       }]
     })
 
@@ -113,12 +119,18 @@ export function WatershedMap() {
           id: 'nodes', type: 'circle', source: 'nodes',
           paint: { 'circle-radius': 3, 'circle-color': '#334155' },
         })
-        // 断面状态着色:绿正常/红告警
+        // 断面着色:回放模式按浓度热力(绿→黄→红),平时按告警状态(绿/红)
         map.addLayer({
           id: 'stations', type: 'circle', source: 'stations',
           paint: {
             'circle-radius': 7,
-            'circle-color': ['case', ['get', 'alert'], '#ef4444', '#22c55e'],
+            'circle-color': [
+              'case',
+              ['has', 'heat'],
+              ['interpolate', ['linear'], ['get', 'heat'],
+                0, '#22c55e', 0.4, '#eab308', 0.75, '#f97316', 1, '#ef4444'],
+              ['case', ['get', 'alert'], '#ef4444', '#22c55e'],
+            ],
             'circle-stroke-width': 2,
             'circle-stroke-color': '#e2e8f0',
           },
@@ -160,7 +172,7 @@ export function WatershedMap() {
     else map.once('load', initLayers)
     // 数据更新(告警/结论变化)时只更新 source
     return () => {}
-  }, [watershed, events, conclusion, selectStation])
+  }, [watershed, events, conclusion, selectStation, playbackActive, playbackHeat])
 
   return <div ref={containerRef} className="h-full w-full rounded-lg border border-edge" />
 }

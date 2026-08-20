@@ -17,3 +17,7 @@ export const getStationEem = (stationId: string, eventId?: string) =>
     `/stations/${stationId}/eem${eventId ? `?event_id=${eventId}` : ''}`,
     'eem.json',
   )
+
+// GET /watershed/enterprises/{id}/eem 企业档案 EEM(与现场同网格,并排对比用)
+export const getEnterpriseEem = (entId: string) =>
+  apiGet<EemMatrix>(`/watershed/enterprises/${entId}/eem`, 'eem_enterprise.json')

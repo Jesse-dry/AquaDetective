@@ -154,10 +154,10 @@ export type WsMessage =
 
 // ---------- EEM ----------
 export interface EemMatrix {
-  lex: number[] // 激发波长轴
-  lem: number[] // 发射波长轴
-  eem: number[][] // eem[i][j],i 对应 lem 行,j 对应 lex 列
-  dominant?: string // 权重最大企业 id
+  lex: number[] // 激发波长轴(61 点)
+  lem: number[] // 发射波长轴(71 点)
+  eem: number[][] // eem[i][j],i 对应 lex 行,j 对应 lem 列
+  dominant?: string // 权重最大企业 id(仅现场 EEM 返回)
 }
 
 // ---------- /recordings ----------
