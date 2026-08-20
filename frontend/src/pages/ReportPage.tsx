@@ -28,7 +28,7 @@ export function ReportPage() {
         {error && <p className="text-danger">报告加载失败:{error}</p>}
         {!markdown && !error && <p className="text-slate-500">加载中…</p>}
         {markdown && (
-          <article className="prose prose-invert max-w-none rounded-lg border border-edge bg-panel p-6 print:border-0 print:bg-white print:p-0 prose-headings:text-slate-100 print:prose-headings:text-black">
+          <article className="report-markdown rounded-lg border border-edge bg-panel p-6">
             <ReactMarkdown>{markdown}</ReactMarkdown>
           </article>
         )}

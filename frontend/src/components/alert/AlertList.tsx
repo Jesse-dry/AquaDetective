@@ -4,6 +4,7 @@ import { useInvestigationStore } from '../../store/investigationStore'
 import { usePlaybackStore } from '../../store/playbackStore'
 import { useWatershedStore } from '../../store/watershedStore'
 import { startInvestigation } from '../../api/events'
+import { getInvestigation } from '../../api/investigate'
 import { IS_MOCK } from '../../api/client'
 import { MockStream } from '../../ws/mockStream'
 import { InvestigationConnection } from '../../ws/connection'
@@ -49,6 +50,12 @@ export function AlertList() {
     const conn = new InvestigationConnection(investigation_id, {
       onMessage: inv.applyMessage,
       onStatus: inv.setConnStatus,
+      // 重连成功后用 REST 补齐全量 stream(step_id 去重保证不重复)
+      onReconnect: () => {
+        getInvestigation(investigation_id)
+          .then((full) => full.stream?.forEach(inv.applyMessage))
+          .catch(() => {})
+      },
     })
     activeConn = conn
     conn.connect()

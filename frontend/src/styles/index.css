@@ -2,9 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 打印样式:报告导出 PDF 时白底、隐藏交互元素 */
+/* 报告 Markdown 渲染样式(不引入 typography 插件,打印时转白底黑字) */
+.report-markdown {
+  @apply text-sm leading-relaxed text-slate-200;
+}
+.report-markdown h1 {
+  @apply mb-4 text-xl font-bold text-slate-100;
+}
+.report-markdown h2 {
+  @apply mb-2 mt-5 border-b border-edge pb-1 text-base font-semibold text-accent;
+}
+.report-markdown h3 {
+  @apply mb-1 mt-3 text-sm font-semibold text-slate-100;
+}
+.report-markdown p {
+  @apply mb-2;
+}
+.report-markdown ul,
+.report-markdown ol {
+  @apply mb-2 list-inside pl-2;
+}
+.report-markdown ul {
+  @apply list-disc;
+}
+.report-markdown ol {
+  @apply list-decimal;
+}
+.report-markdown table {
+  @apply mb-3 w-full border-collapse text-xs;
+}
+.report-markdown th,
+.report-markdown td {
+  @apply border border-edge px-2 py-1 text-left;
+}
+.report-markdown th {
+  @apply bg-edge/40 text-slate-100;
+}
+.report-markdown strong {
+  @apply text-slate-100;
+}
+.report-markdown code {
+  @apply rounded bg-edge/50 px-1 text-xs;
+}
+
+/* 打印样式:报告导出 PDF 时白底黑字、隐藏交互元素 */
 @media print {
   body {
     background: #fff;
+  }
+  .report-markdown {
+    @apply border-0 bg-white p-0 text-black;
+  }
+  .report-markdown h1,
+  .report-markdown h2,
+  .report-markdown h3,
+  .report-markdown strong {
+    @apply text-black;
+  }
+  .report-markdown h2 {
+    @apply border-slate-300 text-slate-800;
+  }
+  .report-markdown th,
+  .report-markdown td {
+    @apply border-slate-300;
+  }
+  .report-markdown th {
+    @apply bg-slate-100 text-black;
+  }
+  .report-markdown code {
+    @apply bg-slate-100;
   }
 }
