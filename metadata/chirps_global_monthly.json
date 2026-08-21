@@ -1,0 +1,18 @@
+{
+  "dataset_id": "chirps_global_monthly",
+  "name": "CHIRPS v2.0 全球逐月降雨栅格(2007–2015,太湖流域裁剪)",
+  "provider": "UCSB Climate Hazards Center(美国地质调查局/加州大学圣巴巴拉分校)",
+  "source_url": "https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_monthly/tifs/",
+  "license": "公共领域(CC0,可自由使用,需引用)",
+  "citation": "Funk, C. et al. (2015): The climate hazards infrared precipitation with stations. Scientific Data, 2, 150066. DOI: 10.1038/sdata.2015.66",
+  "retrieved_at": "2026-08-21",
+  "region": "原始为全球 50°S–50°N;已裁剪太湖流域外包框 119.0–121.2°E / 30.4–31.8°N",
+  "time_range": ["2007-01", "2015-12"],
+  "frequency": "monthly",
+  "station_count": null,
+  "parameters": ["降水量(月累计, mm/月)"],
+  "coordinate_system": "WGS84 (EPSG:4326), 0.05° 分辨率",
+  "format": "GeoTIFF (.tif.gz)",
+  "sha256": "见 data/raw/chirps_global_monthly/SHA256SUMS.txt(108 个文件逐一登记)",
+  "notes": "108 个月度文件共 1.5 GB,全部 gzip 完整性校验通过。裁剪结果 data/interim/chirps_global_monthly/:每月 28×44 像元(有效 1226 个)GeoTIFF + taihu_monthly_rainfall.csv(区域月均序列,18.0~455.3 mm,梅雨季峰值合理)。与太湖理化数据集(2007–2015)时间范围完全重叠,满足'与水质时间范围重叠'要求。日频版本(CHIRPS daily)同站可下,如需小流域降雨-径流分析可后续补充。"
+}

@@ -1,0 +1,18 @@
+{
+  "dataset_id": "hydrorivers_v10_as",
+  "name": "HydroRIVERS v10 亚洲河网矢量数据(太湖流域裁剪)",
+  "provider": "HydroSHEDS (WWF/USGS 等联合项目)",
+  "source_url": "https://www.hydrosheds.org/products/hydrorivers",
+  "license": "HydroSHEDS 免费许可(科研与非商业用途免费,需引用;见站内 License Agreement)",
+  "citation": "Lehner, B., Grill, G. (2013): Global river hydrography and network routing. Ecohydrological Processes. 数据: https://www.hydrosheds.org/products/hydrorivers",
+  "retrieved_at": "2026-08-21",
+  "region": "原始为亚洲全域;已裁剪太湖流域外包框 119.0–121.2°E / 30.4–31.8°N",
+  "time_range": ["静态数据", "静态数据"],
+  "frequency": "static",
+  "station_count": null,
+  "parameters": ["HYRIV_ID", "NEXT_DOWN(下游拓扑)", "MAIN_RIV", "LENGTH_KM", "DIST_DN_KM", "DIST_UP_KM", "CATCH_SKM", "UPLAND_SKM", "DIS_AV_CMS(多年平均流量)", "ORD_STRA/ORD_CLAS/ORD_FLOW(河序)", "HYBAS_L12"],
+  "coordinate_system": "WGS84 (EPSG:4326)",
+  "format": "SHP (zip)",
+  "sha256": "29780b0a75f90024f22e7e2029e5e3045f7325cda0528db65c5cc4c864b98525",
+  "notes": "原始文件 data/raw/hydrorivers_v10_as/HydroRIVERS_v10_as_shp.zip(90,510,995 字节,与官方 content-length 一致,zip 完整性校验通过,含技术文档 PDF)。裁剪结果 data/interim/hydrorivers_taihu_bbox.shp:2082 个河段,估算河长合计约 8389 km。NEXT_DOWN 字段直接支撑上下游拓扑溯源;DIS_AV_CMS 可作流量先验。静态河网无时间维度。许可证:科研/非商业免费使用,商业用途需联系 HydroSHEDS。"
+}

@@ -2,3 +2,7 @@
 *.bundle
 .DS_Store
 CLAUDE.md
+中国数据获取指南.md
+# 大体量原始数据本地留存,不入库(元数据与裁剪结果照常提交)
+data/raw/hydrorivers_v10_as/
+data/raw/chirps_global_monthly/
