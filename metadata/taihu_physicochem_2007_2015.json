@@ -1,0 +1,21 @@
+{
+  "dataset_id": "taihu_physicochem_2007_2015",
+  "name": "2007–2015年太湖水体理化监测数据集",
+  "provider": "中国科学院南京地理与湖泊研究所 太湖湖泊生态系统研究站(Science Data Bank 发布)",
+  "source_url": "https://www.scidb.cn/en/detail?dataSetId=633694461355884546",
+  "license": "CC BY 4.0",
+  "citation": "闵屾, 钱荣树, 朱广伟, 等. 2007–2015年太湖水体理化监测数据集[DS/OL]. Science Data Bank, 2019. DOI: 10.11922/sciencedb.833; CSTR: 31253.11.sciencedb.833; 数据论文: 中国科学数据, 2020, 5(1). DOI: 10.11922/csdata.2019.0037.zh",
+  "retrieved_at": "2026-08-21",
+  "region": "太湖湖体(8 个长期常规监测站点:THL00/THL01/THL03/THL04/THL05/THL06/THL07/THL08)",
+  "time_range": ["2007-01", "2015-12"],
+  "frequency": "monthly",
+  "station_count": 8,
+  "parameters": [
+    "透明度", "水深", "水温", "电导率", "悬浮质", "溶解氧", "pH", "硅酸盐",
+    "磷酸盐", "亚硝酸盐氮", "硝酸盐氮", "氨态氮", "化学需氧量", "总磷", "总氮", "溶解性总有机碳"
+  ],
+  "coordinate_system": "未知(站点坐标见数据论文 DOI: 10.11922/csdata.2019.0037.zh)",
+  "format": "XLSX",
+  "sha256": "afda92d34ea9d4711a401e746065c6dfb2902846a95b919658a6b40a7934180a",
+  "notes": "原始文件 data/raw/taihu_physicochem_2007_2015/D06E70D3-E0EB-411E-8D42-81E0BF890A7E.xlsx(172,534 字节),MD5 4f2494b4105980cbb0f14bd0dc477663 与官方公布一致,文件真实性已校验。下载需注册 ScienceDB 账号(免费),由人工登录后下载。实测内容:Sheet1 共 864 行 × 21 列,2007-01 至 2015-12 逐月,8 站点(无 THL02),关键指标(水深/溶解氧/pH)零缺失,含单位表头与备注列。注意:为湖体站点月频数据,不满足'10 断面+日频'的主数据集门槛,按评分(74 分)定位为补充/对标数据,适合趋势分析与季节基线验证,不作为突发污染预警的唯一依据。"
+}
