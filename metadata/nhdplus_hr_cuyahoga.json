@@ -1,0 +1,29 @@
+{
+  "dataset_id": "nhdplus_hr_cuyahoga",
+  "name": "NHDPlus High Resolution — Cuyahoga HU4 0411 (含 HUC8 04110002) 河网",
+  "provider": "USGS + US EPA (NHDPlus High Resolution)",
+  "source_url": "https://www.epa.gov/waterdata/nhdplus-high-resolution",
+  "download_url": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Hydrography/NHDPlusHR/Beta/GDB/NHDPLUS_H_0411_HU4_GDB.zip",
+  "license": "公有领域 (USGS/EPA public domain)",
+  "citation": "USGS & EPA, NHDPlus High Resolution (Beta)",
+  "retrieved_at": "2026-08-21",
+  "region": "美国俄亥俄州 Cuyahoga River 流域，HU4 0411（覆盖 HUC8 04110002 全流域）",
+  "time_range": ["静态数据", "静态数据"],
+  "frequency": "n/a (静态河网)",
+  "station_count": 0,
+  "parameters": [
+    "COMID (通用河段标识)", "上下游连接 (FromNode/ToNode)", "河段长度", "流向",
+    "汇水区 (Catchment)", "流量线 (Flowline)"
+  ],
+  "coordinate_system": "NAD83 (File Geodatabase 内为地理/投影坐标，需在读取时确认具体 CRS)",
+  "format": "File Geodatabase (GDB) → zip",
+  "files": [
+    {
+      "path": "data/raw/nhdplus_hr_cuyahoga/NHDPLUS_H_0411_HU4_GDB.zip",
+      "description": "Cuyahoga HU4 0411 河网 File Geodatabase（Flowline/Catchment 等要素类，zip 完整性校验通过）",
+      "size_bytes": 49018294,
+      "sha256": "eeb69d7349d1e6fe610b818bf6f9d55a4aa052bb0b171bbceee65525b42cff19"
+    }
+  ],
+  "notes": "NHDPlus HR 按 HU4（4 位 HUC）打包，S3 前缀 StagedProducts/Hydrography/NHDPlusHR/Beta/GDB/NHDPLUS_H_0411_*。同目录另有 RASTER.7z（597 MB 高程栅格，本期未下载）。File Geodatabase 为 Esri 专有格式，Python 侧可用 geopandas/pyogrio（GDAL OpenFileGDB 驱动）读取。下载源为 Beta 版本（Last-Modified 2023-12-20）。\n\n导入结果（scripts/build_flow_network.py）：NHDFlowline（几何，EPSG:4269）经 NHDPlusID 关联 NHDPlusFlowlineVAA（FromNode/ToNode 拓扑），得 17915 条网络河段（Enabled=1）。2233 个站点（WQP 1890 / USGS 112 / ECHO 231）坐标吸附到最近河段 COMID，2131 个 ≤500m、102 个 >500m。拓扑图 17549 节点 / 17719 有向边（FromNode→ToNode 为水流方向）。产物见 data/interim/nhdplus_hr_cuyahoga/（flowlines.geojson、sites_snapped.csv）与 data/processed/cuyahoga_network/（flow_edges.csv、flow_network.pkl、stations_upstream_facilities.csv）。"
+}
