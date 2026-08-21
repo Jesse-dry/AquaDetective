@@ -1,0 +1,42 @@
+{
+  "dataset_id": "usgs_nwis_cuyahoga",
+  "name": "USGS NWIS 逐日值 — Cuyahoga River 流域 (HUC8 04110002) 流量/水位/水温",
+  "provider": "USGS (U.S. Geological Survey, National Water Information System)",
+  "source_url": "https://waterservices.usgs.gov/nwis/",
+  "api_query": "https://waterservices.usgs.gov/nwis/dv/?format=rdb&sites=<112站>&parameterCd=00060,00065,00010&startDT=2018-01-01&endDT=2024-12-31&siteStatus=all",
+  "license": "公有领域 (USGS public domain)",
+  "citation": "U.S. Geological Survey, National Water Information System",
+  "retrieved_at": "2026-08-21",
+  "region": "美国俄亥俄州 Cuyahoga River 流域，HUC8 04110002",
+  "time_range": ["2018-01-01", "2024-12-31"],
+  "frequency": "daily",
+  "station_count": 112,
+  "parameters": [
+    { "code": "00060", "name": "Discharge (流量)", "unit": "cfs (ft³/s)", "rows": 41043 },
+    { "code": "00065", "name": "Gage height (水位)", "unit": "ft", "rows": 3967 },
+    { "code": "00010", "name": "Water temperature (水温)", "unit": "deg C", "rows": 3967 }
+  ],
+  "coordinate_system": "NAD83 (十进制度经纬度)；高程基准 NADV88/NGVD29 混杂",
+  "format": "RDB (tab-delimited)",
+  "files": [
+    {
+      "path": "data/raw/usgs_nwis_cuyahoga/site_inventory.rdb",
+      "description": "112 个地表水测站清单（站号/名称/经纬度/HUC8），已过滤具备 00060/00065/00010 任一参数的站点",
+      "size_bytes": 13069,
+      "sha256": "7ecaa8b78565493eff792e9fa4fcadcc4559cddf9bbfe3596479d4ce3d65b3b1"
+    },
+    {
+      "path": "data/raw/usgs_nwis_cuyahoga/daily_values_2018_2024.rdb",
+      "description": "2018–2024 逐日值，44306 行（含质量标志列 *_cd，如 A:e 表示日值已批准）",
+      "size_bytes": 1599277,
+      "sha256": "0d3f64864e0bab1989be456445da49faf10231bc046e303506ef2986c8f4b2c4"
+    },
+    {
+      "path": "data/raw/usgs_nwis_cuyahoga/site_numbers.txt",
+      "description": "112 个站号（逗号分隔，供复现 dv 查询用）",
+      "size_bytes": 1401,
+      "sha256": null
+    }
+  ],
+  "notes": "RDB 输出按站点分块，列名为 {内部记录号}_{parm_cd}_{统计码}，需按 parm_cd 解析（列名后缀 00060/00065/00010）。数据含日值质量标志（A=批准、P=临时、e=估计）。112 站中多数有流量 (00060)，水位/水温 (00065/00010) 仅部分站点具备（约 3967 行）。主河道代表性站点：Cuyahoga River at Hiram Rapids (04202000)、at Old Portage (04206000)、at Independence (04208000) 等。"
+}

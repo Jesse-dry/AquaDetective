@@ -1,0 +1,67 @@
+{
+  "dataset_id": "epa_echo_cuyahoga",
+  "name": "EPA ECHO ICIS-NPDES 设施 + DMR 排放记录 — Cuyahoga River 流域 (HUC8 04110002)",
+  "provider": "US EPA ECHO (Enforcement and Compliance History Online)",
+  "source_url": "https://echodata.epa.gov/echo/ (REST API) / https://echo.epa.gov/tools/data-downloads",
+  "api_query": "https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?output=JSON&p_huc=04110002",
+  "license": "公有领域 (US EPA public domain)",
+  "citation": "U.S. EPA ECHO (https://echo.epa.gov/)",
+  "retrieved_at": "2026-08-21",
+  "region": "美国俄亥俄州 Cuyahoga River 流域，HUC8 04110002",
+  "time_range": ["2007-01-01", "2026-08-16"],
+  "frequency": "facilities=静态快照；DMR=逐设施逐报告期排放自监测记录",
+  "station_count": 231,
+  "parameters": [
+    "设施名称 (CWPName)", "NPDES 许可编号 (SourceID/EXTERNAL_PERMIT_NMBR)", "街道/城市/县",
+    "经纬度 (FacLat/FacLong)", "许可状态 (CWPPermitStatusDesc)",
+    "DMR 污染物：Solids/Nitrogen/BOD/pH/Flow/Temperature/Phosphorus/Turbidity/E.coli/Mercury 等",
+    "限值 (LIMIT_VALUE_NMBR/LIMIT_VALUE_STANDARD_UNITS)", "监测周期 (MONITORING_PERIOD_END_DATE)"
+  ],
+  "coordinate_system": "WGS84 (FacLat/FacLong 十进制度)",
+  "format": "JSON (设施) / CSV (DMR+LIMITS)",
+  "files": [
+    {
+      "path": "data/raw/epa_echo_cuyahoga/facilities_huc04110002.json",
+      "description": "HUC8 04110002 内 231 个 NPDES 设施（名称/许可号/经纬度 FacLat+FacLong/许可状态）",
+      "size_bytes": 149110,
+      "sha256": "cda830e4409eda1e72810ea1e6f6e5c14e2b9756adf402a0348ae1e8594fc177"
+    },
+    {
+      "path": "data/raw/epa_echo_cuyahoga/cuyahoga_npdes_ids.txt",
+      "description": "231 个 NPDES SourceID 清单（供 DMR/LIMITS 过滤与复现用）",
+      "size_bytes": 2539,
+      "sha256": "5bf84af35ef902c40d01443846181b32909f6b3f93af49780a18ba1c683010f7"
+    },
+    {
+      "path": "data/raw/epa_echo_cuyahoga/OH_FY2024_NPDES_DMRS_LIMITS.zip",
+      "description": "俄亥俄州全州 FY2024 DMR+LIMITS 原始 zip（解压后 DMRS 465MB / LIMITS 71MB）",
+      "size_bytes": 34868616,
+      "sha256": "d5789444dbfdbcc9b5290d68ea27d5394ba6bba6fcc7cb989df718068d7ad820"
+    },
+    {
+      "path": "data/raw/epa_echo_cuyahoga/OH_FY2024_NPDES_DMRS_cuyahoga_huc8.csv",
+      "description": "过滤到 HUC8 的 231 设施的 FY2024 DMR 排放记录，56239 行 / 138 个许可",
+      "size_bytes": 15744997,
+      "sha256": "57afd265ec9fbefbe60b6f9fc215d3c1e07af91adea0bb226dccf1aec41650ef"
+    },
+    {
+      "path": "data/raw/epa_echo_cuyahoga/OH_FY2024_NPDES_LIMITS_cuyahoga_huc8.csv",
+      "description": "过滤到 HUC8 的 FY2024 许可限值，8684 行",
+      "size_bytes": 2346240,
+      "sha256": "2c6a478684a2469d8aeef23951a24d0ee3946c0d272dd88817af80907eef51c7"
+    },
+    {
+      "path": "data/raw/epa_echo_cuyahoga/OH_NPDES_EFF_VIOLATIONS.zip",
+      "description": "俄亥俄州全州排放违规原始 zip（解压后 288 MB CSV）",
+      "size_bytes": 54464449,
+      "sha256": "8e05b983e11841e7856fb886880d0e4d47701a221de153e0dc6be69f7d345a9d"
+    },
+    {
+      "path": "data/raw/epa_echo_cuyahoga/OH_NPDES_EFF_VIOLATIONS_cuyahoga_huc8.csv",
+      "description": "过滤到 HUC8 的排放违规记录，39425 行（NPDES_ID 关联 231 设施）",
+      "size_bytes": 11650578,
+      "sha256": "15b3c5b2e02a2e361240ff3eacbce46093a2f035bf266852eb9fe5a4d8f3b9dd"
+    }
+  ],
+  "notes": "get_facilities 返回汇总统计 (QueryRows=231) 与 QueryID，用 get_qid?qid=<id> 获取完整设施列表。注意：get_qid/get_facility_info 默认只返回约 25 字段且不含经度 FacLong，需用 get_facility_info?p_huc=04110002&qcolumns=2,24,25 显式请求（FacLat=24、FacLong=25）。DMR 为俄亥俄州全州文件，经 scripts/filter_dmr_cuyahoga.py 按 EXTERNAL_PERMIT_NMBR=SourceID 流式过滤到 HUC8 的 231 设施；违规记录经 scripts/filter_violations_cuyahoga.py 按 NPDES_ID 过滤。231 个设施中 138 个在 FY2024 有 DMR 记录（其余为无排放/次要/非点源类）。DMR 超许可与违规记录只能作为候选证据，不能直接当作下游污染真值（见指南 §4.3）。州文件命名模式：OH_FY<财年>_NPDES_DMRS_LIMITS.zip、OH_NPDES_EFF_VIOLATIONS.zip。"
+}

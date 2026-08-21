@@ -2,3 +2,6 @@
 *.bundle
 .DS_Store
 CLAUDE.md
+
+# 公开基准数据（大文件，凭 metadata/ 的 SHA256 + 下载 URL 复现，不入库）
+data/

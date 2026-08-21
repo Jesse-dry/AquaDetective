@@ -1,0 +1,50 @@
+{
+  "dataset_id": "usgs_wqp_cuyahoga",
+  "name": "Water Quality Portal — Cuyahoga River watershed (HUC8 04110002)",
+  "provider": "USGS + EPA + 各州环保局 (Water Quality Portal 聚合)",
+  "source_url": "https://www.waterqualitydata.us/",
+  "api_query": "https://www.waterqualitydata.us/data/Result/search?huc=04110002&siteType=Stream&siteType=Lake,%20Reservoir,%20Impoundment&startDateLo=01-01-2018&startDateHi=12-31-2024&mimeType=csv",
+  "license": "美国联邦数据为公有领域 (public domain)；个别州/机构提供方可能有附加使用条款，需逐项核对",
+  "citation": "Water Quality Portal (https://www.waterqualitydata.us/)",
+  "retrieved_at": "2026-08-21",
+  "region": "美国俄亥俄州 Cuyahoga River 流域，HUC8 04110002",
+  "time_range": ["2018-01-01", "2024-12-31"],
+  "frequency": "variable (传感器高频 + 手工采样，日频至季度不等)",
+  "station_count": 1889,
+  "station_count_with_results_2018_2024": 222,
+  "parameters": [
+    "pH", "Dissolved oxygen (DO)", "Temperature", "Conductivity/Specific conductance",
+    "Nitrate", "Nitrite", "Ammonia and ammonium", "Phosphorus", "Orthophosphate",
+    "Turbidity", "Total dissolved solids", "Salinity", "Suspended sediment", "Chloride"
+  ],
+  "parameters_total_distinct": 530,
+  "coordinate_system": "WGS84 / NAD83 (依提供方而异，均为十进制度经纬度)",
+  "format": "CSV",
+  "files": [
+    {
+      "path": "data/raw/usgs_wqp_cuyahoga/station_huc04110002.csv",
+      "description": "全站点清单（所有站型，含地下水井），2650 行",
+      "size_bytes": 648841,
+      "sha256": "001e17ea460b386aafca2f093648e80f01baf18c369e1bad2c4c5bbc2f48c570"
+    },
+    {
+      "path": "data/raw/usgs_wqp_cuyahoga/station_surface_water.csv",
+      "description": "地表水站点清单 (Stream + Lake/Reservoir/Impoundment)，1889 站点",
+      "size_bytes": 444401,
+      "sha256": "b0761409121b4a6c4c295f5b31986858089644a33cd7c4d63d80d270d4c48867"
+    },
+    {
+      "path": "data/raw/usgs_wqp_cuyahoga/result_2018_2024.csv",
+      "description": "2018–2024 地表水观测结果，76755 行 / 222 站点 / 530 特征",
+      "size_bytes": 40782869,
+      "sha256": "85219343a560618b8fb0107ef43f3ba7cee7340afaa1d1fba226bae4565d7d40"
+    },
+    {
+      "path": "data/raw/usgs_wqp_cuyahoga/result_2023_sample.csv",
+      "description": "2023 年快速查看样例，1162 行 / 40 站点",
+      "size_bytes": 392605,
+      "sha256": "4290d99f152a1415c43d357ce56399c900b4da7ce5d3d5dfc5aa7df8f89cbeab"
+    }
+  ],
+  "notes": "主字段：CharacteristicName(列32)、ResultMeasureValue(列34)、单位(列35)、ActivityStartDate(列7)、MonitoringLocationIdentifier(列22)、ResultDetectionConditionText(列31，含检出限/非检出)、SampleCollectionMethod(列29-30)。含质量标志 (ResultStatusIdentifier)。各站点采样频率差异大：连续传感器站（pH/DO/水温/电导）为高频，营养盐为手工月/季采样。NARS/GLNPO 等全国性项目站点为轮换抽样，跨年覆盖不稳定。"
+}
