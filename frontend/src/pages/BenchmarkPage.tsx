@@ -3,6 +3,7 @@ import type { PollutionEvent } from '../types'
 import { getEvents } from '../api/events'
 import { getRecordings, getInvestigation } from '../api/investigate'
 import { useWatershedStore } from '../store/watershedStore'
+import { RealDataValidation } from '../components/charts/RealDataValidation'
 
 // 真实数据对标页(W5):本系统验证结果 + 行业真实落地案例
 // 声明:演示流域为模拟数据,真实数据仅用于算法验证
@@ -85,7 +86,7 @@ export function BenchmarkPage() {
       <div className="mx-auto max-w-4xl space-y-6">
         <h1 className="text-lg font-bold">📊 真实数据对标</h1>
         <p className="rounded-lg border border-warn/50 bg-warn/10 p-3 text-sm text-warn">
-          声明:演示流域(清源河)为模拟数据;本页真实案例仅用于说明算法与行业落地技术同源。
+          声明:演示流域(清源河)为模拟数据;②节验证使用真实太湖国控断面公开数据(2021–2025),③节真实案例仅用于说明算法与行业落地技术同源。
         </p>
 
         <section>
@@ -129,8 +130,10 @@ export function BenchmarkPage() {
           </p>
         </section>
 
+        <RealDataValidation />
+
         <section>
-          <h2 className="mb-2 text-sm font-semibold text-slate-300">② 行业真实落地案例(技术同源背书)</h2>
+          <h2 className="mb-2 text-sm font-semibold text-slate-300">③ 行业真实落地案例(技术同源背书)</h2>
           <div className="grid grid-cols-2 gap-3">
             {REAL_CASES.map((c) => (
               <div key={c.place} className="rounded-lg border border-edge bg-panel p-4">
@@ -143,7 +146,7 @@ export function BenchmarkPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-sm font-semibold text-slate-300">③ 核心原理</h2>
+          <h2 className="mb-2 text-sm font-semibold text-slate-300">④ 核心原理</h2>
           <p className="rounded-lg border border-edge bg-panel p-4 text-xs leading-relaxed text-slate-400">
             不同行业废水具有特征性三维荧光光谱(EEM)——如同"水质指纹"。本系统与清华苏州环境
             创新研究院落地技术同源:为每个污染源企业建立"光谱指纹 + 特征污染物比例"双指纹档案,

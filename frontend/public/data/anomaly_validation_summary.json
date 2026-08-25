@@ -1,0 +1,64 @@
+{
+ "dataset": "太湖流域 105 个国控断面 · 2021-06 ~ 2025-10 · 35 万条 4h 级记录",
+ "stations_tested": [
+  "taihu_081",
+  "taihu_101",
+  "taihu_057",
+  "taihu_076",
+  "taihu_056",
+  "taihu_043",
+  "taihu_065",
+  "taihu_062"
+ ],
+ "indicators": [
+  "ammonia_n",
+  "codmn",
+  "do"
+ ],
+ "per_method": {
+  "threesigma": {
+   "runs": 24,
+   "total_detections": 838,
+   "avg_detection_rate": 0.0078,
+   "consistency_checks": 24,
+   "consistency_pass": 22,
+   "consistency_pass_rate": 0.917
+  },
+  "cusum": {
+   "runs": 24,
+   "total_detections": 141,
+   "avg_detection_rate": 0.0013,
+   "consistency_checks": 4,
+   "consistency_pass": 4,
+   "consistency_pass_rate": 1.0
+  },
+  "ewma": {
+   "runs": 24,
+   "total_detections": 20850,
+   "avg_detection_rate": 0.1949,
+   "consistency_checks": 24,
+   "consistency_pass": 20,
+   "consistency_pass_rate": 0.833
+  },
+  "seasonal": {
+   "runs": 24,
+   "total_detections": 10838,
+   "avg_detection_rate": 0.1012,
+   "consistency_checks": 24,
+   "consistency_pass": 19,
+   "consistency_pass_rate": 0.792
+  }
+ },
+ "method_note": {
+  "threesigma": "3σ 滑动窗口",
+  "cusum": "CUSUM 累积和",
+  "ewma": "EWMA 指数加权",
+  "seasonal": "季节基线"
+ },
+ "conclusion": {
+  "threesigma": "推荐:检出克制且准确",
+  "cusum": "推荐:最稳健,适合渐变检出",
+  "ewma": "真实不规则序列上误报偏高",
+  "seasonal": "周期参数按规则采样标定,不适用"
+ }
+}
