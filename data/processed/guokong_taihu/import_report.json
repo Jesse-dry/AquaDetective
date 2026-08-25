@@ -1,0 +1,27 @@
+{
+  "source": "data/interim/guokong_surface_water_2021_2025/taihu_basin_4h_2021_2025.csv.gz",
+  "rows_in": 382961,
+  "rows_out": 350076,
+  "dropped_unparseable_ts": 0,
+  "dropped_duplicates": 32885,
+  "station_count": 105,
+  "time_range": [
+    "2021-06-17T04:00:00+08:00",
+    "2025-10-10T08:00:00+08:00"
+  ],
+  "nan_rate_by_indicator": {
+    "temperature": 0.0325,
+    "ph": 0.0327,
+    "do": 0.0334,
+    "conductivity": 0.034,
+    "turbidity": 0.0355,
+    "codmn": 0.0533,
+    "ammonia_n": 0.044,
+    "tp": 0.0458,
+    "tn": 0.0534,
+    "chla": 0.8955,
+    "algae_density": 0.9124
+  },
+  "timezone": "UTC+8",
+  "notes": "codmn=高锰酸盐指数,非 COD;chla/algae_density 多为空(仅湖库站测量);时间戳空值已用文件名抓取时刻回退。"
+}
