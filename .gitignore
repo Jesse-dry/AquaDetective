@@ -7,4 +7,4 @@ CLAUDE.md
 data/raw/hydrorivers_v10_as/
 data/raw/chirps_global_monthly/
 data/raw/guokong_surface_water_2021_2025/
-data/interim/guokong_surface_water_2021_2025/
+data/interim/guokong_surface_water_2021_2025/data/raw/cnemc_surface_water_realtime/archive/
