@@ -26,6 +26,13 @@ export function AlertList() {
   const loadPlayback = usePlaybackStore((s) => s.load)
   const stationIds = useWatershedStore((s) => s.data?.stations.map((st) => st.id) ?? [])
 
+  // 按事件序号正序展示(事件1 在前),后端默认按发生时间倒序
+  const sortedEvents = [...events].sort((a, b) => {
+    const na = Number(a.id.match(/(\d+)/)?.[1] ?? 0)
+    const nb = Number(b.id.match(/(\d+)/)?.[1] ?? 0)
+    return na - nb
+  })
+
   useEffect(() => {
     refresh()
     const timer = setInterval(refresh, 30_000)
@@ -63,10 +70,10 @@ export function AlertList() {
   return (
     <div className="flex h-full flex-col gap-2 overflow-y-auto p-3">
       <h2 className="text-sm font-semibold text-slate-200">🚨 告警事件</h2>
-      {events.length === 0 && (
+      {sortedEvents.length === 0 && (
         <p className="py-6 text-center text-sm text-slate-500">暂无事件</p>
       )}
-      {events.map((ev) => (
+      {sortedEvents.map((ev) => (
         <div
           key={ev.id}
           className={`rounded-lg border p-3 ${SEVERITY_STYLE[ev.severity]} ${

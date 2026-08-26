@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getRecordings, getRecording } from '../api/investigate'
 import { useInvestigationStore } from '../store/investigationStore'
 import { ReasoningPanel } from '../components/reasoning/ReasoningPanel'
@@ -23,6 +24,9 @@ export function ReplayPage() {
   return (
     <div className="grid h-screen grid-cols-[320px_1fr] bg-ink text-slate-200">
       <aside className="space-y-2 overflow-y-auto border-r border-edge p-4">
+        <Link to="/" className="inline-block rounded bg-edge px-3 py-1 text-xs text-slate-300 hover:bg-slate-600">
+          ← 返回大屏
+        </Link>
         <h1 className="text-lg font-bold">📼 调查回放</h1>
         {recordingIds.length === 0 && (
           <p className="text-sm text-slate-500">暂无历史调查记录</p>

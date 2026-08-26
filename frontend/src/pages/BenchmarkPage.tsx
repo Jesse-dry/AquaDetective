@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { PollutionEvent } from '../types'
 import { getEvents } from '../api/events'
 import { getRecordings, getInvestigation } from '../api/investigate'
@@ -79,6 +80,9 @@ export function BenchmarkPage() {
   return (
     <div className="min-h-screen bg-ink p-6 text-slate-200">
       <div className="mx-auto max-w-4xl space-y-6">
+        <Link to="/" className="inline-block rounded bg-edge px-3 py-1 text-xs text-slate-300 hover:bg-slate-600">
+          ← 返回大屏
+        </Link>
         <h1 className="text-lg font-bold">📊 真实数据对标</h1>
         <p className="rounded-lg border border-warn/50 bg-warn/10 p-3 text-sm text-warn">
           声明:演示流域(清源河)为模拟数据;②节验证使用真实太湖国控断面公开数据(2021–2025),③节真实案例仅用于说明算法与行业落地技术同源。
