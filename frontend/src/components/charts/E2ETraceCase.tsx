@@ -10,7 +10,7 @@ interface E2EData {
   station: { id: string; name: string; lon: number; lat: number }
   matched_enterprise: {
     name: string; industry: string; city: string; lon: number; lat: number
-    dist_km: number; travel_h: number
+    dist_km: number; travel_h_range: string
   }
   anomaly: {
     indicator: string; event_dt: string; peak: number; baseline: number
@@ -140,7 +140,7 @@ export function E2ETraceCase() {
               河网距离:<span className="tabular-nums text-sky-300">{e.dist_km} km</span>
             </div>
             <div>
-              传播时间:<span className="tabular-nums text-sky-300">{e.travel_h} h</span>
+              传播时间:<span className="tabular-nums text-sky-300">{e.travel_h_range} h</span>
             </div>
             <div>
               严重度:<span className="text-amber-400">{a.severity}</span>
@@ -163,9 +163,10 @@ export function E2ETraceCase() {
       </div>
 
       <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
-        说明:断面坐标来自百度地图模糊查询(GCJ-02→WGS84 转换,误差米级),吸附到 HydroRIVERS
-        太湖河网;异常检测与拓扑上溯均为确定性纯函数。本演示为真实断面数据上的算法验证,
-        非真实污染事件认定。
+        命中判定:距离最近 + 行业匹配(污水处理厂出水氨氮异常合理),已通过河网拓扑核验
+        (NEXT_DOWN 直连,确属上游)。传播时间为距离排序分而非因果证据;未与污水厂出水在线监测做交叉验证,属候选命中而非确证因果。
+        断面坐标来自百度地图模糊查询(GCJ-02→WGS84,误差米级),异常检测与拓扑上溯均为确定性纯函数。
+        本演示为真实断面数据上的算法验证,非真实污染事件认定。
       </p>
     </section>
   )
