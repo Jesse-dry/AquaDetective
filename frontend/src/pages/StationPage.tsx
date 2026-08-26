@@ -5,6 +5,7 @@ import { getStationEem, getEnterpriseEem } from '../api/watershed'
 import { useWatershedStore } from '../store/watershedStore'
 import { SeriesChart } from '../components/charts/SeriesChart'
 import { EemContour } from '../components/charts/EemContour'
+import { stationLabel, eventLabel } from '../utils/labels'
 
 // 断面详情页:时序 + EEM"现场 vs 企业档案"并排对比
 // 可用 ?event=evt_001 指定事件(现场 EEM 以 Ground Truth 源为主导)
@@ -37,7 +38,7 @@ export function StationPage() {
   return (
     <div className="min-h-screen space-y-4 bg-ink p-4 text-slate-200">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">断面 {id}{eventId && <span className="ml-2 text-sm text-slate-400">事件 {eventId}</span>}</h1>
+        <h1 className="text-lg font-bold">{stationLabel(id)}{eventId && <span className="ml-2 text-sm text-slate-400">{eventLabel(eventId)}</span>}</h1>
         <label className="text-xs text-slate-400">
           对比企业档案:
           <select

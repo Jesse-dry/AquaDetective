@@ -66,9 +66,9 @@ export function InjectDialog({ onClose }: { onClose: () => void }) {
             onChange={(e) => setSeverity(e.target.value as Severity)}
             className="mt-1 w-full rounded border border-edge bg-ink px-2 py-1 text-sm text-slate-200"
           >
-            <option value="low">低</option>
-            <option value="medium">中</option>
-            <option value="high">高</option>
+            <option value="low">轻微</option>
+            <option value="medium">中等</option>
+            <option value="high">严重</option>
           </select>
         </label>
         <div className="flex gap-2 pt-1">

@@ -6,6 +6,7 @@ import { useAlertStore } from '../../store/alertStore'
 import { useUiStore } from '../../store/uiStore'
 import { useInvestigationStore } from '../../store/investigationStore'
 import { usePlaybackStore } from '../../store/playbackStore'
+import { stationShort } from '../../utils/labels'
 
 // 流域底图:空白深色样式 + GeoJSON 绘制节点/边/断面/企业
 // 坐标直接使用契约 (x, y) 平面坐标,fitBounds 自适应
@@ -66,7 +67,11 @@ export function WatershedMap() {
       const n = nodeById.get(s.node_id)
       if (!n) return []
       // 扩散回放中携带热力值(触发 heat 着色),平时不带
-      const properties: Record<string, unknown> = { id: s.id, alert: openStationIds.has(s.id) }
+      const properties: Record<string, unknown> = {
+        id: s.id,
+        num: stationShort(s.id), // 图上仅标注数字序号
+        alert: openStationIds.has(s.id),
+      }
       if (playbackActive) properties.heat = playbackHeat[s.id] ?? 0
       return [{
         type: 'Feature' as const,
@@ -134,6 +139,17 @@ export function WatershedMap() {
             'circle-stroke-width': 2,
             'circle-stroke-color': '#e2e8f0',
           },
+        })
+        // 断面序号标注(仅数字,普通观众可读)
+        map.addLayer({
+          id: 'station-labels', type: 'symbol', source: 'stations',
+          layout: {
+            'text-field': ['get', 'num'],
+            'text-size': 10,
+            'text-offset': [0, -1.3],
+            'text-font': ['Open Sans Bold'],
+          },
+          paint: { 'text-color': '#e2e8f0', 'text-halo-color': '#0b1220', 'text-halo-width': 1.5 },
         })
         // 企业:锁定后放大高亮
         map.addLayer({

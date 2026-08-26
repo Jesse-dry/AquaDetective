@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import * as echarts from 'echarts'
 import { getSeries } from '../../api/series'
 import { useUiStore } from '../../store/uiStore'
+import { indicatorLabel } from '../../utils/labels'
 
 // 断面时序曲线:异常时段由调用方传 markArea(后续接 events)
 export function SeriesChart({ stationId }: { stationId: string | null }) {
@@ -39,7 +40,7 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
           splitLine: { lineStyle: { color: '#1f2c4a' } },
         },
         series: [{
-          name: indicator,
+          name: indicatorLabel(indicator),
           type: 'line',
           showSymbol: false,
           sampling: 'lttb',

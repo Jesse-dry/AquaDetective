@@ -1,4 +1,5 @@
 import { useInvestigationStore } from '../../store/investigationStore'
+import { industryLabel } from '../../utils/labels'
 
 // 假设排行榜:分数实时变化,被排除(rejected)假设变灰划线
 // 注意:WS hypothesis 消息的 target 是企业名称,直接展示
@@ -21,7 +22,7 @@ export function HypothesisBoard() {
               <div className="flex justify-between text-xs">
                 <span className={eliminated ? 'line-through' : ''}>
                   {h.target}
-                  {h.industry && <span className="ml-1 text-slate-500">({h.industry})</span>}
+                  {h.industry && <span className="ml-1 text-slate-500">({industryLabel(h.industry)})</span>}
                 </span>
                 <span className="tabular-nums text-slate-400">{pct}%</span>
               </div>

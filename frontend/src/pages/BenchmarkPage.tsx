@@ -4,6 +4,7 @@ import { getEvents } from '../api/events'
 import { getRecordings, getInvestigation } from '../api/investigate'
 import { useWatershedStore } from '../store/watershedStore'
 import { RealDataValidation } from '../components/charts/RealDataValidation'
+import { eventLabel, etypeLabel } from '../utils/labels'
 
 // 真实数据对标页(W5):本系统验证结果 + 行业真实落地案例
 // 声明:演示流域为模拟数据,真实数据仅用于算法验证
@@ -29,12 +30,6 @@ const REAL_CASES = [
     detail: '从异常检出到锁定污染源企业最快 21 分钟,验证指纹溯源的工程时效性。',
   },
 ]
-
-const ETYPE_LABEL: Record<string, string> = {
-  sudden: '突发泄漏',
-  periodic: '夜间偷排',
-  gradual: '渐变恶化',
-}
 
 interface VerifiedRow {
   event: PollutionEvent
@@ -106,8 +101,8 @@ export function BenchmarkPage() {
               <tbody>
                 {rows.map(({ event: ev, sourceName, confidence, hit }) => (
                   <tr key={ev.id} className="border-t border-edge">
-                    <td className="px-3 py-2">{ev.id}</td>
-                    <td className="px-3 py-2">{ETYPE_LABEL[ev.etype] ?? ev.etype}</td>
+                    <td className="px-3 py-2">{eventLabel(ev.id)}</td>
+                    <td className="px-3 py-2">{etypeLabel(ev.etype)}</td>
                     <td className="px-3 py-2 text-slate-400">
                       {watershed?.enterprises.find((e) => e.id === ev.truth_source)?.name ?? ev.truth_source}
                     </td>

@@ -9,6 +9,7 @@ import { IS_MOCK } from '../../api/client'
 import { MockStream } from '../../ws/mockStream'
 import { InvestigationConnection } from '../../ws/connection'
 import type { Severity } from '../../types'
+import { eventLabel, stationLabel, indicatorLabel, etypeLabel, SEVERITY_LABEL } from '../../utils/labels'
 
 // 告警面板:新事件闪烁,点击触发调查(Mock 模式回放 mock 推理流)
 const SEVERITY_STYLE: Record<Severity, string> = {
@@ -16,8 +17,6 @@ const SEVERITY_STYLE: Record<Severity, string> = {
   medium: 'border-warn/60 bg-warn/10',
   low: 'border-edge bg-panel',
 }
-
-const SEVERITY_LABEL: Record<Severity, string> = { high: '高', medium: '中', low: '低' }
 
 let activeConn: InvestigationConnection | MockStream | null = null
 
@@ -75,13 +74,13 @@ export function AlertList() {
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-100">{ev.id}</span>
+            <span className="text-sm font-semibold text-slate-100">{eventLabel(ev.id)}</span>
             <span className="text-xs text-slate-400">
-              {ev.etype} · {SEVERITY_LABEL[ev.severity]}
+              {etypeLabel(ev.etype)} · {SEVERITY_LABEL[ev.severity] ?? ev.severity}
             </span>
           </div>
           <p className="mt-1 text-xs text-slate-400">
-            断面 {ev.station_id} · {ev.indicators.join('/')}
+            {stationLabel(ev.station_id)} · {ev.indicators.map(indicatorLabel).join('/')}
           </p>
           <p className="text-xs text-slate-500">
             {new Date(ev.onset_ts).toLocaleString('zh-CN')}

@@ -8,6 +8,7 @@ import { AlertList } from '../components/alert/AlertList'
 import { ReasoningPanel } from '../components/reasoning/ReasoningPanel'
 import { SeriesChart } from '../components/charts/SeriesChart'
 import { ScenarioBar } from '../components/demo/ScenarioBar'
+import { stationLabel, indicatorLabel } from '../utils/labels'
 
 // 大屏主页:左告警 / 中地图 / 右推理 / 底部曲线
 export function DashboardPage() {
@@ -62,7 +63,7 @@ export function DashboardPage() {
       <footer className="flex h-44 flex-col border-t border-edge p-2">
         {selectedStationId && indicators.length > 0 && (
           <div className="mb-1 flex items-center gap-1.5 px-1">
-            <span className="text-xs text-slate-500">断面 {selectedStationId}</span>
+            <span className="text-xs text-slate-500">{stationLabel(selectedStationId)}</span>
             {indicators.map((ind) => (
               <button
                 key={ind}
@@ -73,7 +74,7 @@ export function DashboardPage() {
                     : 'bg-edge text-slate-300 hover:bg-slate-600'
                 }`}
               >
-                {ind}
+                {indicatorLabel(ind)}
               </button>
             ))}
           </div>
