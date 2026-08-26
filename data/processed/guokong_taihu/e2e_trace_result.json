@@ -1,0 +1,125 @@
+{
+  "pipeline": "realdata_e2e_trace",
+  "summary": {
+    "station_id": "taihu_059",
+    "station_name": "钓邾大桥",
+    "indicator": "ammonia_n",
+    "matched_enterprise": "无锡中发水务投资有限公司(锡北污水处理厂)",
+    "travel_h": 4.6
+  },
+  "anomaly": {
+    "station_id": "taihu_059",
+    "station_name": "钓邾大桥",
+    "hyriv_id": 40625636,
+    "indicator": "ammonia_n",
+    "method": "cusum",
+    "n_detections": 10,
+    "n_high_medium": 6,
+    "event_ts": 1669953600,
+    "event_dt": "2022-12-02T12:00:00+08:00",
+    "event_value": 0.698,
+    "event_zscore": 1.72,
+    "event_severity": "high",
+    "event_baseline": 0.102,
+    "window_before_h": 24,
+    "window_after_h": 12
+  },
+  "upstream_trace": {
+    "window_h": 72.0,
+    "upstream_reaches_count": 2,
+    "upstream_enterprises_count": 1,
+    "upstream_path_sample": [
+      {
+        "hid": 40625918,
+        "path_len": 2,
+        "dist_km": 1.16,
+        "travel_h": 0.83
+      },
+      {
+        "hid": 40625635,
+        "path_len": 2,
+        "dist_km": 8.5,
+        "travel_h": 4.6
+      }
+    ]
+  },
+  "matched_enterprise": {
+    "enterprise": "无锡中发水务投资有限公司(锡北污水处理厂)",
+    "city": "无锡市",
+    "industry": "wwtp",
+    "credit_code": "91320205789098198H",
+    "address": "无锡市锡山区安镇镇年余村(分支机构,母公司代码)",
+    "lon_wgs84": 120.488141,
+    "lat_wgs84": 31.608964,
+    "hyriv_id": 40625635,
+    "travel_h": 4.6,
+    "dist_km": 8.5,
+    "snap_dist_m": 941.8,
+    "indicator_match": true,
+    "indicator_note": "污水处理厂出水氨氮/COD/总磷异常",
+    "score": -19.4
+  },
+  "candidate_enterprises": [
+    {
+      "enterprise": "无锡中发水务投资有限公司(锡北污水处理厂)",
+      "city": "无锡市",
+      "industry": "wwtp",
+      "credit_code": "91320205789098198H",
+      "address": "无锡市锡山区安镇镇年余村(分支机构,母公司代码)",
+      "lon_wgs84": 120.488141,
+      "lat_wgs84": 31.608964,
+      "hyriv_id": 40625635,
+      "travel_h": 4.6,
+      "dist_km": 8.5,
+      "snap_dist_m": 941.8,
+      "indicator_match": true,
+      "indicator_note": "污水处理厂出水氨氮/COD/总磷异常",
+      "score": -19.4
+    }
+  ],
+  "all_candidates_summary": [
+    {
+      "station": "taihu_059",
+      "name": "钓邾大桥",
+      "indicator": "ammonia_n",
+      "n_high": 6,
+      "upstream_ents": 1
+    },
+    {
+      "station": "taihu_090",
+      "name": "汤溇",
+      "indicator": "tp",
+      "n_high": 5,
+      "upstream_ents": 1
+    },
+    {
+      "station": "taihu_085",
+      "name": "新港口(新塘港)",
+      "indicator": "turbidity",
+      "n_high": 6,
+      "upstream_ents": 1
+    },
+    {
+      "station": "taihu_081",
+      "name": "小梅口",
+      "indicator": "turbidity",
+      "n_high": 4,
+      "upstream_ents": 17
+    },
+    {
+      "station": "taihu_048",
+      "name": "瓜泾口西",
+      "indicator": "turbidity",
+      "n_high": 3,
+      "upstream_ents": 19
+    }
+  ],
+  "assumptions": {
+    "coord_source": "百度地图模糊查询(站点经纬度坐标.csv),按 GCJ-02→WGS84 转换,误差米级",
+    "snap_limit_m": 2000.0,
+    "travel_window_h": 72.0,
+    "velocity": "估速 0.3~2.0 m/s(由 DIS_AV_CMS 对数折算),保底 0.5 m/s",
+    "anomaly_engine": "backend/app/engine/anomaly.py detect_cusum (h=7σ, 纯函数)",
+    "note": "数值计算(异常检测/拓扑/吸附)全走确定性纯函数;行业-指标映射仅作命中后佐证,不影响数值。"
+  }
+}
