@@ -6,6 +6,7 @@ import { getRecordings, getInvestigation } from '../api/investigate'
 import { useWatershedStore } from '../store/watershedStore'
 import { RealDataValidation } from '../components/charts/RealDataValidation'
 import { E2ETraceCase } from '../components/charts/E2ETraceCase'
+import { PermitEnterprises } from '../components/charts/PermitEnterprises'
 import { eventLabel, etypeLabel } from '../utils/labels'
 
 // 真实数据对标页(W5):本系统验证结果 + 行业真实落地案例
@@ -134,8 +135,10 @@ export function BenchmarkPage() {
 
         <E2ETraceCase />
 
+        <PermitEnterprises />
+
         <section>
-          <h2 className="mb-2 text-sm font-semibold text-slate-300">④ 行业真实落地案例(技术同源背书)</h2>
+          <h2 className="mb-2 text-sm font-semibold text-slate-300">⑤ 行业真实落地案例(技术同源背书)</h2>
           <div className="grid grid-cols-2 gap-3">
             {REAL_CASES.map((c) => (
               <div key={c.place} className="rounded-lg border border-edge bg-panel p-4">

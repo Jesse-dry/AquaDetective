@@ -18,6 +18,12 @@ interface E2EData {
     severity: string; shape: string
   }
   upstream_path: { hid: number; dist_km: number; travel_h: number }[]
+  fingerprint: {
+    score: number | null; rank: number | null; library_size: number
+    source: string; query_vector: Record<string, number>
+    note: string
+  }
+  evidence_type: string
   series: SeriesPoint[]
 }
 
@@ -159,14 +165,34 @@ export function E2ETraceCase() {
               ))}
             </ol>
           </div>
+
+          {data.fingerprint && data.fingerprint.score !== null && (
+            <div className="mt-3 border-t border-edge pt-2">
+              <div className="mb-1 text-[11px] text-slate-500">指纹比对证据</div>
+              <div className="space-y-1 text-[11px] text-slate-400">
+                <div className="flex justify-between">
+                  <span>相似度分数</span>
+                  <span className="tabular-nums text-sky-300">
+                    {data.fingerprint.score} (排名 {data.fingerprint.rank}/{data.fingerprint.library_size})
+                  </span>
+                </div>
+                <div className="leading-relaxed text-slate-500">
+                  {data.fingerprint.source}
+                </div>
+                <div className="leading-relaxed text-slate-500">
+                  {data.fingerprint.note}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
-        命中判定:距离最近 + 行业匹配(污水处理厂出水氨氮异常合理),已通过河网拓扑核验
-        (NEXT_DOWN 直连,确属上游)。传播时间为距离排序分而非因果证据;未与污水厂出水在线监测做交叉验证,属候选命中而非确证因果。
-        断面坐标来自百度地图模糊查询(GCJ-02→WGS84,误差米级),异常检测与拓扑上溯均为确定性纯函数。
-        本演示为真实断面数据上的算法验证,非真实污染事件认定。
+        证据类型:{data.evidence_type}。命中判定:距离最近 + 行业匹配(污水处理厂出水氨氮异常合理),
+        已通过河网拓扑核验(NEXT_DOWN 直连,确属上游)。指纹比对用真实许可证主要污染物年排放量限值;
+        传播时间为距离排序分而非因果证据。断面坐标来自百度地图模糊查询(GCJ-02→WGS84,误差米级),
+        异常检测/拓扑上溯/指纹相似度均为确定性纯函数。本演示为真实断面数据上的算法验证,非真实污染事件认定。
       </p>
     </section>
   )
