@@ -1,0 +1,30 @@
+排口级信息填写说明
+====================
+
+一、数据流
+  许可证平台复制粘贴 → data/interim/taihu_enterprises_v1/outlet_raw.txt → python tools/import_outlets.py → data/processed/taihu_enterprises/
+    - outlets.csv             排口级(1 排口 1 行)
+    - outlet_pollutants.csv   排口×污染物(1 排口×1 污染物 1 行)
+    - outlets_report.json     主要污染物清单 + 排放指纹向量
+
+二、raw 文件格式(直接从许可证"排放许可信息"页复制粘贴)
+  浓度限值行:  排放口编号 \t 排放口名称 \t 污染物种类 \t 浓度限值 \t 年量5列(通常为/)
+  合计行:     主要排放口合计 \t 污染物 \t 年量5列
+  合计续行:    污染物 \t 年量5列(省略"合计"前缀,脚本自动识别)
+  见 outlet_raw.txt 样例(DW003,14 种污染物,COD/氨氮为主要)
+
+三、主要污染物判定(脚本自动,无需手填)
+  规则:出现在"主要排放口合计"表、年排放量限值非"/"的污染物 = 主要污染物
+  首要污染物 = 主要污染物中年排放量(t/a)最大者
+  例:CODcr 575.922 t/a + 氨氮 23.037 t/a → 主要污染物 COD/NH3N,首要 COD
+
+四、与溯源系统对接
+  - outlets_report.json 的 fingerprint_vector {COD:575.922, NH3N:23.037} 可直接喂给
+    backend/app/engine/fingerprint.py 的 match_pollutants 做指纹比对
+  - 异常断面检出氨氮 → 上溯命中企业 → 该企业主要污染物含 NH3N → 指纹匹配加强命中可信度
+
+五、待人工补充
+  1. outlet_raw.txt 不含企业信用代码——每家企业的排口数据需用 "### 信用代码" 行分隔
+     (脚本待升级:识别 ### 行作为下一家企业的锚点,回填 credit_code 到 outlets.csv)
+  2. discharge_to(直排环境/市政管网)、target_water(受纳水体)需从许可证
+     "排放口基本情况"表补录(浓度限值表不含此信息)

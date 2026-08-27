@@ -1,0 +1,27 @@
+{
+  "outlets_count": 1,
+  "pollutant_rows": 14,
+  "enterprises": {
+    "91320205A8062806XD": {
+      "name": "无锡市东北塘宏良染色厂",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 575.922
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 23.037
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 575.922,
+        "NH3N": 23.037
+      }
+    }
+  },
+  "notes": "主要污染物=主要排放口合计表中年排放量限值非/的污染物;首要污染物=年排放量最大者;fingerprint_vector 可直接对接 backend/app/engine/fingerprint.py match_pollutants。raw 文件用 ### 信用代码 企业名 锚点行分隔多家企业。"
+}
