@@ -2,16 +2,20 @@
 """CNEMC 国控断面实时水质前向存档。
 
 每次运行:
-1. 拉取国家地表水水质自动监测实时发布系统全部断面当前快照(分页,页间隔 1s,正常使用强度);
+1. 拉取国家地表水水质自动监测实时发布系统全部断面当前快照(分页,页间隔 2s,降低限速触发);
 2. 原始 JSON 原样存入 data/raw/cnemc_surface_water_realtime/archive/<时间戳>.json(不修改);
 3. 解析为长表追加到 data/interim/cnemc_archive/all_stations.csv,
-   按(断面名称,监测时间)去重——重复运行不产生重复记录。
+   按(抓取年份,断面名称,监测时间)去重——重复运行不产生重复记录,跨年不误并。
 
-监测时间格式为 'MM-DD HH:MM',不含年份;追加时打上抓取年份(跨年边界见 notes)。
+监测时间格式为 'MM-DD HH:MM',不含年份;追加时打上抓取年份并参与去重键。
+
+健康检查:main() 断言拉取行数 > 0 且与系统 records 偏差 < 10%,不达标 sys.exit(1),
+杜绝"页1成功后续全失败"或"空响应"伪装成全量成功(历史 8 轮 6 失败的最严重静默路径)。
 
 定时部署(任选其一):
-  crontab:  17 1,5,9,13,17,21 * * *  cd /path/to/AquaDetective && /usr/bin/python3 tools/cnemc_archive.py >> /tmp/cnemc_archive.log 2>&1
-  (官方 4h 一轮:约 00/04/08/12/16/20 点出数,错峰 1 小时 17 分抓取)
+  crontab(本地中国 IP,主力轨,已证 100% 成功):
+    13 1,5,9,13,17,21 * * *  cd /path/to/AquaDetective && /usr/bin/python3 tools/cnemc_archive.py >> /tmp/cnemc_archive.log 2>&1
+  GitHub Actions(异地冗余备份):见 .github/workflows/cnemc-archive.yml
 
 手动运行:python3 tools/cnemc_archive.py
 """
@@ -32,7 +36,7 @@ OUT_CSV = ROOT / "data/interim/cnemc_archive/all_stations.csv"
 
 API = "https://szzdjc.cnemc.cn:8070/GJZ/Ajax/Publish.ashx"
 PAGE_SIZE = 500
-PAGE_DELAY_S = 1.0
+PAGE_DELAY_S = 2.0  # 页间延时,降低对政务 API 的限速触发
 
 HEADERS = ["省份", "流域", "断面名称", "监测时间", "水质类别", "水温(℃)", "pH(无量纲)",
            "溶解氧(mg/L)", "电导率(μS/cm)", "浊度(NTU)", "高锰酸盐指数(mg/L)",
@@ -65,6 +69,10 @@ def fetch_page(page_index: int, retries: int = 3) -> dict:
 def fetch_all() -> tuple[list[list[str]], dict]:
     first = fetch_page(1)
     total_pages = int(first.get("total", 1))
+    # 防御:total 若是记录数(常见 API 命名歧义)会跑几千空页,设上限 50 页
+    if total_pages > 50 or total_pages < 1:
+        print(f"  [警告] total={total_pages} 异常,按 1 页处理")
+        total_pages = 1
     rows = list(first.get("tbody", []))
     for p in range(2, total_pages + 1):
         time.sleep(PAGE_DELAY_S)
@@ -85,28 +93,59 @@ def clean(cell: str) -> str:
 def main() -> None:
     now = datetime.now()
     rows, first_page = fetch_all()
+    records = first_page.get("records")
     print(f"[{now:%Y-%m-%d %H:%M:%S}] 拉取 {len(rows)} 个断面 "
-      f"(系统记录数 {first_page.get('records')})")
+      f"(系统记录数 {records})")
+
+    # ===== 健康检查断言(防静默假成功)=====
+    # 1) 空响应:rows 为 0 说明 API 返回空壳,不提交
+    if not rows:
+        print("[FAILED] 拉取 0 行(空响应),退出不提交", flush=True)
+        raise SystemExit(1)
+    # 2) 覆盖率:拉取行数 vs 系统 records 偏差 < 10%(防页1成功后续全失败的假全量)
+    if records:
+        try:
+            rec_n = int(records)
+            if rec_n > 0:
+                coverage = len(rows) / rec_n
+                if coverage < 0.90:
+                    print(f"[FAILED] 覆盖率 {coverage:.1%} < 90%(拉 {len(rows)}/系统 {rec_n}),"
+                          f"疑后续页全失败,退出不提交", flush=True)
+                    raise SystemExit(1)
+                print(f"[OK] 覆盖率 {coverage:.1%}(拉 {len(rows)}/系统 {rec_n})")
+        except (ValueError, TypeError):
+            pass
+    # 3) 数据新鲜度:与已存 CSV 末行监测时间比对,本次最新时次不应早于已存最新
+    if OUT_CSV.exists():
+        with open(OUT_CSV, newline="") as f:
+            recs = list(csv.DictReader(f))
+        if recs:
+            last_ts = recs[-1]["监测时间"]
+            cur_max = max((r[3] for r in rows if len(r) > 3), default="")
+            if cur_max and last_ts and cur_max < last_ts:
+                print(f"[FAILED] 本次最新时次 {cur_max} 早于已存 {last_ts},"
+                      f"疑 API 返回缓存旧数据,退出不提交", flush=True)
+                raise SystemExit(1)
 
     # 1) 原始快照(raw 不修改)
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     raw_path = RAW_DIR / f"cnemc_snapshot_{now:%Y%m%d_%H%M%S}.json"
     raw_path.write_text(json.dumps(
         {"fetched_at": now.isoformat(timespec="seconds"),
-         "records": first_page.get("records"), "thead": first_page.get("thead"),
+         "records": records, "thead": first_page.get("thead"),
          "tbody": rows},
         ensure_ascii=False))
     print("原始快照:", raw_path)
 
-    # 2) 长表追加(去重)
+    # 2) 长表追加(去重,键含抓取年份防跨年误并)
     OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    existing: set[tuple[str, str]] = set()
+    existing: set[tuple[str, str, str]] = set()
     if OUT_CSV.exists():
         with open(OUT_CSV, newline="") as f:
             for rec in csv.DictReader(f):
-                existing.add((rec["断面名称"], rec["监测时间"]))
+                existing.add((rec["抓取年份"], rec["断面名称"], rec["监测时间"]))
 
-    year = now.year
+    year = str(now.year)
     new_rows = 0
     with open(OUT_CSV, "a", newline="") as f:
         w = csv.writer(f)
@@ -115,7 +154,7 @@ def main() -> None:
         for row in rows:
             if len(row) < len(HEADERS):
                 continue
-            key = (row[2], row[3])
+            key = (year, row[2], row[3])
             if key in existing:
                 continue
             w.writerow([year, row[0], row[1], row[2], row[3], row[4],

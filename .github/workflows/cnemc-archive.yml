@@ -1,10 +1,11 @@
 name: CNEMC 前向存档
 
-# 每 4 小时 +17 分拉取一次国家地表水实时数据(官方约 00/04/08/12/16/20 点出数)
+# 每 4 小时 +13 分拉取一次国家地表水实时数据(官方约 00/04/08/12/16/20 点出数)
 # 注意:GitHub Actions cron 为 UTC;每 4h 一轮的频率下时区只影响绝对时刻,不影响每日 6 轮覆盖
+# 本工作流为异地冗余备份;主力轨为本地中国 IP cron(见 tools/cnemc_archive.py docstring)
 on:
   schedule:
-    - cron: '17 */4 * * *'
+    - cron: '13 */4 * * *'
   workflow_dispatch: # 支持手动触发
 
 # 防止上一轮未跑完时并发重入
@@ -18,6 +19,7 @@ permissions:
 jobs:
   archive:
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # 防慢响应拖至 6h 默认上限
     steps:
       - uses: actions/checkout@v4
 
@@ -26,13 +28,9 @@ jobs:
           python-version: '3.12'
 
       # 脚本仅依赖标准库,无需 pip install
+      # 健康检查(行数>0 且覆盖率>90% 且时次新鲜)不达标则 sys.exit(1),杜绝静默假成功
       - name: 拉取并存档 CNEMC 实时水质
-        run: |
-          set -x
-          python tools/cnemc_archive.py
-          echo "=== 产物清单 ==="
-          ls -la data/raw/cnemc_surface_water_realtime/archive/ || echo "archive 目录缺失"
-          ls -la data/interim/cnemc_archive/ || echo "interim 目录缺失"
+        run: python tools/cnemc_archive.py
 
       # 原始快照体积大且 gitignored,作为构件留存 30 天
       - name: 上传原始快照构件
@@ -41,12 +39,11 @@ jobs:
           name: cnemc-snapshot-${{ github.run_id }}
           path: data/raw/cnemc_surface_water_realtime/archive/*
           retention-days: 30
-          if-no-files-found: warn
+          if-no-files-found: error  # 快照应存在,无文件说明脚本异常,应 fail
 
-      # 去重长表回写仓库(有变更才提交)
+      # 去重长表回写仓库(有变更才提交;push 重试+rebase 防 non-fast-forward 失败丢数据)
       - name: 回写去重长表
         run: |
-          set -x
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/interim/cnemc_archive/all_stations.csv
@@ -54,5 +51,23 @@ jobs:
             echo "无新增记录(全部为已存档时次),跳过提交"
           else
             git commit -m "data: CNEMC 定时存档 $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break || {
+                echo "push 第 $i 次失败(non-fast-forward?),5s 后重试"; sleep 5
+              }
+            done
           fi
+
+      # 失败通知(高频存档无告警会失明):失败时创建 issue 提示人工介入
+      - name: 失败告警
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `CNEMC 存档工作流失败 #${context.runNumber}`,
+              body: `运行 ${context.runId} 失败,请查看 https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\n高频存档(每4h)失败可能造成数据时序缺口,建议尽快排查。`,
+              labels: ['cnemc-archive', 'auto-alert']
+            })
