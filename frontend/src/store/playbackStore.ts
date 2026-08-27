@@ -5,8 +5,10 @@ import { getSeries } from '../api/series'
 // 扩散回放:以事件首达时刻为中心开时间窗,拉取各断面真实时序,
 // 时间游标推进时把"当前值/窗内峰值"作为热力值供地图着色。
 // 前端零计算:数值原样来自 /series,热力仅做显示归一化。
-const PRE_S = 6 * 3600 // 窗口:事件前 6h
-const POST_S = 48 * 3600 // 窗口:事件后 48h
+// 单位契约:后端 API 返回毫秒级 epoch(onset_ts、series.ts 均毫秒),
+// 本 store 全程毫秒,直接 new Date(ms) 格式化。
+const PRE_MS = 6 * 3600 * 1000 // 窗口:事件前 6h
+const POST_MS = 48 * 3600 * 1000 // 窗口:事件后 48h
 
 interface PlaybackState {
   active: boolean
@@ -16,14 +18,14 @@ interface PlaybackState {
   t0Ms: number
   t1Ms: number
   playing: boolean
-  speedS: number // 每个 tick(100ms)推进的模拟秒数
+  speedMs: number // 每个 tick(100ms)推进的模拟毫秒数
   series: Record<string, SeriesPoint[]>
   heat: Record<string, number> // stationId -> 0~1 热力(显示用)
   cursors: Record<string, number> // stationId -> 已消费的数据下标
 
   load: (ev: PollutionEvent, stationIds: string[]) => Promise<void>
   setPlaying: (playing: boolean) => void
-  setSpeed: (speedS: number) => void
+  setSpeed: (speedMs: number) => void
   tick: () => void
   close: () => void
 }
@@ -36,7 +38,7 @@ const initial = {
   t0Ms: 0,
   t1Ms: 0,
   playing: false,
-  speedS: 900,
+  speedMs: 900 * 1000,
   series: {} as Record<string, SeriesPoint[]>,
   heat: {} as Record<string, number>,
   cursors: {} as Record<string, number>,
@@ -46,9 +48,10 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   ...initial,
 
   load: async (ev, stationIds) => {
-    const onsetS = ev.onset_ts / 1000
-    const from = onsetS - PRE_S
-    const to = onsetS + POST_S
+    // onset_ts 为毫秒(API 契约),from/to 用毫秒传给 /series(后端已转毫秒)
+    const onsetMs = ev.onset_ts
+    const from = onsetMs - PRE_MS
+    const to = onsetMs + POST_MS
     const indicator = ev.indicators[0]
     const entries = await Promise.all(
       stationIds.map(async (sid) => {
@@ -74,12 +77,13 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   },
 
   setPlaying: (playing) => set({ playing }),
-  setSpeed: (speedS) => set({ speedS }),
+  setSpeed: (speedMs) => set({ speedMs }),
 
   tick: () => {
     const s = get()
     if (!s.playing || !s.active) return
-    const cursorMs = s.cursorMs + s.speedS * 1000
+    // cursorMs 与 points.ts 均为毫秒,单位一致才能正确推进
+    const cursorMs = s.cursorMs + s.speedMs
     if (cursorMs >= s.t1Ms) {
       set({ playing: false, cursorMs: s.t1Ms })
       return

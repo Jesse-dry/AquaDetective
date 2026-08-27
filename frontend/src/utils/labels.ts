@@ -67,3 +67,43 @@ export const INDUSTRY_LABEL: Record<string, string> = {
 }
 
 export const industryLabel = (code: string): string => INDUSTRY_LABEL[code] ?? code
+
+/** 节点编码 → 中文:m04 → 4号节点;t1_03 → t1支流3号节点 */
+export function nodeLabel(id: string): string {
+  const m = id.match(/^([a-z]+_?)(\d+)$/i)
+  if (!m) return id
+  const prefix = m[1].replace(/_$/, '').toUpperCase()
+  return `${prefix}节点${Number(m[2])}`
+}
+
+/** 推理步骤 step_id → 中文:h1_eem → 假设1·荧光指纹;h2_pattern → 假设2·排放规律 */
+const STEP_PHASE_CN: Record<string, string> = {
+  eem: '荧光指纹', pollutant: '污染物谱', pattern: '排放规律', strength: '传播强度',
+}
+export function stepIdLabel(stepId: string): string {
+  const m = stepId.match(/^(h\d+)_([a-z]+)$/)
+  if (!m) return stepId
+  const phase = STEP_PHASE_CN[m[2]] ?? m[2]
+  return `假设${m[1].slice(1)}·${phase}`
+}
+
+/** 推理 phase → 中文(后端发的"证据校核·eem"等) */
+export function phaseLabel(phase: string): string {
+  // 形如 "证据校核·eem" → "证据校核·荧光指纹"
+  return phase.replace(/·([a-z]+)$/, (_, k) => `·${STEP_PHASE_CN[k] ?? k}`)
+}
+
+/** 把文本中的内部 id 替换为中文:st_02→2号断面、m04→4号节点、cr6/cod 等→中文 */
+export function humanize(text: string): string {
+  if (!text) return text
+  let out = text
+  // 站点 st_xx / stx
+  out = out.replace(/\bst_?0*(\d+)\b/gi, (_, n) => `${Number(n)}号断面`)
+  // 节点 m04 / t1_03 / t2_04 等(含字母前缀+数字)
+  out = out.replace(/\b([mt]\w*)_?0*(\d+)\b/g, (_, p, n) => `${p.toUpperCase()}节点${Number(n)}`)
+  // 指标
+  for (const [code, cn] of Object.entries(INDICATOR_LABEL)) {
+    out = out.replace(new RegExp(`\\b${code}\\b`, 'g'), cn)
+  }
+  return out
+}

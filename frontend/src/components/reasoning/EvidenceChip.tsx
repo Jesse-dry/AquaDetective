@@ -4,9 +4,11 @@ import type { Evidence } from '../../types'
 const KIND_LABEL: Record<string, string> = {
   eem_score: '光谱指纹',
   pollutant_score: '污染物指纹',
-  topology: '拓扑可达',
+  topology: '上游可达',
   dispersion: '扩散校核',
   pattern: '排放规律',
+  pattern_score: '排放规律',
+  strength_score: '传播强度',
   event: '事件',
 }
 

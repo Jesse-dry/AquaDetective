@@ -10,7 +10,7 @@ export interface SeriesQuery {
 }
 
 // GET /series?station=&indicator=&from=&to=
-// 后端返回 { station, indicator, count, data:[{ts(秒), value}] }
+// 后端返回 { station, indicator, count, data:[{ts(毫秒), value}] }(API 契约:毫秒级)
 export function getSeries(q: SeriesQuery) {
   const params = new URLSearchParams()
   params.set('station', q.station)

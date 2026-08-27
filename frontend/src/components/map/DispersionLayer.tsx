@@ -38,13 +38,13 @@ export function DispersionLayer() {
           {pb.playing ? '⏸ 暂停' : '▶ 播放'}
         </button>
         <select
-          value={pb.speedS}
+          value={pb.speedMs}
           onChange={(e) => pb.setSpeed(Number(e.target.value))}
           className="rounded border border-edge bg-ink px-1.5 py-1 text-xs text-slate-200"
         >
-          <option value={300}>慢速 5min/步</option>
-          <option value={900}>中速 15min/步</option>
-          <option value={3600}>快速 1h/步</option>
+          <option value={300 * 1000}>慢速 5min/步</option>
+          <option value={900 * 1000}>中速 15min/步</option>
+          <option value={3600 * 1000}>快速 1h/步</option>
         </select>
         <span className="text-xs text-slate-500">断面颜色 = 浓度热力</span>
       </div>
