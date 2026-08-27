@@ -125,19 +125,22 @@ export function WatershedMap() {
           paint: { 'circle-radius': 3, 'circle-color': '#334155' },
         })
         // 断面着色:回放模式按浓度热力(绿→黄→红),平时按告警状态(绿/红)
+        // 回放时圆圈放大并加模糊光晕,让浓度变化更醒目
         map.addLayer({
           id: 'stations', type: 'circle', source: 'stations',
           paint: {
-            'circle-radius': 7,
+            'circle-radius': 18,
             'circle-color': [
               'case',
               ['has', 'heat'],
               ['interpolate', ['linear'], ['get', 'heat'],
-                0, '#22c55e', 0.4, '#eab308', 0.75, '#f97316', 1, '#ef4444'],
+                0, '#14532d', 0.1, '#22c55e', 0.25, '#84cc16', 0.4, '#eab308',
+                0.6, '#f97316', 0.8, '#ef4444', 1, '#dc2626'],
               ['case', ['get', 'alert'], '#ef4444', '#22c55e'],
             ],
             'circle-stroke-width': 2,
             'circle-stroke-color': '#e2e8f0',
+            'circle-opacity': 1,
           },
         })
         // 断面序号标注(仅数字,普通观众可读)
@@ -151,7 +154,7 @@ export function WatershedMap() {
           },
           paint: { 'text-color': '#e2e8f0', 'text-halo-color': '#0b1220', 'text-halo-width': 1.5 },
         })
-        // 企业:锁定后放大高亮
+        // 企业:锁定后放大高亮;回放时隐藏(避免黄色小圈干扰断面热力)
         map.addLayer({
           id: 'enterprises', type: 'circle', source: 'enterprises',
           paint: {

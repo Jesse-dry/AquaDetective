@@ -12,6 +12,25 @@ from . import tools
 MAX_ROUNDS = 3
 W = {"eem": 0.40, "pollutant": 0.25, "pattern": 0.20, "strength": 0.15}
 
+# 通俗化标签:面向普通观众的中文映射(只影响展示文本,不影响数值逻辑)
+INDICATOR_CN = {"cod": "化学需氧量", "ammonia": "氨氮", "tp": "总磷", "cr6": "六价铬",
+                "ph": "pH值", "do": "溶解氧", "codmn": "高锰酸盐指数"}
+ETYPE_CN = {"sudden": "突发泄漏", "periodic": "夜间偷排", "gradual": "渐变恶化"}
+SEVERITY_CN = {"high": "严重(需立即处置)", "medium": "中等(持续关注)", "low": "轻微(留观)"}
+
+
+def _indicators_cn(ev: dict) -> str:
+    """指标编码列表 → 中文逗号串。"""
+    inds = _indicators(ev)
+    return "、".join(INDICATOR_CN.get(i, i) for i in inds) or "未知指标"
+
+
+def _station_cn(ws: dict, station_id: str) -> str:
+    """st_02 → 2号断面。"""
+    import re
+    m = re.match(r"^st_?0*(\d+)$", station_id, re.I)
+    return f"{int(m[1])}号断面" if m else station_id
+
 
 def _indicators(ev: dict) -> list[str]:
     """events.indicators 可能是 JSON 字符串或列表，统一返回列表。"""
@@ -31,13 +50,20 @@ def _station_of(ws: dict, station_id: str) -> dict:
 def parse_event(state: dict, llm, db_path: str, ws: dict) -> dict:
     ev = state["event"]
     st = _station_of(ws, ev["station_id"])
-    indicators = ", ".join(_indicators(ev) or st["indicators"])
+    inds_cn = _indicators_cn(ev)
+    station_cn = _station_cn(ws, ev["station_id"])
+    etype_cn = ETYPE_CN.get(ev["etype"], ev["etype"])
+    sev_cn = SEVERITY_CN.get(ev["severity"], ev["severity"])
+    # 首达时间转可读(秒→北京时间)
+    from datetime import datetime, timezone, timedelta
+    tz = timezone(timedelta(hours=8))
+    onset_cn = datetime.fromtimestamp(int(ev["onset_ts"]), tz=tz).strftime("%m月%d日 %H:%M")
     stream = list(state["stream"])
     stream.append({"type": "step", "data": {
         "step_id": "parse", "phase": "事件解析",
-        "clue": f"断面 {ev['station_id']}（{st['node_id']}）检出异常：{indicators}",
-        "reasoning": f"异常类型疑似 {ev['etype']}，严重度 {ev['severity']}，"
-                     f"首达时间 {ev['onset_ts']}。开始排查上游污染源。",
+        "clue": f"{station_cn} 检出异常：{inds_cn}",
+        "reasoning": f"异常类型疑似「{etype_cn}」，严重度「{sev_cn}」，"
+                     f"首达时间 {onset_cn}。开始排查上游污染源。",
         "evidence": [{"kind": "event", "value": {k: ev.get(k) for k in
                       ("id", "station_id", "indicators", "onset_ts", "severity", "etype")}}],
         "status": "verified"}})
@@ -114,7 +140,8 @@ def _check_eem(state, h, ev, db_path, ws) -> tuple[float | None, dict]:
         "kind": "eem_score", "target": h["target_name"], "value": entry["score"],
         "rank": next(i for i, r in enumerate(ranked) if r["enterprise_id"] == h["target_id"]) + 1,
         "top": top["enterprise_id"],
-        "detail": f"现场EEM与指纹库比对：余弦 {entry['cosine']}，皮尔逊 {entry['pearson']}"}
+        "detail": f"现场荧光指纹与指纹库比对：相似度 {entry['cosine']:.1%}（余弦），"
+                  f"相关性 {entry['pearson']:.1%}（皮尔逊）"}
 
 
 def _check_pollutant(state, h, ev, db_path, ws) -> tuple[float | None, dict]:
@@ -124,7 +151,7 @@ def _check_pollutant(state, h, ev, db_path, ws) -> tuple[float | None, dict]:
         return None, {}
     return entry["score"], {
         "kind": "pollutant_score", "target": h["target_name"], "value": entry["score"],
-        "detail": "特征污染物比例向量余弦相似度"}
+        "detail": "特征污染物比例向量比对（相似度越高越同源）"}
 
 
 def _check_pattern(state, h, ev, db_path, ws) -> tuple[float | None, dict]:
@@ -182,7 +209,7 @@ def verify_hypotheses(state: dict, llm, db_path: str, ws: dict) -> dict:
             h["evidence"].append(evd)
             stream.append({"type": "step", "data": {
                 "step_id": f"{h['id']}_{wkey}", "phase": f"证据校核·{wkey}",
-                "clue": evd.get("detail", ""), "reasoning": f"目标 {h['target_name']}",
+                "clue": evd.get("detail", ""), "reasoning": f"嫌疑企业：{h['target_name']}",
                 "evidence": [evd], "status": "verified"}})
         if scored_pairs:
             weight_sum = sum(w for _, w in scored_pairs)

@@ -20,6 +20,7 @@ interface PlaybackState {
   playing: boolean
   speedMs: number // 每个 tick(100ms)推进的模拟毫秒数
   series: Record<string, SeriesPoint[]>
+  globalPeak: number // 全断面全局峰值(统一归一化,体现扩散浓度差)
   heat: Record<string, number> // stationId -> 0~1 热力(显示用)
   cursors: Record<string, number> // stationId -> 已消费的数据下标
 
@@ -40,6 +41,7 @@ const initial = {
   playing: false,
   speedMs: 900 * 1000,
   series: {} as Record<string, SeriesPoint[]>,
+  globalPeak: 0,
   heat: {} as Record<string, number>,
   cursors: {} as Record<string, number>,
 }
@@ -63,6 +65,12 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
         }
       }),
     )
+    // 全局峰值:所有断面全窗最大值,统一归一化以体现"上游高、下游低"的扩散浓度差
+    const seriesMap = Object.fromEntries(entries) as Record<string, SeriesPoint[]>
+    let globalPeak = 0
+    for (const pts of Object.values(seriesMap)) {
+      for (const p of pts) if (p.value > globalPeak) globalPeak = p.value
+    }
     set({
       ...initial,
       active: true,
@@ -72,7 +80,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       t1Ms: to,
       cursorMs: from,
       playing: true,
-      series: Object.fromEntries(entries),
+      series: seriesMap,
+      globalPeak,
     })
   },
 
@@ -90,15 +99,14 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     }
     const heat: Record<string, number> = {}
     const cursors = { ...s.cursors }
+    // 全局峰值归一化:上游浓度高先变红,下游随扩散到达逐渐变色,体现时空扩散关系
+    const peak = s.globalPeak || 1
     for (const [sid, points] of Object.entries(s.series)) {
       let idx = cursors[sid] ?? 0
       while (idx < points.length && points[idx].ts <= cursorMs) idx += 1
       cursors[sid] = idx
       const current = idx > 0 ? points[idx - 1].value : 0
-      // 显示归一化:当前值 / 窗内峰值(纯渲染缩放,不改变数据)
-      let peak = 0
-      for (const p of points) if (p.value > peak) peak = p.value
-      heat[sid] = peak > 0 ? Math.min(current / peak, 1) : 0
+      heat[sid] = Math.min(current / peak, 1)
     }
     set({ cursorMs, heat, cursors })
   },
