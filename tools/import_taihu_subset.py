@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -56,7 +57,6 @@ PLACEHOLDERS = {"*", "-", "—", "", "nan", "NaN", "NULL"}
 def parse_ts(row: pd.Series) -> pd.Timestamp | None:
     """监测时间(年份-MM-DD HH:MM)优先,非法时回退文件名抓取时刻。"""
     raw = str(row["监测时间"]).strip()
-    year = str(row["年份"])
     # 常规:2021-07-30 04:00
     m = re.match(r"^(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{2})", raw)
     if m:
@@ -147,6 +147,13 @@ def main() -> None:
         json.dumps(report, ensure_ascii=False, indent=2)
     )
     print(json.dumps(report, ensure_ascii=False, indent=2))
+
+    # The legacy wide tables remain the frontend/anomaly-engine input. Generate the
+    # cross-region long-table package from those same normalized files.
+    sys.path.insert(0, str(ROOT / "backend"))
+    from app.ingest.run import run_taihu
+
+    run_taihu()
 
 
 if __name__ == "__main__":

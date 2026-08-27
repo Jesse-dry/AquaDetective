@@ -4,13 +4,13 @@ import type { SeriesResponse } from '../types'
 export interface SeriesQuery {
   station: string
   indicator: string
-  from?: number
-  to?: number
+  from?: number // API 毫秒级 epoch
+  to?: number // API 毫秒级 epoch
   step?: number // 降采样,大图默认带上
 }
 
 // GET /series?station=&indicator=&from=&to=
-// 后端返回 { station, indicator, count, data:[{ts(秒), value}] }
+// 后端返回 { station, indicator, count, data:[{ts(毫秒 epoch), value}] }
 export function getSeries(q: SeriesQuery) {
   const params = new URLSearchParams()
   params.set('station', q.station)

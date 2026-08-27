@@ -15,7 +15,9 @@ with httpx.Client(base_url=BASE, timeout=120) as c:
     print("最新事件:", evs[0]["id"], evs[0]["etype"], evs[0]["truth_source"], "status:", evs[0]["status"])
 
     # 验证注入事件确实写进了时序
-    r = c.get("/series", params={"station": "st_05", "indicator": "cod", "from": 1737500000, "to": 1737900000})
+    # API 时间参数统一为毫秒级 epoch；数据库内部仍为秒级。
+    r = c.get("/series", params={"station": "st_05", "indicator": "cod",
+                                  "from": 1737500000000, "to": 1737900000000})
     data = r.json()["data"]
     vals = [d["value"] for d in data]
     print(f"st_05 cod 注入窗口: {len(vals)} 点, max={max(vals):.1f}")

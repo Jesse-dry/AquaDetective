@@ -1,15 +1,15 @@
-"""美国公开基准数据导入器入口。
+"""公开基准数据统一导入器入口。
 
-把四类原始数据映射到统一 schema，输出标准化 CSV 到 data/processed/cuyahoga/，
-并生成数据质量报告。
+把 Cuyahoga 与太湖公开数据映射到统一 schema，并生成数据质量报告。
 
 运行（仓库根目录）：
-    backend/.venv/Scripts/python.exe -m app.ingest.run
-或直接：
-    backend/.venv/Scripts/python.exe backend/app/ingest/run.py
+    cd backend
+    .venv/Scripts/python.exe -m app.ingest.run --dataset all
 """
 from __future__ import annotations
 
+import argparse
+import gzip
 import json
 from pathlib import Path
 
@@ -22,6 +22,8 @@ RAW = ROOT / "data" / "raw"
 INTERIM = ROOT / "data" / "interim"
 PROCESSED = ROOT / "data" / "processed"
 OUT = PROCESSED / "cuyahoga"
+TAIHU_OUT = PROCESSED / "taihu_unified"
+QUALITY_REPORTS = ROOT / "docs" / "data-quality"
 
 
 def build_parameters() -> pd.DataFrame:
@@ -32,6 +34,8 @@ def build_parameters() -> pd.DataFrame:
         rows.append({"parameter_code": code, "source": "usgs", "original_name": orig})
     for name, code in schema.ECHO_PARAM_MAP.items():
         rows.append({"parameter_code": code, "source": "echo", "original_name": name})
+    for name, (code, _) in schema.TAIHU_PARAM_MAP.items():
+        rows.append({"parameter_code": code, "source": "taihu", "original_name": name})
     return pd.DataFrame(rows).sort_values(["source", "parameter_code"])
 
 
@@ -60,10 +64,10 @@ def _table(df: pd.DataFrame | pd.Series) -> str:
     return "```\n" + df.to_string() + "\n```"
 
 
-def write_report(obs: pd.DataFrame, sites: pd.DataFrame, flow: pd.DataFrame,
-                 sources: pd.DataFrame, dmr: pd.DataFrame, viol: pd.DataFrame) -> str:
+def write_cuyahoga_report(obs: pd.DataFrame, sites: pd.DataFrame, flow: pd.DataFrame,
+                          sources: pd.DataFrame, dmr: pd.DataFrame,
+                          viol: pd.DataFrame) -> str:
     lines = ["# Cuyahoga HUC8 公开数据 · 数据质量报告", ""]
-    lines += [f"- 生成时间：{pd.Timestamp.now():%Y-%m-%d %H:%M}", ""]
 
     lines += ["## 1. 表概览", "", "| 表 | 行数 | 说明 |", "|---|---|---|"]
     lines += [f"| observations | {len(obs):,} | 水质+水文观测长表 |"]
@@ -94,8 +98,10 @@ def write_report(obs: pd.DataFrame, sites: pd.DataFrame, flow: pd.DataFrame,
 
     lines += ["## 5. 已知限制与注意事项", ""]
     lines += [
-        "- **WQP 时间戳非真 UTC**：`timestamp_utc` 由 ActivityStartDate+Time 拼接并加 `Z`，"
-        "实际为站点本地时区（各站 TimeZoneCode 不同），跨站对比传播时间前需统一时区。",
+        (
+            "- **WQP 时间戳非真 UTC**：`timestamp_utc` 由 ActivityStartDate+Time 拼接并加 `Z`，"
+            "实际为站点本地时区（各站 TimeZoneCode 不同），跨站对比传播时间前需统一时区。"
+        ),
         "- **USGS 为逐日值**：无日内时间，`timestamp_utc` 统一为当日 00:00Z。",
         "- **参数编码**：核心指标走 `parameters.csv` 映射；未映射的 WQP 特征按名称 slug 化保留，未做近似合并。",
         "- **非检出**：WQP 非检出（value 为空）保留 `detection_limit`，value 为 NaN，qc_flag 含 `Not Detected`。",
@@ -104,9 +110,16 @@ def write_report(obs: pd.DataFrame, sites: pd.DataFrame, flow: pd.DataFrame,
     return "\n".join(lines)
 
 
-def main() -> None:
+def _write_quality_report(out_dir: Path, report_name: str, report: str) -> None:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    QUALITY_REPORTS.mkdir(parents=True, exist_ok=True)
+    (out_dir / "data_quality_report.md").write_text(report, encoding="utf-8")
+    (QUALITY_REPORTS / f"{report_name}.md").write_text(report, encoding="utf-8")
+
+
+def run_cuyahoga() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    print("[ingest] 映射四类数据到统一 schema ...")
+    print("[ingest:cuyahoga] 映射四类数据到统一 schema ...")
 
     obs = pd.concat(
         [
@@ -124,7 +137,7 @@ def main() -> None:
     dmr = mappers.map_echo_dmr(RAW / "epa_echo_cuyahoga" / "OH_FY2024_NPDES_DMRS_cuyahoga_huc8.csv")
     viol = mappers.map_echo_violations(RAW / "epa_echo_cuyahoga" / "OH_NPDES_EFF_VIOLATIONS_cuyahoga_huc8.csv")
 
-    print("[ingest] 写入标准化 CSV ...")
+    print("[ingest:cuyahoga] 写入标准化 CSV ...")
     obs.to_csv(OUT / "observations.csv", index=False)
     sites.to_csv(OUT / "sites.csv", index=False)
     flow.to_csv(OUT / "flow_network.csv", index=False)
@@ -134,12 +147,119 @@ def main() -> None:
     build_parameters().to_csv(OUT / "parameters.csv", index=False)
     build_datasets().to_csv(OUT / "datasets.csv", index=False)
 
-    report = write_report(obs, sites, flow, sources, dmr, viol)
-    (OUT / "data_quality_report.md").write_text(report, encoding="utf-8")
+    report = write_cuyahoga_report(obs, sites, flow, sources, dmr, viol)
+    _write_quality_report(OUT, "cuyahoga", report)
 
-    print(f"[ingest] 完成：{OUT}")
+    print(f"[ingest:cuyahoga] 完成：{OUT}")
     print(f"  observations={len(obs):,}  sites={len(sites):,}  flow_edges={len(flow):,}  "
           f"sources={len(sources):,}  dmr={len(dmr):,}  violations={len(viol):,}")
+
+
+def write_taihu_report(stats: dict[str, int], sites: pd.DataFrame,
+                        sources: pd.DataFrame, flow: pd.DataFrame) -> str:
+    return "\n".join(
+        [
+            "# 太湖国控断面公开数据 · 统一导入质量报告",
+            "",
+            "## 1. 表概览",
+            "",
+            "| 表 | 行数 | 说明 |",
+            "|---|---:|---|",
+            f"| observations | {stats['observations']:,} | 调查可读的数值观测长表 |",
+            f"| evaluation_labels | {stats['evaluation_labels']:,} | 离线评测水质类别 |",
+            f"| sites | {len(sites):,} | 太湖断面及 HydroRIVERS 吸附 |",
+            f"| sources | {len(sources):,} | 企业候选源及河网吸附 |",
+            f"| flow_network | {len(flow):,} | HydroRIVERS 河段拓扑 |",
+            "",
+            "## 2. 隔离保证",
+            "",
+            "- `observations.csv.gz` 不包含 `quality_class`、`truth_source` 或企业标签。",
+            "- 发布水质类别仅写入 `evaluation_labels.csv.gz`，只供离线验证读取。",
+            "- 旧版按站点宽表继续保留，现有异常检测与前端演示不受影响。",
+            "",
+            "## 3. 已知限制",
+            "",
+            f"- 河网吸附标记为 `ok` 的断面 {int((sites['snap_flag'] == 'ok').sum())}/{len(sites)}。",
+            f"- 河网吸附标记为 `ok` 的企业 {int((sources['snap_flag'] == 'ok').sum())}/{len(sources)}。",
+            "- 断面坐标来自汇编方地图查询，正式归因前仍需用官方坐标复核。",
+            "- HydroRIVERS 流速与传播时间只能用于候选排序，不能作为污染因果证据。",
+        ]
+    )
+
+
+def run_taihu() -> None:
+    """Stream legacy Taihu station files into the unified long-table package."""
+    readings_dir = PROCESSED / "guokong_taihu" / "readings"
+    station_snap = PROCESSED / "guokong_taihu" / "stations_snapped.csv"
+    enterprise_snap = PROCESSED / "taihu_enterprises" / "enterprises_snapped.csv"
+    river_shape = INTERIM / "hydrorivers_v10_as" / "hydrorivers_taihu_bbox.shp"
+    required = [readings_dir, station_snap, enterprise_snap, river_shape]
+    missing = [str(path.relative_to(ROOT)) for path in required if not path.exists()]
+    if missing:
+        raise FileNotFoundError("Taihu unified ingest inputs missing: " + ", ".join(missing))
+
+    TAIHU_OUT.mkdir(parents=True, exist_ok=True)
+    observations_path = TAIHU_OUT / "observations.csv.gz"
+    labels_path = TAIHU_OUT / "evaluation_labels.csv.gz"
+    observation_count = 0
+    label_count = 0
+    observation_header = True
+    label_header = True
+    print("[ingest:taihu] 流式写入统一观测与离线评测标签 ...")
+    with (
+        gzip.open(observations_path, "wt", encoding="utf-8", newline="") as obs_file,
+        gzip.open(labels_path, "wt", encoding="utf-8", newline="") as label_file,
+    ):
+        for reading_path in sorted(readings_dir.glob("taihu_*.csv")):
+            frame = pd.read_csv(reading_path)
+            station_id = reading_path.stem
+            observations = mappers.map_taihu_reading_frame(frame, station_id)
+            labels = mappers.map_taihu_evaluation_labels(frame, station_id)
+            if not observations.empty:
+                observations.to_csv(obs_file, index=False, header=observation_header)
+                observation_header = False
+                observation_count += len(observations)
+            if not labels.empty:
+                labels.to_csv(label_file, index=False, header=label_header)
+                label_header = False
+                label_count += len(labels)
+        if observation_header:
+            pd.DataFrame(columns=schema.OBSERVATION_COLUMNS).to_csv(obs_file, index=False)
+        if label_header:
+            pd.DataFrame(columns=schema.EVALUATION_LABEL_COLUMNS).to_csv(label_file, index=False)
+
+    sites = mappers.map_taihu_sites(station_snap)
+    sources = mappers.map_taihu_sources(enterprise_snap)
+    flow = mappers.map_hydrorivers_flow(river_shape)
+    sites.to_csv(TAIHU_OUT / "sites.csv", index=False)
+    sources.to_csv(TAIHU_OUT / "sources.csv", index=False)
+    flow.to_csv(TAIHU_OUT / "flow_network.csv", index=False)
+    build_parameters().to_csv(TAIHU_OUT / "parameters.csv", index=False)
+    build_datasets().to_csv(TAIHU_OUT / "datasets.csv", index=False)
+
+    stats = {"observations": observation_count, "evaluation_labels": label_count}
+    report = write_taihu_report(stats, sites, sources, flow)
+    _write_quality_report(TAIHU_OUT, "taihu", report)
+    print(f"[ingest:taihu] 完成：{TAIHU_OUT}")
+    print(
+        f"  observations={observation_count:,}  evaluation_labels={label_count:,}  "
+        f"sites={len(sites):,}  sources={len(sources):,}  flow_reaches={len(flow):,}"
+    )
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--dataset",
+        choices=("cuyahoga", "taihu", "all"),
+        default="cuyahoga",
+        help="dataset package to generate (default: cuyahoga)",
+    )
+    args = parser.parse_args(argv)
+    if args.dataset in ("cuyahoga", "all"):
+        run_cuyahoga()
+    if args.dataset in ("taihu", "all"):
+        run_taihu()
 
 
 if __name__ == "__main__":

@@ -33,9 +33,29 @@ python scripts/run_tests.py
 `.env` 不配置 `AQ_LLM_API_KEY` 时，Agent 自动使用模板推理（确定性规则），
 完整调查流程（假设生成 → 工具验证 → 结论 → 报告）照常工作，保证演示不依赖网络。
 
+## 公开数据统一导入
+
+太湖导入需要地理数据可选依赖；Cuyahoga 导入只需要基础依赖。
+
+```bash
+cd backend
+pip install -e ".[data]"
+
+# 可选 cuyahoga、taihu 或 all
+python -m app.ingest.run --dataset all
+```
+
+标准化结果写入 `data/processed/cuyahoga/` 和 `data/processed/taihu_unified/`，
+质量报告同步写入 `docs/data-quality/`。太湖发布水质类别只写入
+`evaluation_labels.csv.gz`，不会混入调查引擎读取的 `observations.csv.gz`。
+
+时间约定：SQLite 与计算引擎内部保留秒级 epoch；所有 API/WS 的 `ts`、`onset_ts`
+和 `started_at` 均为毫秒级 epoch，前端直接格式化展示。
+
 ## 常用脚本
 
 - `python -m app.data.seed` — 重建数据库（同 seed 结果可复现；`--force` 强制重建）
+- `python -m app.ingest.run --dataset all` — 生成中美公开数据统一包和质量报告
 - `python scripts/run_tests.py` — 轻量测试 runner（无 pytest 依赖；pytest 亦可）
 - `python scripts/smoke_investigate.py [event_id]` — 不启动服务，直接跑"事件 → 侦探推理 → 报告"全链路（无 langgraph 也能跑）
 - `python scripts/verify_graph.py [event_id]` — 用最小 stub 模拟 langgraph，验证状态机接线（节点/边/条件路由）

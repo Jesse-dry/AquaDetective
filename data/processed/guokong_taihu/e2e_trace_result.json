@@ -4,8 +4,14 @@
     "station_id": "taihu_059",
     "station_name": "钓邾大桥",
     "indicator": "ammonia_n",
-    "matched_enterprise": "无锡中发水务投资有限公司(锡北污水处理厂)",
-    "travel_h": 4.6
+    "primary_candidate": "无锡中发水务投资有限公司(东港污水处理厂)",
+    "primary_candidate_tie_count": 2,
+    "evidence_status": "candidate_unverified",
+    "causal_confirmed": false
+  },
+  "station": {
+    "lon": 120.552273,
+    "lat": 31.579094
   },
   "anomaly": {
     "station_id": "taihu_059",
@@ -27,7 +33,7 @@
   "upstream_trace": {
     "window_h": 72.0,
     "upstream_reaches_count": 2,
-    "upstream_enterprises_count": 1,
+    "upstream_enterprises_count": 3,
     "upstream_path_sample": [
       {
         "hid": 40625918,
@@ -43,8 +49,8 @@
       }
     ]
   },
-  "matched_enterprise": {
-    "enterprise": "无锡中发水务投资有限公司(锡北污水处理厂)",
+  "primary_candidate": {
+    "enterprise": "无锡中发水务投资有限公司(东港污水处理厂)",
     "city": "无锡市",
     "industry": "wwtp",
     "credit_code": "91320205789098198H",
@@ -52,14 +58,51 @@
     "lon_wgs84": 120.488141,
     "lat_wgs84": 31.608964,
     "hyriv_id": 40625635,
-    "travel_h": 4.6,
+    "travel_time": {
+      "estimate_h": 4.6,
+      "range_h": [
+        4.6,
+        24.0
+      ],
+      "method": "HydroRIVERS reach length / estimated velocity",
+      "causal_evidence": false
+    },
     "dist_km": 8.5,
     "snap_dist_m": 941.8,
     "indicator_match": true,
     "indicator_note": "污水处理厂出水氨氮/COD/总磷异常",
-    "score": -19.4
+    "ranking_score": -19.4,
+    "evidence_status": "candidate_unverified",
+    "causal_confirmed": false
   },
+  "primary_candidate_tie_count": 2,
   "candidate_enterprises": [
+    {
+      "enterprise": "无锡中发水务投资有限公司(东港污水处理厂)",
+      "city": "无锡市",
+      "industry": "wwtp",
+      "credit_code": "91320205789098198H",
+      "address": "无锡市锡山区安镇镇年余村(分支机构,母公司代码)",
+      "lon_wgs84": 120.488141,
+      "lat_wgs84": 31.608964,
+      "hyriv_id": 40625635,
+      "travel_time": {
+        "estimate_h": 4.6,
+        "range_h": [
+          4.6,
+          24.0
+        ],
+        "method": "HydroRIVERS reach length / estimated velocity",
+        "causal_evidence": false
+      },
+      "dist_km": 8.5,
+      "snap_dist_m": 941.8,
+      "indicator_match": true,
+      "indicator_note": "污水处理厂出水氨氮/COD/总磷异常",
+      "ranking_score": -19.4,
+      "evidence_status": "candidate_unverified",
+      "causal_confirmed": false
+    },
     {
       "enterprise": "无锡中发水务投资有限公司(锡北污水处理厂)",
       "city": "无锡市",
@@ -69,12 +112,48 @@
       "lon_wgs84": 120.488141,
       "lat_wgs84": 31.608964,
       "hyriv_id": 40625635,
-      "travel_h": 4.6,
+      "travel_time": {
+        "estimate_h": 4.6,
+        "range_h": [
+          4.6,
+          24.0
+        ],
+        "method": "HydroRIVERS reach length / estimated velocity",
+        "causal_evidence": false
+      },
       "dist_km": 8.5,
       "snap_dist_m": 941.8,
       "indicator_match": true,
       "indicator_note": "污水处理厂出水氨氮/COD/总磷异常",
-      "score": -19.4
+      "ranking_score": -19.4,
+      "evidence_status": "candidate_unverified",
+      "causal_confirmed": false
+    },
+    {
+      "enterprise": "伟成(无锡)金属有限公司",
+      "city": "无锡市",
+      "industry": "electroplating",
+      "credit_code": "91320205725204983U",
+      "address": "无锡市锡山经济技术开发区联福路1245号",
+      "lon_wgs84": 120.4953,
+      "lat_wgs84": 31.624337,
+      "hyriv_id": 40625635,
+      "travel_time": {
+        "estimate_h": 4.6,
+        "range_h": [
+          4.6,
+          24.0
+        ],
+        "method": "HydroRIVERS reach length / estimated velocity",
+        "causal_evidence": false
+      },
+      "dist_km": 8.5,
+      "snap_dist_m": 248.3,
+      "indicator_match": false,
+      "indicator_note": "电镀废水含重金属/高电导",
+      "ranking_score": 4.6,
+      "evidence_status": "candidate_unverified",
+      "causal_confirmed": false
     }
   ],
   "all_candidates_summary": [
@@ -83,35 +162,35 @@
       "name": "钓邾大桥",
       "indicator": "ammonia_n",
       "n_high": 6,
-      "upstream_ents": 1
+      "upstream_ents": 3
     },
     {
       "station": "taihu_090",
       "name": "汤溇",
       "indicator": "tp",
       "n_high": 5,
-      "upstream_ents": 1
+      "upstream_ents": 2
     },
     {
       "station": "taihu_085",
       "name": "新港口(新塘港)",
       "indicator": "turbidity",
       "n_high": 6,
-      "upstream_ents": 1
+      "upstream_ents": 2
     },
     {
       "station": "taihu_081",
       "name": "小梅口",
       "indicator": "turbidity",
       "n_high": 4,
-      "upstream_ents": 17
+      "upstream_ents": 21
     },
     {
       "station": "taihu_048",
       "name": "瓜泾口西",
       "indicator": "turbidity",
       "n_high": 3,
-      "upstream_ents": 19
+      "upstream_ents": 25
     }
   ],
   "assumptions": {
@@ -120,6 +199,15 @@
     "travel_window_h": 72.0,
     "velocity": "估速 0.3~2.0 m/s(由 DIS_AV_CMS 对数折算),保底 0.5 m/s",
     "anomaly_engine": "backend/app/engine/anomaly.py detect_cusum (h=7σ, 纯函数)",
-    "note": "数值计算(异常检测/拓扑/吸附)全走确定性纯函数;行业-指标映射仅作命中后佐证,不影响数值。"
-  }
+    "note": "数值计算(异常检测/拓扑/吸附)全走确定性纯函数;行业-指标映射仅用于候选排序。"
+  },
+  "evidence_status": "candidate_unverified",
+  "causal_confirmed": false,
+  "limitations": [
+    "企业仅因位于河网上游且行业指标相符而成为候选,未取得排口同期监测证据。",
+    "传播时间来自 HydroRIVERS 河段长度与估算流速,只用于排序,不是因果证据。",
+    "断面和企业坐标存在地图查询与河网吸附误差,正式归因前必须复核。",
+    "首位有 2 家同分候选;界面仅展示其中一家,不代表其证据优于其他同分候选。",
+    "本结果是算法验证,不是对真实污染事件或企业责任的认定。"
+  ]
 }

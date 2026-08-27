@@ -13,6 +13,7 @@ from ..agents import recorder as rec_mod
 from ..agents.runner import run_investigation
 from ..context import get_db_path, get_llm, get_watershed
 from ..db import get_conn
+from .time import epoch_ms
 from .ws import INVESTIGATIONS
 
 router = APIRouter(tags=["investigate"])
@@ -29,7 +30,12 @@ def list_events(status: str | None = None, limit: int = 50):
         rows = conn.execute("SELECT * FROM events ORDER BY onset_ts DESC LIMIT ?",
                             (limit,)).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    result = []
+    for row in rows:
+        event = dict(row)
+        event["onset_ts"] = epoch_ms(event["onset_ts"])
+        result.append(event)
+    return result
 
 
 @router.post("/events/{event_id}/investigate")
@@ -70,6 +76,7 @@ def investigation_status(inv_id: str):
     if not row:
         raise HTTPException(404, "调查不存在")
     out = dict(row)
+    out["started_at"] = epoch_ms(out["started_at"])
     out["conclusion"] = json.loads(out["conclusion"]) if out["conclusion"] else None
     out["stream"] = rec_mod.replay(inv_id)
     return out

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 
+from ..api.time import epoch_ms
 from . import tools
 
 MAX_ROUNDS = 3
@@ -32,14 +33,17 @@ def parse_event(state: dict, llm, db_path: str, ws: dict) -> dict:
     ev = state["event"]
     st = _station_of(ws, ev["station_id"])
     indicators = ", ".join(_indicators(ev) or st["indicators"])
+    event_evidence = {
+        k: ev.get(k) for k in ("id", "station_id", "indicators", "severity", "etype")
+    }
+    event_evidence["onset_ts"] = epoch_ms(ev.get("onset_ts"))
     stream = list(state["stream"])
     stream.append({"type": "step", "data": {
         "step_id": "parse", "phase": "事件解析",
         "clue": f"断面 {ev['station_id']}（{st['node_id']}）检出异常：{indicators}",
         "reasoning": f"异常类型疑似 {ev['etype']}，严重度 {ev['severity']}，"
-                     f"首达时间 {ev['onset_ts']}。开始排查上游污染源。",
-        "evidence": [{"kind": "event", "value": {k: ev.get(k) for k in
-                      ("id", "station_id", "indicators", "onset_ts", "severity", "etype")}}],
+                     f"首达时间 {epoch_ms(ev['onset_ts'])}（毫秒 epoch）。开始排查上游污染源。",
+        "evidence": [{"kind": "event", "value": event_evidence}],
         "status": "verified"}})
     return {"stream": stream}
 

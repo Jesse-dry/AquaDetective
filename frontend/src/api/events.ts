@@ -1,7 +1,7 @@
 import { apiGet, apiPost } from './client'
 import type { PollutionEvent } from '../types'
 
-// 后端原始事件行:indicators 可能是 JSON 字符串,onset_ts 为秒级 epoch
+// 后端原始事件行:indicators 可能是 JSON 字符串,onset_ts 为毫秒级 epoch
 interface RawEvent extends Omit<PollutionEvent, 'indicators'> {
   indicators: string | string[]
 }

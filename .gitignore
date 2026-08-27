@@ -3,6 +3,8 @@
 .DS_Store
 CLAUDE.md
 中国数据获取指南.md
+__pycache__/
+*.py[cod]
 
 # 大体量原始数据本地留存，元数据、代码和精选样例照常提交
 data/raw/hydrorivers_v10_as/

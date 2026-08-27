@@ -5,8 +5,8 @@ import { getSeries } from '../api/series'
 // 扩散回放:以事件首达时刻为中心开时间窗,拉取各断面真实时序,
 // 时间游标推进时把"当前值/窗内峰值"作为热力值供地图着色。
 // 前端零计算:数值原样来自 /series,热力仅做显示归一化。
-const PRE_S = 6 * 3600 // 窗口:事件前 6h
-const POST_S = 48 * 3600 // 窗口:事件后 48h
+const PRE_MS = 6 * 3600 * 1000 // 窗口:事件前 6h
+const POST_MS = 48 * 3600 * 1000 // 窗口:事件后 48h
 
 interface PlaybackState {
   active: boolean
@@ -46,9 +46,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   ...initial,
 
   load: async (ev, stationIds) => {
-    const onsetS = ev.onset_ts / 1000
-    const from = onsetS - PRE_S
-    const to = onsetS + POST_S
+    const from = ev.onset_ts - PRE_MS
+    const to = ev.onset_ts + POST_MS
     const indicator = ev.indicators[0]
     const entries = await Promise.all(
       stationIds.map(async (sid) => {
