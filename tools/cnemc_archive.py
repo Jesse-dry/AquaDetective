@@ -115,16 +115,29 @@ def main() -> None:
                 print(f"[OK] 覆盖率 {coverage:.1%}(拉 {len(rows)}/系统 {rec_n})")
         except (ValueError, TypeError):
             pass
-    # 3) 数据新鲜度:与已存 CSV 末行监测时间比对,本次最新时次不应早于已存最新
+    # 3) 数据新鲜度:与已存 CSV 末行比对,本次最新时次不应早于已存最新
+    #    用 (抓取年份 + 监测时间) 拼成可比较的完整时间戳,防跨年字符串误杀
+    #    (年初 '01-01' 字典序 < '12-31' 会误判,必须带年份比)
+    year = now.year
     if OUT_CSV.exists():
         with open(OUT_CSV, newline="") as f:
             recs = list(csv.DictReader(f))
         if recs:
+            last_year = recs[-1].get("抓取年份", str(year))
             last_ts = recs[-1]["监测时间"]
             cur_max = max((r[3] for r in rows if len(r) > 3), default="")
-            if cur_max and last_ts and cur_max < last_ts:
-                print(f"[FAILED] 本次最新时次 {cur_max} 早于已存 {last_ts},"
+            # 拼成 "YYYY MM-DD HH:MM" 字符串比较(年份前置,字典序=时间序)
+            last_full = f"{last_year} {last_ts}"
+            cur_full = f"{year} {cur_max}"
+            if cur_full < last_full:
+                print(f"[FAILED] 本次最新时次 {cur_full} 早于已存 {last_full},"
                       f"疑 API 返回缓存旧数据,退出不提交", flush=True)
+                raise SystemExit(1)
+            # 时次停滞断言:本次最新时次应严格晚于已存,或本次含已存未有的新时次
+            # (防"末次相等仅补全断面"被放行——与前向存档目标相悖)
+            if cur_full == last_full:
+                print(f"[FAILED] 本次最新时次 {cur_full} 与已存末次相同,"
+                      f"无新时次(仅补全断面,前向存档停滞),退出不提交", flush=True)
                 raise SystemExit(1)
 
     # 1) 原始快照(raw 不修改)
