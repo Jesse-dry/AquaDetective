@@ -58,9 +58,12 @@ export const useInvestigationStore = create<InvestigationState>((set, get) => ({
       case 'hypothesis':
         set({ hypotheses: { ...s.hypotheses, [msg.data.id]: msg.data } })
         return
-      case 'agent_talk':
+      case 'agent_talk': {
+        // (agent, text) 去重:重连补齐重放时重复消息不产生重复卡片
+        if (s.talks.some((t) => t.agent === msg.data.agent && t.text === msg.data.text)) return
         set({ talks: [...s.talks, msg.data] })
         return
+      }
       case 'conclusion':
         set({ conclusion: msg.data })
         return

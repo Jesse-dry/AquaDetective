@@ -39,6 +39,17 @@ export function AlertList() {
     return () => clearInterval(timer)
   }, [refresh])
 
+  // 调查结束(收到 report_ready/conclusion/failed)后主动关闭 WS,避免后端关连接触发无效重连
+  // 无效重连会反复补齐 stream,导致 talks 重复跳出(已加去重,但切断根源更干净)
+  const reportId = useInvestigationStore((s) => s.reportId)
+  const conclusion = useInvestigationStore((s) => s.conclusion)
+  const failed = useInvestigationStore((s) => s.failed)
+  useEffect(() => {
+    if (reportId || conclusion || failed) {
+      ;(activeConn as { close?: () => void } | null)?.close?.()
+    }
+  }, [reportId, conclusion, failed])
+
   const investigate = async (eventId: string) => {
     ;(activeConn as { close?: () => void; stop?: () => void } | null)?.close?.()
     ;(activeConn as { stop?: () => void } | null)?.stop?.()
