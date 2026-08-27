@@ -1,27 +1,657 @@
 {
-  "outlets_count": 1,
-  "pollutant_rows": 14,
+  "outlets_count": 31,
+  "pollutant_rows": 418,
+  "enterprises_with_data": 28,
+  "enterprises_anchored": 34,
   "enterprises": {
     "91320205A8062806XD": {
       "name": "无锡市东北塘宏良染色厂",
       "major": [
         {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 23.037
+        },
+        {
           "pollutant_code": "COD",
           "pollutant_name": "化学需氧量",
-          "annual_limit_t": 575.922
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "NH3N",
+      "fingerprint_vector": {
+        "NH3N": 23.037,
+        "COD": null
+      },
+      "permit_status": "在业，许可注销"
+    },
+    "91330502734506772N": {
+      "name": "湖州三友印染有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 107.277
         },
         {
           "pollutant_code": "NH3N",
           "pollutant_name": "氨氮（NH3-N）",
-          "annual_limit_t": 23.037
+          "annual_limit_t": 10.728
         }
       ],
       "primary_pollutant": "COD",
       "fingerprint_vector": {
-        "COD": 575.922,
-        "NH3N": 23.037
-      }
+        "COD": 107.277,
+        "NH3N": 10.728
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913305027332233087": {
+      "name": "浙江大港印染有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 132.078
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 13.208
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 132.078,
+        "NH3N": 13.208
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91330502147023485D": {
+      "name": "湖州金牛纺织印染实业有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 131.466
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 13.147
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 131.466,
+        "NH3N": 13.147
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91330521557545067M": {
+      "name": "浙江龙威印染有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 39.6
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 3.96
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 39.6,
+        "NH3N": 3.96
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913305007519080792": {
+      "name": "浙江钱江纺织印染有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 84.83
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 8.48
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 84.83,
+        "NH3N": 8.48
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91330502704448495M": {
+      "name": "湖州复兴纺织印染有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 33.89
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 3.389
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 33.89,
+        "NH3N": 3.389
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913305006095842023": {
+      "name": "浙江华源应用新材料股份有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": null
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913305006095858382": {
+      "name": "漂莱特(中国)有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 34.32
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 4.576
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 34.32,
+        "NH3N": 4.576
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91330521569388863L": {
+      "name": "英格瓷(浙江)锆业有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": null
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91330521MA29J05A6N": {
+      "name": "浙江拜克生物科技有限公司",
+      "major": [
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 3.321
+        },
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "NH3N",
+      "fingerprint_vector": {
+        "NH3N": 3.321,
+        "COD": null
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91330500704459653Q": {
+      "name": "浙江拓普药业股份有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 20.251
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 2.363
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 20.251,
+        "NH3N": 2.363
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913305007195378967": {
+      "name": "浙江浙北药业有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 6.211
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 0.435
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 6.211,
+        "NH3N": 0.435
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91330521732436475P": {
+      "name": "德清县上峰纸业有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 93.062
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 7.347
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 93.062,
+        "NH3N": 7.347
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913305211471190143": {
+      "name": "湖州市韶春纸业有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 13.86
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 0.693
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 13.86,
+        "NH3N": 0.693
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913305211470844729": {
+      "name": "湖州新天纸业有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 155.61
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 12.968
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 155.61,
+        "NH3N": 12.968
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913305001470538522": {
+      "name": "湖州市水务集团有限公司(市北污水处理厂)",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 292.0
+        },
+        {
+          "pollutant_code": "TN",
+          "pollutant_name": "总氮（以N计）",
+          "annual_limit_t": 96.725
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 20.683
+        },
+        {
+          "pollutant_code": "TP",
+          "pollutant_name": "总磷（以P计）",
+          "annual_limit_t": 2.19
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 292.0,
+        "TN": 96.725,
+        "NH3N": 20.683,
+        "TP": 2.19
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91330502770749069W": {
+      "name": "浙江湖州金洁水务股份有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 876.0
+        },
+        {
+          "pollutant_code": "TN",
+          "pollutant_name": "总氮（以N计）",
+          "annual_limit_t": 289.98
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 61.92
+        },
+        {
+          "pollutant_code": "TP",
+          "pollutant_name": "总磷（以P计）",
+          "annual_limit_t": 6.57
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 876.0,
+        "TN": 289.98,
+        "NH3N": 61.92,
+        "TP": 6.57
+      },
+      "permit_status": "2021年12月6日更名为“浙江金洁环境股份有限公司”"
+    },
+    "91330500766436502E": {
+      "name": "湖州中环水务有限责任公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 1460.0
+        },
+        {
+          "pollutant_code": "TN",
+          "pollutant_name": "总氮（以N计）",
+          "annual_limit_t": 483.3
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 103.2
+        },
+        {
+          "pollutant_code": "TP",
+          "pollutant_name": "总磷（以P计）",
+          "annual_limit_t": 10.95
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 1460.0,
+        "TN": 483.3,
+        "NH3N": 103.2,
+        "TP": 10.95
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91330500786432381F": {
+      "name": "湖州诚信污水处理有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 292.0
+        },
+        {
+          "pollutant_code": "TN",
+          "pollutant_name": "总氮（以N计）",
+          "annual_limit_t": 87.6
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 14.6
+        },
+        {
+          "pollutant_code": "TP",
+          "pollutant_name": "总磷（以P计）",
+          "annual_limit_t": 2.19
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 292.0,
+        "TN": 87.6,
+        "NH3N": 14.6,
+        "TP": 2.19
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913305006605864576": {
+      "name": "湖州双林水质净化有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 365.0
+        },
+        {
+          "pollutant_code": "TN",
+          "pollutant_name": "总氮（以N计）",
+          "annual_limit_t": 120.825
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 25.8
+        },
+        {
+          "pollutant_code": "TP",
+          "pollutant_name": "总磷（以P计）",
+          "annual_limit_t": 2.7375
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 365.0,
+        "TN": 120.825,
+        "NH3N": 25.8,
+        "TP": 2.7375
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913202057558662409": {
+      "name": "无锡市永平热镀锌有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": null
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91320205725204983U": {
+      "name": "伟成(无锡)金属有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": null
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91320205MA22CLY012": {
+      "name": "无锡达美喷涂有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": null
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91320205713285982F": {
+      "name": "无锡苏纺纺织科技有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": null
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913202057624311499": {
+      "name": "无锡科捷化学有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": null
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "913202056282865181": {
+      "name": "无锡先进化药化工有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": 32.8237
+        },
+        {
+          "pollutant_code": "TN",
+          "pollutant_name": "总氮（以N计）",
+          "annual_limit_t": 9.3782
+        },
+        {
+          "pollutant_code": "NH3N",
+          "pollutant_name": "氨氮（NH3-N）",
+          "annual_limit_t": 3.7513
+        },
+        {
+          "pollutant_code": "TP",
+          "pollutant_name": "总磷（以P计）",
+          "annual_limit_t": 0.2345
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": 32.8237,
+        "TN": 9.3782,
+        "NH3N": 3.7513,
+        "TP": 0.2345
+      },
+      "permit_status": "在业(有许可数据)"
+    },
+    "91320205MA24KU3Y2Q": {
+      "name": "无锡市锡山中荷水务有限公司",
+      "major": [
+        {
+          "pollutant_code": "COD",
+          "pollutant_name": "化学需氧量",
+          "annual_limit_t": null
+        }
+      ],
+      "primary_pollutant": "COD",
+      "fingerprint_vector": {
+        "COD": null
+      },
+      "permit_status": "在业(有许可数据)"
     }
   },
-  "notes": "主要污染物=主要排放口合计表中年排放量限值非/的污染物;首要污染物=年排放量最大者;fingerprint_vector 可直接对接 backend/app/engine/fingerprint.py match_pollutants。raw 文件用 ### 信用代码 企业名 锚点行分隔多家企业。"
+  "permit_status_table": [
+    "无锡市东北塘宏良染色厂 | 在业，许可注销",
+    "湖州三友印染有限公司 | 在业(有许可数据)",
+    "浙江大港印染有限公司 | 在业(有许可数据)",
+    "湖州金牛纺织印染实业有限公司 | 在业(有许可数据)",
+    "湖州华欣印染有限公司 | 2025-11-06注销(宣告破产)",
+    "浙江龙威印染有限公司 | 在业(有许可数据)",
+    "浙江钱江纺织印染有限公司 | 在业(有许可数据)",
+    "湖州复兴纺织印染有限公司 | 在业(有许可数据)",
+    "浙江华源应用新材料股份有限公司 | 在业(有许可数据)",
+    "漂莱特(中国)有限公司 | 在业(有许可数据)",
+    "英格瓷(浙江)锆业有限公司 | 在业(有许可数据)",
+    "浙江拜克生物科技有限公司 | 在业(有许可数据)",
+    "浙江拓普药业股份有限公司 | 在业(有许可数据)",
+    "浙江浙北药业有限公司 | 在业(有许可数据)",
+    "德清县上峰纸业有限公司 | 在业(有许可数据)",
+    "德清县东港纸业有限公司 | 存续，许可注销",
+    "湖州市韶春纸业有限公司 | 在业(有许可数据)",
+    "湖州新天纸业有限公司 | 在业(有许可数据)",
+    "湖州市水务集团有限公司(碧浪污水处理厂) | 在业(有许可数据)",
+    "浙江湖州金洁水务股份有限公司 | 2021年12月6日更名为“浙江金洁环境股份有限公司”",
+    "湖州中环水务有限责任公司 | 在业(有许可数据)",
+    "湖州诚信污水处理有限公司 | 在业(有许可数据)",
+    "湖州南浔和孚污水处理有限公司 | 2022-05-09注销",
+    "湖州双林水质净化有限公司 | 在业(有许可数据)",
+    "爱恩邦德(无锡)技术有限公司 | 在业，许可注销",
+    "无锡市永平热镀锌有限公司 | 在业(有许可数据)",
+    "伟成(无锡)金属有限公司 | 在业(有许可数据)",
+    "无锡达美喷涂有限公司 | 在业(有许可数据)",
+    "无锡市长宏漂染有限公司 | 在业，排污许可证有效期届满未延续",
+    "无锡苏纺纺织科技有限公司 | 在业(有许可数据)",
+    "无锡科捷化学有限公司 | 在业(有许可数据)",
+    "无锡先进化药化工有限公司 | 在业(有许可数据)",
+    "无锡中发水务投资有限公司(锡北污水处理厂) | 在业，许可注销",
+    "无锡市锡山中荷水务有限公司 | 在业(有许可数据)"
+  ],
+  "notes": "主要污染物=主要排放口合计表中年排放量限值非/的污染物;首要污染物=年排放量最大者;fingerprint_vector 可直接对接 backend/app/engine/fingerprint.py match_pollutants。raw 文件用 ### 信用代码 企业名 锚点行分隔多家企业;无许可数据的企业见 企业备注.md(许可注销/破产/届满未延续)。"
 }

@@ -84,11 +84,29 @@ def parse_annual(fields: list[str]) -> list:
     return out
 
 
+def parse_remarks(path: Path) -> dict[str, str]:
+    """从 企业备注.md 解析 {企业名: 许可状态备注}。"""
+    out: dict[str, str] = {}
+    if not path.exists():
+        return out
+    for line in open(path, encoding="utf-8"):
+        line = line.strip()
+        if not line or line.startswith("无信息"):
+            continue
+        # 格式:企业名,状态说明
+        if "，" in line:
+            name, note = line.split("，", 1)
+            out[name.strip()] = note.strip()
+    return out
+
+
 def main() -> None:
     lines = [l.rstrip("\n") for l in open(RAW, encoding="utf-8") if l.strip()]
     if not lines:
         print("[!] raw 为空")
         return
+
+    remarks = parse_remarks(ROOT / "企业备注.md")
 
     outlets: dict[tuple[str, str], dict] = {}  # (credit_code, outlet_code) → 排口信息
     pollutants: list[dict] = []  # 排口×污染物
@@ -221,13 +239,48 @@ def main() -> None:
         d["major"].sort(key=lambda x: x["annual_limit_t"] or 0, reverse=True)
         d["primary_pollutant"] = d["major"][0]["pollutant_code"] if d["major"] else None
         d["fingerprint_vector"] = {m["pollutant_code"]: m["annual_limit_t"] for m in d["major"]}
+        d["permit_status"] = remarks.get(d["name"], "在业(有许可数据)")
+
+    # 全部锚点企业(含无许可数据的)→ 企业许可状态表
+    anchor_ents: dict[str, str] = {}  # cc → name
+    for line in lines:
+        if line.startswith("###"):
+            parts = line.split(maxsplit=2)
+            cc = parts[1] if len(parts) > 1 else ""
+            nm = parts[2].strip() if len(parts) > 2 else ""
+            anchor_ents[cc] = nm
+    ent_status_rows = []
+    for cc, nm in anchor_ents.items():
+        has_data = cc in enterprises
+        status = remarks.get(nm, ("在业(有许可数据)" if has_data else "未查到许可数据"))
+        ent_status_rows.append({
+            "credit_code": cc, "name": nm,
+            "has_permit_data": has_data,
+            "permit_status": status,
+            "primary_pollutant": enterprises[cc]["primary_pollutant"] if has_data else "",
+            "major_pollutants": "/".join(m["pollutant_code"] for m in enterprises[cc]["major"]) if has_data else "",
+        })
+
+    # 写企业许可状态表
+    with open(OUT_DIR / "enterprises_permitted.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=["credit_code", "name", "has_permit_data",
+                                          "permit_status", "primary_pollutant",
+                                          "major_pollutants"])
+        w.writeheader()
+        for r in ent_status_rows:
+            w.writerow(r)
+
     report = {
         "outlets_count": len(outlet_rows),
         "pollutant_rows": len(pollutants),
+        "enterprises_with_data": len(enterprises),
+        "enterprises_anchored": len(anchor_ents),
         "enterprises": enterprises,
+        "permit_status_table": [f"{r['name']} | {r['permit_status']}" for r in ent_status_rows],
         "notes": "主要污染物=主要排放口合计表中年排放量限值非/的污染物;首要污染物=年排放量最大者;"
                  "fingerprint_vector 可直接对接 backend/app/engine/fingerprint.py match_pollutants。"
-                 "raw 文件用 ### 信用代码 企业名 锚点行分隔多家企业。",
+                 "raw 文件用 ### 信用代码 企业名 锚点行分隔多家企业;"
+                 "无许可数据的企业见 企业备注.md(许可注销/破产/届满未延续)。",
     }
     (OUT_DIR / "outlets_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
