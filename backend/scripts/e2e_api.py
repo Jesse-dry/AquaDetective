@@ -28,7 +28,8 @@ async def main(event_id: str) -> None:
                 msgs.append(msg)
                 if msg["type"] in ("conclusion", "failed", "report_ready", "error"):
                     print(f"  <- {msg['type']}: {json.dumps(msg['data'], ensure_ascii=False)[:150]}")
-                if msg["type"] in ("conclusion", "failed", "report_ready", "error"):
+                # 等到 report_ready 才 break(报告落盘后才会推送),否则会查到"报告尚未生成"
+                if msg["type"] in ("failed", "report_ready", "error"):
                     break
         print(f"WS 共收到 {len(msgs)} 条消息（含 connected）")
 

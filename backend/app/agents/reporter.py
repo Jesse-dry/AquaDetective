@@ -62,7 +62,6 @@ def build_report(state: dict, llm, db_path: str, ws: dict) -> dict:
         lines.append(f"**{t.get('agent')}**：{t.get('text')}")
         lines.append("")
     report = "\n".join(lines)
-    stream = list(state["stream"])
-    stream.append({"type": "report_ready", "data": {
-        "report_id": state.get("investigation_id")}})
-    return {"report": report, "stream": stream}
+    # report_ready 不在此处加入 stream;改由 runner 在报告落盘后 push,
+    # 保证前端收到 report_ready 时报告文件已可读(避免收到信号却查不到报告的时序竞态)
+    return {"report": report}

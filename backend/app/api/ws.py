@@ -17,8 +17,11 @@ async def ws_stream(websocket: WebSocket, investigation_id: str = ""):
     await websocket.accept()
     reg = INVESTIGATIONS.get(investigation_id)
     if reg is None:
-        await websocket.send_json({"type": "error", "data": {"reason": "调查不存在"}})
-        await websocket.close()
+        try:
+            await websocket.send_json({"type": "error", "data": {"reason": "调查不存在"}})
+            await websocket.close()
+        except RuntimeError:
+            pass
         return
     queue: asyncio.Queue = reg["queue"]
     done: threading.Event = reg["done"]
@@ -36,4 +39,8 @@ async def ws_stream(websocket: WebSocket, investigation_id: str = ""):
         pass
     finally:
         INVESTIGATIONS.pop(investigation_id, None)
-        await websocket.close()
+        # 客户端可能已断开/已关闭,再 close 会抛 RuntimeError,忽略已关闭错误
+        try:
+            await websocket.close()
+        except RuntimeError:
+            pass
