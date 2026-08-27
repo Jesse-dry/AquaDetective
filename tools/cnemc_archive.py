@@ -41,23 +41,39 @@ HEADERS = ["省份", "流域", "断面名称", "监测时间", "水质类别", "
 TAG = re.compile(r"<[^>]+>")
 
 
-def fetch_page(page_index: int) -> dict:
+def fetch_page(page_index: int, retries: int = 3) -> dict:
+    """拉取单页,带重试。GitHub Actions runner 访问 CNEMC API 不稳定,
+    单页失败重试 3 次(间隔递增),仍失败则抛异常让上层处理。"""
     data = urllib.parse.urlencode({
         "AreaID": "", "RiverID": "", "MNName": "",
         "PageIndex": page_index, "PageSize": PAGE_SIZE, "action": "getRealDatas",
     }).encode()
-    req = urllib.request.Request(API, data=data, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.load(r)
+    last_err = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(API, data=data, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.load(r)
+        except Exception as e:
+            last_err = e
+            wait = (attempt + 1) * 5
+            print(f"  第 {page_index} 页拉取失败(第 {attempt+1}/{retries} 次): {e}, {wait}s 后重试")
+            time.sleep(wait)
+    raise RuntimeError(f"第 {page_index} 页重试 {retries} 次仍失败: {last_err}")
 
 
 def fetch_all() -> tuple[list[list[str]], dict]:
     first = fetch_page(1)
     total_pages = int(first.get("total", 1))
-    rows = list(first["tbody"])
+    rows = list(first.get("tbody", []))
     for p in range(2, total_pages + 1):
         time.sleep(PAGE_DELAY_S)
-        rows.extend(fetch_page(p)["tbody"])
+        try:
+            page = fetch_page(p)
+            rows.extend(page.get("tbody", []))
+        except RuntimeError as e:
+            print(f"  [警告] {e},跳过该页,继续后续页")
+            continue
     return rows, first
 
 
