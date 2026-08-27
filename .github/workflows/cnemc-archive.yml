@@ -27,20 +27,26 @@ jobs:
 
       # 脚本仅依赖标准库,无需 pip install
       - name: 拉取并存档 CNEMC 实时水质
-        run: python tools/cnemc_archive.py
+        run: |
+          set -x
+          python tools/cnemc_archive.py
+          echo "=== 产物清单 ==="
+          ls -la data/raw/cnemc_surface_water_realtime/archive/ || echo "archive 目录缺失"
+          ls -la data/interim/cnemc_archive/ || echo "interim 目录缺失"
 
       # 原始快照体积大且 gitignored,作为构件留存 30 天
       - name: 上传原始快照构件
         uses: actions/upload-artifact@v4
         with:
           name: cnemc-snapshot-${{ github.run_id }}
-          path: data/raw/cnemc_surface_water_realtime/archive/
+          path: data/raw/cnemc_surface_water_realtime/archive/*
           retention-days: 30
           if-no-files-found: warn
 
       # 去重长表回写仓库(有变更才提交)
       - name: 回写去重长表
         run: |
+          set -x
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/interim/cnemc_archive/all_stations.csv
