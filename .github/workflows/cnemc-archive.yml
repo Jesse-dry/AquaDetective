@@ -5,7 +5,7 @@ name: CNEMC 前向存档
 # 本工作流为异地冗余备份;主力轨为本地中国 IP cron(见 tools/cnemc_archive.py docstring)
 on:
   schedule:
-    - cron: '13 */4 * * *'
+    - cron: '43 */4 * * *'  # 北京 00:43/04:43/...,给 CNEMC ~43 分钟发布时间
   workflow_dispatch: # 支持手动触发
 
 # 防止上一轮未跑完时并发重入
@@ -71,16 +71,31 @@ jobs:
             fi
           fi
 
-      # 失败通知(高频存档无告警会失明):失败时创建 issue 提示人工介入
+      # 失败通知(去重:已有 open issue 则评论,不新建,避免高频刷 issue)
       - name: 失败告警
         if: failure()
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `CNEMC 存档工作流失败 #${context.runNumber}`,
-              body: `运行 ${context.runId} 失败,请查看 https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\n高频存档(每4h)失败可能造成数据时序缺口,建议尽快排查。`,
-              labels: ['cnemc-archive', 'auto-alert']
-            })
+            const { owner, repo } = context.repo;
+            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            // 查找已存在的 cnemc-archive open issue
+            const existing = await github.rest.issues.listForRepo({
+              owner, repo, labels: 'cnemc-archive', state: 'open', per_page: 1
+            });
+            if (existing.data.length > 0) {
+              // 已有则评论(累积失败记录,不新建 issue)
+              const iss = existing.data[0];
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: iss.number,
+                body: `运行 #${context.runNumber} 失败 (${new Date().toISOString().slice(0,16)}Z)\n${runUrl}`
+              });
+            } else {
+              // 首次失败建 issue
+              await github.rest.issues.create({
+                owner, repo,
+                title: `CNEMC 存档工作流失败`,
+                body: `运行 #${context.runNumber} 失败,请查看 ${runUrl}\n\n高频存档(每4h)失败可能造成数据时序缺口,后续失败将以评论形式累积于此 issue。`,
+                labels: ['cnemc-archive', 'auto-alert']
+              });
+            }

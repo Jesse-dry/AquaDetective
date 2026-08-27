@@ -98,27 +98,24 @@ def main() -> None:
       f"(系统记录数 {records})")
 
     # ===== 健康检查断言(防静默假成功)=====
-    # 1) 空响应:rows 为 0 说明 API 返回空壳,不提交
+    # 1) 空响应:rows 为 0 说明 API 返回空壳或网络硬失败 → 告警(exit 1)
     if not rows:
-        print("[FAILED] 拉取 0 行(空响应),退出不提交", flush=True)
+        print("[FAILED] 拉取 0 行(空响应/网络错误),退出不提交", flush=True)
         raise SystemExit(1)
-    # 2) 覆盖率:拉取行数 vs 系统 records 偏差 < 10%(防页1成功后续全失败的假全量)
+
+    # 2) 覆盖率:拉取行数 vs 系统 records
+    coverage = None
     if records:
         try:
             rec_n = int(records)
             if rec_n > 0:
                 coverage = len(rows) / rec_n
-                if coverage < 0.90:
-                    print(f"[FAILED] 覆盖率 {coverage:.1%} < 90%(拉 {len(rows)}/系统 {rec_n}),"
-                          f"疑后续页全失败,退出不提交", flush=True)
-                    raise SystemExit(1)
-                print(f"[OK] 覆盖率 {coverage:.1%}(拉 {len(rows)}/系统 {rec_n})")
         except (ValueError, TypeError):
             pass
-    # 3) 数据新鲜度:与已存 CSV 末行比对,本次最新时次不应早于已存最新
-    #    用 (抓取年份 + 监测时间) 拼成可比较的完整时间戳,防跨年字符串误杀
-    #    (年初 '01-01' 字典序 < '12-31' 会误判,必须带年份比)
+
+    # 3) 数据新鲜度:与已存 CSV 末行比对(年份前置防跨年字符串误杀)
     year = now.year
+    last_full = cur_full = ""
     if OUT_CSV.exists():
         with open(OUT_CSV, newline="") as f:
             recs = list(csv.DictReader(f))
@@ -126,19 +123,32 @@ def main() -> None:
             last_year = recs[-1].get("抓取年份", str(year))
             last_ts = recs[-1]["监测时间"]
             cur_max = max((r[3] for r in rows if len(r) > 3), default="")
-            # 拼成 "YYYY MM-DD HH:MM" 字符串比较(年份前置,字典序=时间序)
             last_full = f"{last_year} {last_ts}"
             cur_full = f"{year} {cur_max}"
-            if cur_full < last_full:
-                print(f"[FAILED] 本次最新时次 {cur_full} 早于已存 {last_full},"
-                      f"疑 API 返回缓存旧数据,退出不提交", flush=True)
-                raise SystemExit(1)
-            # 时次停滞断言:本次最新时次应严格晚于已存,或本次含已存未有的新时次
-            # (防"末次相等仅补全断面"被放行——与前向存档目标相悖)
-            if cur_full == last_full:
-                print(f"[FAILED] 本次最新时次 {cur_full} 与已存末次相同,"
-                      f"无新时次(仅补全断面,前向存档停滞),退出不提交", flush=True)
-                raise SystemExit(1)
+
+    # ===== 区分"发布中"(软跳过 exit 0)vs"真失败"(告警 exit 1)=====
+    # 发布中特征:rows>0 但覆盖率低 + 本次最新时次==已存末次(CNEMC 正在更新,新时次未发完)
+    # 真失败:rows==0(空响应) 或 时次倒退(缓存旧数据);前者已在 1) 拦截
+    if cur_full and cur_full < last_full:
+        # 时次倒退:API 返回比已存更旧的数据,真异常
+        print(f"[FAILED] 本次最新时次 {cur_full} 早于已存 {last_full},"
+              f"疑 API 返回缓存旧数据,退出不提交", flush=True)
+        raise SystemExit(1)
+
+    low_coverage = coverage is not None and coverage < 0.90
+    if low_coverage:
+        print(f"[SKIP] 覆盖率 {coverage:.1%} < 90%(拉 {len(rows)}/系统 {int(records)}),"
+              f"疑 CNEMC 发布中,跳过本轮不提交(不告警)", flush=True)
+        raise SystemExit(0)  # 软跳过:工作流标 SUCCESS 但无新增,不建 issue
+
+    if coverage is not None:
+        print(f"[OK] 覆盖率 {coverage:.1%}(拉 {len(rows)}/系统 {int(records)})")
+
+    # 覆盖率 OK 但时次停滞(== 已存末次):发布延迟或重复抓取,软跳过
+    if cur_full and cur_full == last_full:
+        print(f"[SKIP] 本次最新时次 {cur_full} 与已存末次相同,"
+              f"无新时次(发布延迟或重复抓取),跳过本轮不提交", flush=True)
+        raise SystemExit(0)  # 软跳过,不告警
 
     # 1) 原始快照(raw 不修改)
     RAW_DIR.mkdir(parents=True, exist_ok=True)
