@@ -99,7 +99,65 @@ def rank_eem(query_eem: np.ndarray, watershed: dict) -> list[dict]:
     return match_eem(query_eem, library_eems(watershed))
 
 
+# ---------- 真实许可证指纹注入 ----------
+# 按行业把真实企业指纹轮转映射到合成流域企业(同名行业,顺序轮换)
+_INDUSTRY_TO_REAL: dict[str, list[dict]] | None = None
+
+
+def _real_by_industry() -> dict[str, list[dict]]:
+    """从许可证指纹库按行业分组真实企业指纹。懒加载。"""
+    global _INDUSTRY_TO_REAL
+    if _INDUSTRY_TO_REAL is not None:
+        return _INDUSTRY_TO_REAL
+    from .permit_fingerprints import INDUSTRY_MAP, real_fingerprints_by_name
+    # 需要 industry 信息,从 outlets_report 的 major pollutant 推断行业不易,
+    # 改读 v2 企业表
+    import csv
+    from pathlib import Path
+    ROOT = Path(__file__).resolve().parent.parent.parent.parent
+    v2 = ROOT / "data/interim/taihu_enterprises_v1/taihu_basin_enterprises_v2.csv"
+    name_ind: dict[str, str] = {}
+    if v2.exists():
+        for r in csv.DictReader(open(v2, encoding="utf-8")):
+            name_ind[r["name"]] = INDUSTRY_MAP.get(r.get("industry_cn", "").strip(), r.get("industry", "").strip())
+    real_fp = real_fingerprints_by_name()
+    by: dict[str, list[dict]] = {}
+    for name, vec in real_fp.items():
+        ind = name_ind.get(name, "unknown")
+        by.setdefault(ind, []).append({"name": name, "fingerprint": vec})
+    _INDUSTRY_TO_REAL = by
+    return by
+
+
+def _injected_pollutant_lib(watershed: dict) -> dict[str, dict[str, float]]:
+    """合成流域指纹库 + 真实许可证指纹按行业轮转覆盖。
+
+    对每个合成企业,若其行业有真实指纹样本,按"合成企业索引 % 该行业真实样本数"
+    取一个真实向量替换合成向量(确定性,可复现)。无真实样本的行业保留合成向量。
+    """
+    by_ind = _real_by_industry()
+    # 按行业对合成企业编号
+    ind_idx: dict[str, int] = {}
+    lib: dict[str, dict[str, float]] = {}
+    for fp in watershed["fingerprints"]:
+        eid = fp["enterprise_id"]
+        ent = next((e for e in watershed["enterprises"] if e["id"] == eid), None)
+        ind = ent["industry"] if ent else "unknown"
+        samples = by_ind.get(ind, [])
+        if samples:
+            i = ind_idx.get(ind, 0)
+            ind_idx[ind] = i + 1
+            lib[eid] = samples[i % len(samples)]["fingerprint"]
+        else:
+            lib[eid] = fp["pollutants"]
+    return lib
+
+
 def rank_pollutants(query_vec: dict, watershed: dict) -> list[dict]:
-    return match_pollutants(query_vec, {
-        fp["enterprise_id"]: fp["pollutants"] for fp in watershed["fingerprints"]
-    })
+    """现场污染物向量 vs 指纹库(真实许可证指纹注入后)。
+
+    注入层用真实许可证主要污染物比例向量覆盖合成值;数值计算仍走
+    engine.match_pollutants(纯函数 min/max 比相似度)。
+    """
+    lib = _injected_pollutant_lib(watershed)
+    return match_pollutants(query_vec, lib)
