@@ -3,8 +3,5 @@
 .DS_Store
 CLAUDE.md
 中国数据获取指南.md
-# 大体量原始数据和付费数据本地留存,不入库(元数据与裁剪结果照常提交)
-data/raw/hydrorivers_v10_as/
-data/raw/chirps_global_monthly/
-data/raw/guokong_surface_water_2021_2025/
-data/interim/guokong_surface_water_2021_2025/data/raw/cnemc_surface_water_realtime/archive/
+# 公开基准数据（大文件，凭 metadata/ 的 SHA256 + 下载 URL 复现，不入库）
+data/
