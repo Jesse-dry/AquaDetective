@@ -57,7 +57,7 @@ export interface Watershed {
 
 // ---------- /series ----------
 export interface SeriesPoint {
-  ts: number // 毫秒级 epoch
+  ts: number // API 毫秒级 epoch
   value: number
 }
 
@@ -77,7 +77,7 @@ export interface PollutionEvent {
   id: string
   station_id: string
   indicators: string[] // 后端可能给 JSON 字符串,api 层已归一化为数组
-  onset_ts: number //   毫秒级 epoch
+  onset_ts: number // API 毫秒级 epoch
   severity: Severity
   etype: EventType
   truth_source?: string
@@ -88,7 +88,7 @@ export interface PollutionEvent {
 export interface Investigation {
   id: string
   event_id: string
-  started_at: number // 毫秒级 epoch
+  started_at: number // API 毫秒级 epoch
   status: 'running' | 'resolved' | 'failed'
   conclusion: ConclusionData | null
   stream?: WsMessage[] // 后端附带完整推理记录,WS 断线补齐用

@@ -50,10 +50,9 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   ...initial,
 
   load: async (ev, stationIds) => {
-    // onset_ts 为毫秒(API 契约),from/to 用毫秒传给 /series(后端已转毫秒)
-    const onsetMs = ev.onset_ts
-    const from = onsetMs - PRE_MS
-    const to = onsetMs + POST_MS
+    // onset_ts 为毫秒(API 契约),from/to 用毫秒传给 /series
+    const from = ev.onset_ts - PRE_MS
+    const to = ev.onset_ts + POST_MS
     const indicator = ev.indicators[0]
     const entries = await Promise.all(
       stationIds.map(async (sid) => {

@@ -1,46 +1,43 @@
 {
-  "title": "③ 真实数据端到端溯源演示(太湖国控断面)",
+  "title": "③ 真实数据端到端候选溯源演示(太湖国控断面)",
   "dataset": "断面 钓邾大桥(taihu_059) · 氨氮 · 2022-12",
   "station": {
     "id": "taihu_059",
     "name": "钓邾大桥",
-    "lon": 120.5523,
-    "lat": 31.5791
+    "lon": 120.552273,
+    "lat": 31.579094
   },
-  "matched_enterprise": {
-    "name": "无锡中发水务(锡北污水处理厂)",
+  "primary_candidate": {
+    "name": "无锡中发水务投资有限公司(东港污水处理厂)",
     "industry": "污水处理厂",
     "city": "无锡市",
-    "lon": 120.4881,
-    "lat": 31.609,
+    "lon": 120.488141,
+    "lat": 31.608964,
     "dist_km": 8.5,
-    "travel_h_range": "4.6 ~ 24"
+    "travel_time": {
+      "estimate_h": 4.6,
+      "range_h": [
+        4.6,
+        24.0
+      ],
+      "method": "HydroRIVERS reach length / estimated velocity",
+      "causal_evidence": false
+    },
+    "evidence_status": "candidate_unverified",
+    "causal_confirmed": false
   },
+  "primary_candidate_tie_count": 2,
   "anomaly": {
     "indicator": "氨氮",
     "event_dt": "2022-12-02 12:00",
     "peak": 0.698,
     "baseline": 0.102,
-    "multiple": "约 7 倍基线",
+    "multiple": "约 6.8 倍基线",
     "class_shift": "Ⅱ → Ⅲ",
     "method": "CUSUM (h=7σ)",
     "severity": "严重",
-    "shape": "11-26~11-29 低谷(~0.05)→ 11-30 回升 → 12-02 尖锐峰值 0.698 → 12-03 回落,约 32h 脉冲"
+    "shape": "异常峰前后 14 天实测序列"
   },
-  "fingerprint": {
-    "score": 0.13,
-    "rank": 1,
-    "library_size": 1,
-    "source": "行业代理(同行业wwtp真实指纹,该企业许可注销/无数据)",
-    "query_vector": {
-      "ammonia": 0.8,
-      "cod": 0.06666666666666667,
-      "tp": 0.06666666666666667,
-      "tn": 0.06666666666666667
-    },
-    "note": "分数=min/max比相似度(1.0=完全一致)。断面检出氨氮异常,而污水厂指纹以COD为主,指纹匹配度低是诚实结果——说明仅凭指纹不足以致信,拓扑+行业匹配仍是主要证据。"
-  },
-  "evidence_type": "指纹+拓扑双证据(命中的锡北污水厂许可已注销,指纹用同行业真实代理)",
   "upstream_path": [
     {
       "hid": 40625918,
@@ -366,5 +363,14 @@
       "v": 0.111,
       "cls": "Ⅱ"
     }
+  ],
+  "evidence_status": "candidate_unverified",
+  "causal_confirmed": false,
+  "limitations": [
+    "企业仅因位于河网上游且行业指标相符而成为候选,未取得排口同期监测证据。",
+    "传播时间来自 HydroRIVERS 河段长度与估算流速,只用于排序,不是因果证据。",
+    "断面和企业坐标存在地图查询与河网吸附误差,正式归因前必须复核。",
+    "首位有 2 家同分候选;界面仅展示其中一家,不代表其证据优于其他同分候选。",
+    "本结果是算法验证,不是对真实污染事件或企业责任的认定。"
   ]
 }

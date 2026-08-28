@@ -8,6 +8,7 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "langgraph>=0.2,<0.3",
     "numpy>=1.26",
+    "pandas>=2.2",
     "scipy>=1.11",
     "networkx>=3.2",
     "pydantic>=2.7",

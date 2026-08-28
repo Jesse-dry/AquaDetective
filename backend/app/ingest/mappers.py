@@ -4,6 +4,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -18,6 +19,28 @@ DATASET_ALIASES = {
     "usgs": "usgs_nwis_cuyahoga",
     "echo": "epa_echo_cuyahoga",
 }
+
+
+def _integer_id(series: pd.Series) -> pd.Series:
+    """Normalize numeric reach identifiers without leaking a trailing `.0`."""
+    return pd.to_numeric(series, errors="coerce").astype("Int64").astype("string")
+
+
+def _taihu_facility_ids(df: pd.DataFrame, registration_id: pd.Series) -> pd.Series:
+    """Build stable facility IDs when one legal entity operates multiple sites."""
+    names = df["name"].fillna("").astype("string").str.strip()
+    addresses = df["address"].fillna("").astype("string").str.strip()
+    latitudes = pd.to_numeric(df["lat_wgs84"], errors="coerce").map(
+        lambda value: "" if pd.isna(value) else f"{value:.6f}"
+    )
+    longitudes = pd.to_numeric(df["lon_wgs84"], errors="coerce").map(
+        lambda value: "" if pd.isna(value) else f"{value:.6f}"
+    )
+    fingerprints = (
+        names + "|" + addresses + "|" + latitudes.astype("string") + "|" + longitudes.astype("string")
+    ).map(lambda value: hashlib.sha256(value.encode("utf-8")).hexdigest()[:12])
+    legal_entity = registration_id.mask(registration_id.eq(""), "unregistered")
+    return TAIHU_SOURCE_DATASET_ID + ":" + legal_entity + ":" + fingerprints
 
 
 # ----------------------------------------------------------------- WQP 水质观测
@@ -108,7 +131,7 @@ def map_usgs_observations(rdb_path: Path) -> pd.DataFrame:
 # ----------------------------------------------------------------- 站点注册表
 def map_sites(snapped_csv: Path) -> pd.DataFrame:
     """吸附结果 sites_snapped.csv → 统一站点注册表。"""
-    df = pd.read_csv(snapped_csv, dtype={"COMID": "Int64"})
+    df = pd.read_csv(snapped_csv)
     df["dataset_id"] = df["dataset"].map(DATASET_ALIASES)
     df["site_id"] = df["dataset_id"] + ":" + df["source_id"]
     out = pd.DataFrame(
@@ -121,7 +144,8 @@ def map_sites(snapped_csv: Path) -> pd.DataFrame:
             "provider": df["provider"],
             "lat": df["lat"],
             "lon": df["lon"],
-            "comid": df["COMID"],
+            "network_id": "nhdplus_hr_cuyahoga",
+            "reach_id": _integer_id(df["COMID"]),
             "snap_flag": df["snap_flag"],
             "snap_dist_m": df["snap_dist_m"],
         }
@@ -133,31 +157,45 @@ def map_sites(snapped_csv: Path) -> pd.DataFrame:
 def map_flow(edges_csv: Path) -> pd.DataFrame:
     """flow_edges.csv → 河网拓扑表。"""
     df = pd.read_csv(edges_csv)
-    return df.rename(columns={"COMID": "comid", "FromNode": "from_node",
-                              "ToNode": "to_node", "LengthKM": "length_km"})[schema.FLOW_COLUMNS]
+    return pd.DataFrame(
+        {
+            "network_id": "nhdplus_hr_cuyahoga",
+            "reach_id": _integer_id(df["COMID"]),
+            "from_node": _integer_id(df["FromNode"]),
+            "to_node": _integer_id(df["ToNode"]),
+            "downstream_reach_id": None,
+            "length_km": pd.to_numeric(df["LengthKM"], errors="coerce"),
+        }
+    )[schema.FLOW_COLUMNS]
 
 
 # ----------------------------------------------------------------- ECHO 污染源
 def map_echo_sources(facilities_json: Path, snapped_csv: Path) -> pd.DataFrame:
     """ECHO 设施 JSON + 吸附结果 → 统一污染源表。"""
     fac = pd.DataFrame(json.loads(facilities_json.read_text(encoding="utf-8"))["Results"]["Facilities"])
-    echo_snap = pd.read_csv(snapped_csv, dtype={"COMID": "Int64"})
+    echo_snap = pd.read_csv(snapped_csv)
     echo_snap = echo_snap[echo_snap["dataset"] == "echo"][["source_id", "COMID", "snap_flag"]]
     df = fac.merge(echo_snap, left_on="SourceID", right_on="source_id", how="left")
     return pd.DataFrame(
         {
             "source_id": "epa_echo_cuyahoga:" + df["SourceID"],
-            "npdes_id": df["SourceID"],
+            "dataset_id": "epa_echo_cuyahoga",
+            "source_type": "npdes_facility",
+            "registration_id": df["SourceID"],
             "name": df["CWPName"],
+            "industry": "",
             "city": df["CWPCity"],
-            "state": df["CWPState"],
-            "zip": df["CWPZip"],
+            "region": df["CWPState"],
+            "address": "",
             "lat": pd.to_numeric(df["FacLat"], errors="coerce"),
             "lon": pd.to_numeric(df["FacLong"], errors="coerce"),
-            "comid": df["COMID"],
+            "network_id": "nhdplus_hr_cuyahoga",
+            "reach_id": _integer_id(df["COMID"]),
+            "snap_flag": df["snap_flag"],
+            "snap_dist_m": None,
             "permit_status": df["CWPPermitStatusDesc"],
         }
-    )
+    )[schema.SOURCE_COLUMNS]
 
 
 # ----------------------------------------------------------------- ECHO 排放记录（轻量映射）
@@ -198,3 +236,130 @@ def map_echo_violations(violations_csv: Path) -> pd.DataFrame:
             "exceedence_pct": pd.to_numeric(df["EXCEEDENCE_PCT"], errors="coerce"),
         }
     )
+
+
+# ----------------------------------------------------------------- 太湖统一映射
+TAIHU_DATASET_ID = "guokong_surface_water_2021_2025"
+TAIHU_NETWORK_ID = "hydrorivers_v10_as"
+TAIHU_SOURCE_DATASET_ID = "taihu_enterprises_v2"
+
+
+def map_taihu_reading_frame(df: pd.DataFrame, station_id: str) -> pd.DataFrame:
+    """One legacy Taihu station table → unified observation long table."""
+    timestamps = pd.to_datetime(df["ts"], errors="coerce", utc=True)
+    global_station_id = f"{TAIHU_DATASET_ID}:{station_id}"
+    parts: list[pd.DataFrame] = []
+    for source_column, (parameter_code, unit) in schema.TAIHU_PARAM_MAP.items():
+        if source_column not in df.columns:
+            continue
+        values = pd.to_numeric(df[source_column], errors="coerce")
+        valid = timestamps.notna() & values.notna()
+        if not valid.any():
+            continue
+        parts.append(
+            pd.DataFrame(
+                {
+                    "dataset_id": TAIHU_DATASET_ID,
+                    "station_id": global_station_id,
+                    "timestamp_utc": timestamps[valid].dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "parameter_code": parameter_code,
+                    "value": values[valid],
+                    "unit": unit,
+                    "qc_flag": "",
+                    "detection_limit": None,
+                }
+            )
+        )
+    if not parts:
+        return pd.DataFrame(columns=schema.OBSERVATION_COLUMNS)
+    return pd.concat(parts, ignore_index=True)[schema.OBSERVATION_COLUMNS]
+
+
+def map_taihu_evaluation_labels(df: pd.DataFrame, station_id: str) -> pd.DataFrame:
+    """Keep published water-quality classes outside investigation observations."""
+    if "quality_class" not in df.columns:
+        return pd.DataFrame(columns=schema.EVALUATION_LABEL_COLUMNS)
+    timestamps = pd.to_datetime(df["ts"], errors="coerce", utc=True)
+    labels = df["quality_class"].astype("string").str.strip()
+    valid = timestamps.notna() & labels.notna() & labels.ne("")
+    return pd.DataFrame(
+        {
+            "dataset_id": TAIHU_DATASET_ID,
+            "station_id": f"{TAIHU_DATASET_ID}:{station_id}",
+            "timestamp_utc": timestamps[valid].dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "label_code": "quality_class",
+            "label_value": labels[valid],
+            "label_source": "CNEMC published water-quality class",
+        }
+    )[schema.EVALUATION_LABEL_COLUMNS]
+
+
+def map_taihu_sites(snapped_csv: Path) -> pd.DataFrame:
+    """Taihu station registry and HydroRIVERS snap results → unified sites."""
+    df = pd.read_csv(snapped_csv)
+    matched = df["matched"].astype("string").str.lower().isin(["true", "1", "yes"])
+    source_id = df["station_id"].astype("string")
+    return pd.DataFrame(
+        {
+            "site_id": TAIHU_DATASET_ID + ":" + source_id,
+            "dataset_id": TAIHU_DATASET_ID,
+            "source_id": source_id,
+            "name": df["name"],
+            "site_type": "surface_water_station",
+            "provider": "China National Environmental Monitoring Centre",
+            "lat": pd.to_numeric(df["lat_wgs"], errors="coerce"),
+            "lon": pd.to_numeric(df["lon_wgs"], errors="coerce"),
+            "network_id": TAIHU_NETWORK_ID,
+            "reach_id": _integer_id(df["hyriv_id"]),
+            "snap_flag": matched.map({True: "ok", False: "review"}),
+            "snap_dist_m": pd.to_numeric(df["snap_dist_m"], errors="coerce"),
+        }
+    )[schema.SITE_COLUMNS]
+
+
+def map_taihu_sources(snapped_csv: Path) -> pd.DataFrame:
+    """Taihu enterprise registry and HydroRIVERS snap results → unified sources."""
+    df = pd.read_csv(snapped_csv, dtype={"credit_code": "string"})
+    matched = df["matched"].astype("string").str.lower().isin(["true", "1", "yes"])
+    registration_id = df["credit_code"].fillna("").astype("string")
+    source_id = _taihu_facility_ids(df, registration_id)
+    return pd.DataFrame(
+        {
+            "source_id": source_id,
+            "dataset_id": TAIHU_SOURCE_DATASET_ID,
+            "source_type": "registered_enterprise",
+            "registration_id": registration_id,
+            "name": df["name"],
+            "industry": df["industry"],
+            "city": df["city"],
+            "region": "",
+            "address": df["address"],
+            "lat": pd.to_numeric(df["lat_wgs84"], errors="coerce"),
+            "lon": pd.to_numeric(df["lon_wgs84"], errors="coerce"),
+            "network_id": TAIHU_NETWORK_ID,
+            "reach_id": _integer_id(df["hyriv_id"]),
+            "snap_flag": matched.map({True: "ok", False: "review"}),
+            "snap_dist_m": pd.to_numeric(df["snap_dist_m"], errors="coerce"),
+            "permit_status": "",
+        }
+    )[schema.SOURCE_COLUMNS]
+
+
+def map_hydrorivers_flow(shapefile: Path) -> pd.DataFrame:
+    """HydroRIVERS reach topology → generic flow-network rows."""
+    import geopandas as gpd
+
+    df = gpd.read_file(shapefile, columns=["HYRIV_ID", "NEXT_DOWN", "LENGTH_KM"])
+    downstream = _integer_id(df["NEXT_DOWN"]).mask(
+        pd.to_numeric(df["NEXT_DOWN"], errors="coerce").eq(0)
+    )
+    return pd.DataFrame(
+        {
+            "network_id": TAIHU_NETWORK_ID,
+            "reach_id": _integer_id(df["HYRIV_ID"]),
+            "from_node": None,
+            "to_node": None,
+            "downstream_reach_id": downstream,
+            "length_km": pd.to_numeric(df["LENGTH_KM"], errors="coerce"),
+        }
+    )[schema.FLOW_COLUMNS]

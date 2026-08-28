@@ -1,17 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 import * as echarts from 'echarts'
 
-// 真实数据端到端溯源演示:真实断面异常 → 河网上溯 → 命中吸附企业
+// 真实数据端到端候选溯源演示:真实断面异常 → 河网上溯 → 筛选候选企业
 // 数据为静态蒸馏 JSON(public/data/e2e_trace_case.json),数值来自后端确定性引擎,前端零计算
 interface SeriesPoint { dt: string; v: number | null; cls: string }
+interface TravelTime {
+  estimate_h: number
+  range_h: [number, number]
+  method: string
+  causal_evidence: boolean
+}
 interface E2EData {
   title: string
   dataset: string
   station: { id: string; name: string; lon: number; lat: number }
-  matched_enterprise: {
+  primary_candidate: {
     name: string; industry: string; city: string; lon: number; lat: number
-    dist_km: number; travel_h_range: string
+    dist_km: number; travel_time: TravelTime
+    evidence_status: 'candidate_unverified'; causal_confirmed: false
   }
+  primary_candidate_tie_count: number
   anomaly: {
     indicator: string; event_dt: string; peak: number; baseline: number
     multiple: string; class_shift: string; method: string
@@ -25,6 +33,9 @@ interface E2EData {
   }
   evidence_type: string
   series: SeriesPoint[]
+  evidence_status: 'candidate_unverified'
+  causal_confirmed: false
+  limitations: string[]
 }
 
 export function E2ETraceCase() {
@@ -111,13 +122,13 @@ export function E2ETraceCase() {
 
   if (!data) return null
   const a = data.anomaly
-  const e = data.matched_enterprise
+  const e = data.primary_candidate
 
   return (
     <section>
       <h2 className="mb-2 text-sm font-semibold text-slate-300">{data.title}</h2>
       <p className="mb-3 text-xs text-slate-500">
-        {data.dataset} · 异常检测 → 河网拓扑上溯 → 命中上游企业,全链路走确定性引擎,真实断面数据
+        {data.dataset} · 异常检测 → 河网拓扑上溯 → 筛选上游候选企业,全链路走确定性引擎,真实断面数据
       </p>
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
@@ -135,9 +146,13 @@ export function E2ETraceCase() {
           </p>
         </div>
 
-        {/* 右:命中企业卡片 + 上溯路径 */}
+        {/* 右:候选企业卡片 + 上溯路径 */}
         <div className="rounded-lg border border-edge bg-panel p-3">
-          <div className="mb-2 text-xs font-semibold text-emerald-400">溯源命中</div>
+          <div className="mb-2 text-xs font-semibold text-emerald-400">
+            {data.primary_candidate_tie_count > 1
+              ? `同分候选之一 (${data.primary_candidate_tie_count} 家)`
+              : '排序首位候选企业'}
+          </div>
           <div className="space-y-1 text-xs text-slate-300">
             <div className="font-medium text-slate-200">{e.name}</div>
             <div>行业:{e.industry}</div>
@@ -146,7 +161,10 @@ export function E2ETraceCase() {
               河网距离:<span className="tabular-nums text-sky-300">{e.dist_km} km</span>
             </div>
             <div>
-              传播时间:<span className="tabular-nums text-sky-300">{e.travel_h_range} h</span>
+              估算传播时间:
+              <span className="tabular-nums text-sky-300">
+                {e.travel_time.range_h[0]} ~ {e.travel_time.range_h[1]} h
+              </span>
             </div>
             <div>
               严重度:<span className="text-amber-400">{a.severity}</span>
@@ -189,10 +207,7 @@ export function E2ETraceCase() {
       </div>
 
       <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
-        证据类型:{data.evidence_type}。命中判定:距离最近 + 行业匹配(污水处理厂出水氨氮异常合理),
-        已通过河网拓扑核验(NEXT_DOWN 直连,确属上游)。指纹比对用真实许可证主要污染物年排放量限值;
-        传播时间为距离排序分而非因果证据。断面坐标来自百度地图模糊查询(GCJ-02→WGS84,误差米级),
-        异常检测/拓扑上溯/指纹相似度均为确定性纯函数。本演示为真实断面数据上的算法验证,非真实污染事件认定。
+        {data.limitations.join(' ')}
       </p>
     </section>
   )

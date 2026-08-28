@@ -19,14 +19,23 @@ OBSERVATION_COLUMNS = [
 
 SITE_COLUMNS = [
     "site_id", "dataset_id", "source_id", "name", "site_type",
-    "provider", "lat", "lon", "comid", "snap_flag", "snap_dist_m",
+    "provider", "lat", "lon", "network_id", "reach_id", "snap_flag", "snap_dist_m",
 ]
 
-FLOW_COLUMNS = ["comid", "from_node", "to_node", "length_km"]
+FLOW_COLUMNS = [
+    "network_id", "reach_id", "from_node", "to_node",
+    "downstream_reach_id", "length_km",
+]
 
 SOURCE_COLUMNS = [
-    "source_id", "npdes_id", "name", "city", "state", "zip",
-    "lat", "lon", "comid", "permit_status",
+    "source_id", "dataset_id", "source_type", "registration_id", "name", "industry",
+    "city", "region", "address", "lat", "lon", "network_id", "reach_id",
+    "snap_flag", "snap_dist_m", "permit_status",
+]
+
+EVALUATION_LABEL_COLUMNS = [
+    "dataset_id", "station_id", "timestamp_utc", "label_code",
+    "label_value", "label_source",
 ]
 
 DATASET_COLUMNS = [
@@ -80,6 +89,20 @@ USGS_PARAM_MAP: dict[str, str] = {
     "00060": "discharge",      # ft³/s
     "00065": "gage_height",    # ft
     "00010": "temperature",    # deg C（与 WQP 水温同码）
+}
+
+TAIHU_PARAM_MAP: dict[str, tuple[str, str]] = {
+    "temperature": ("temperature", "degC"),
+    "ph": ("ph", "1"),
+    "do": ("do", "mg/L"),
+    "conductivity": ("conductivity", "uS/cm"),
+    "turbidity": ("turbidity", "NTU"),
+    "codmn": ("codmn", "mg/L"),
+    "ammonia_n": ("ammonia_n", "mg/L"),
+    "tp": ("tp", "mg/L"),
+    "tn": ("tn", "mg/L"),
+    "chla": ("chla", "mg/L"),
+    "algae_density": ("algae_density", "cells/L"),
 }
 
 # ECHO DMR 污染物（排放记录，属于 sources 模型而非 observations）

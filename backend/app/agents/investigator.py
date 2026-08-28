@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 
+from ..api.time import epoch_ms
 from . import tools
 
 MAX_ROUNDS = 3
@@ -50,22 +51,25 @@ def _station_of(ws: dict, station_id: str) -> dict:
 def parse_event(state: dict, llm, db_path: str, ws: dict) -> dict:
     ev = state["event"]
     st = _station_of(ws, ev["station_id"])
+    # 通俗化文本(我的)+ epoch_ms 转 evidence(队友的),两者合并
     inds_cn = _indicators_cn(ev)
     station_cn = _station_cn(ws, ev["station_id"])
     etype_cn = ETYPE_CN.get(ev["etype"], ev["etype"])
     sev_cn = SEVERITY_CN.get(ev["severity"], ev["severity"])
-    # 首达时间转可读(秒→北京时间)
     from datetime import datetime, timezone, timedelta
     tz = timezone(timedelta(hours=8))
     onset_cn = datetime.fromtimestamp(int(ev["onset_ts"]), tz=tz).strftime("%m月%d日 %H:%M")
+    event_evidence = {
+        k: ev.get(k) for k in ("id", "station_id", "indicators", "severity", "etype")
+    }
+    event_evidence["onset_ts"] = epoch_ms(ev.get("onset_ts"))
     stream = list(state["stream"])
     stream.append({"type": "step", "data": {
         "step_id": "parse", "phase": "事件解析",
         "clue": f"{station_cn} 检出异常：{inds_cn}",
         "reasoning": f"异常类型疑似「{etype_cn}」，严重度「{sev_cn}」，"
                      f"首达时间 {onset_cn}。开始排查上游污染源。",
-        "evidence": [{"kind": "event", "value": {k: ev.get(k) for k in
-                      ("id", "station_id", "indicators", "onset_ts", "severity", "etype")}}],
+        "evidence": [{"kind": "event", "value": event_evidence}],
         "status": "verified"}})
     return {"stream": stream}
 

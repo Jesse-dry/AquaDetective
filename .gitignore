@@ -3,5 +3,21 @@
 .DS_Store
 CLAUDE.md
 中国数据获取指南.md
-# 公开基准数据（大文件，凭 metadata/ 的 SHA256 + 下载 URL 复现，不入库）
-data/
+__pycache__/
+*.py[cod]
+
+# 大体量原始数据本地留存，元数据、代码和精选样例照常提交
+data/raw/hydrorivers_v10_as/
+data/raw/chirps_global_monthly/
+data/raw/guokong_surface_water_2021_2025/
+data/raw/cnemc_surface_water_realtime/archive/
+data/raw/epa_echo_cuyahoga/
+data/raw/nhdplus_hr_cuyahoga/
+data/raw/usgs_nwis_cuyahoga/
+data/raw/usgs_wqp_cuyahoga/
+
+# 可复现的美国中间产物和统一长表不入库
+data/interim/nhdplus_hr_cuyahoga/
+data/processed/cuyahoga/
+data/processed/cuyahoga_network/
+data/processed/taihu_unified/

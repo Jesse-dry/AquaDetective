@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""真实数据端到端溯源演示:真实断面异常 → 河网上溯 → 命中吸附企业。
+"""真实数据端到端候选溯源演示:真实断面异常 → 河网上溯 → 筛选候选企业。
 
 链路:
-  1. 读取 GBK 站点坐标文件,按名称匹配 105 个太湖断面,GCJ-02→WGS84,吸附到 HydroRIVERS 河段;
+  1. 读取已核验的太湖断面 HydroRIVERS 吸附注册表;
   2. 从 HydroRIVERS NEXT_DOWN 构建有向河网图(下游方向),实现站点河段反向上溯;
   3. 在"有上游吸附企业"的断面中,选异常最显著者,跑 backend 引擎 anomaly.detect_cusum,提取最严重异常窗口;
-  4. 从异常断面上溯,在传播时间窗内找命中企业,按 行业-指标 合理性排序,产出 e2e_trace_result.json。
+  4. 从异常断面上溯,在传播时间窗内筛选候选企业,按行业-指标合理性排序。
 
 数值计算只走确定性函数(anomaly 引擎 + networkx 拓扑 + 纯几何吸附),无 LLM。
 用法:python tools/realdata_e2e_trace.py
@@ -15,74 +15,54 @@ from __future__ import annotations
 import json
 import math
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import geopandas as gpd
 import networkx as nx
-import numpy as np
 import pandas as pd
-from shapely.geometry import Point
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "backend"))
 
-from app.engine.anomaly import detect_cusum  # noqa: E402
+from app.engine.anomaly import detect_cusum
 
 # ---------- 路径 ----------
-COORD_CSV = ROOT / "data/raw/guokong_surface_water_2021_2025/站点经纬度坐标.csv"  # GBK
-STATIONS_CSV = ROOT / "data/processed/guokong_taihu/stations.csv"
+STATIONS_SNAPPED = ROOT / "data/processed/guokong_taihu/stations_snapped.csv"
 READINGS_DIR = ROOT / "data/processed/guokong_taihu/readings"
 ENT_SNAPPED = ROOT / "data/processed/taihu_enterprises/enterprises_snapped.csv"
 RIVERS_SHP = ROOT / "data/interim/hydrorivers_v10_as/hydrorivers_taihu_bbox.shp"
 OUT_DIR = ROOT / "data/processed/guokong_taihu"
+FRONTEND_OUT = ROOT / "frontend/public/data/e2e_trace_case.json"
 
 SNAP_LIMIT_M = 2000.0  # 断面吸附阈值(放宽:断面在河口/湖滨,距河网略远合理)
 TRAVEL_WINDOW_H = 72.0  # 上溯传播时间窗(小时):3 天内可能影响断面的企业
 ASSUMED_V_MS = 0.5  # 小微河流平均流速 m/s(缺断面流速时的保守估计)
 
-# ---------- GCJ-02 → WGS84(与 snap_enterprises_to_river 同算法)----------
-_A = 6378245.0
-_EE = 0.00669342162296594323
-
-
-def _out_of_china(lon: float, lat: float) -> bool:
-    return not (72.004 <= lon <= 137.8347 and 0.8293 <= lat <= 55.8271)
-
-
-def _tlat(x: float, y: float) -> float:
-    r = -100 + 2 * x + 3 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * math.sqrt(abs(x))
-    r += (20 * math.sin(6 * x * math.pi) + 20 * math.sin(2 * x * math.pi)) * 2 / 3
-    r += (20 * math.sin(y * math.pi) + 40 * math.sin(y / 3 * math.pi)) * 2 / 3
-    r += (160 * math.sin(y / 12 * math.pi) + 320 * math.sin(y * math.pi / 30)) * 2 / 3
-    return r
-
-
-def _tlon(x: float, y: float) -> float:
-    r = 300 + x + 2 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * math.sqrt(abs(x))
-    r += (20 * math.sin(6 * x * math.pi) + 20 * math.sin(2 * x * math.pi)) * 2 / 3
-    r += (20 * math.sin(x * math.pi) + 40 * math.sin(x / 3 * math.pi)) * 2 / 3
-    r += (150 * math.sin(x / 12 * math.pi) + 300 * math.sin(x / 30 * math.pi)) * 2 / 3
-    return r
-
-
-def gcj02_to_wgs84(lon: float, lat: float) -> tuple[float, float]:
-    if _out_of_china(lon, lat):
-        return lon, lat
-    dlat = _tlat(lon - 105, lat - 35)
-    dlon = _tlon(lon - 105, lat - 35)
-    radlat = lat / 180 * math.pi
-    magic = 1 - _EE * math.sin(radlat) ** 2
-    sm = math.sqrt(magic)
-    dlat = (dlat * 180) / ((_A * (1 - _EE)) / (magic * sm) * math.pi)
-    dlon = (dlon * 180) / (_A / sm * math.cos(radlat) * math.pi)
-    return lon * 2 - (lon + dlon), lat * 2 - (lat + dlat)
-
+INDICATOR_LABELS = {
+    "ammonia_n": "氨氮",
+    "codmn": "高锰酸盐指数",
+    "tp": "总磷",
+    "do": "溶解氧",
+    "turbidity": "浊度",
+    "conductivity": "电导率",
+}
+INDUSTRY_LABELS = {
+    "wwtp": "污水处理厂",
+    "dyeing": "印染",
+    "electroplating": "电镀",
+    "paper": "造纸",
+    "chemical": "化工",
+    "leather": "皮革",
+    "pharmaceutical": "制药",
+}
 
 # ---------- 河网有向图 ----------
 def build_river_graph(rivers: gpd.GeoDataFrame) -> nx.DiGraph:
     """NEXT_DOWN 指向下游河段;边方向 = 当前河段 → 下游河段(水流方向)。
     上溯 = 在反向图上从断面河段出发的可达前驱。"""
     G = nx.DiGraph()
+    river_ids = set(rivers["HYRIV_ID"].astype(int))
     for _, r in rivers.iterrows():
         hid = int(r["HYRIV_ID"])
         G.add_node(
@@ -93,9 +73,19 @@ def build_river_graph(rivers: gpd.GeoDataFrame) -> nx.DiGraph:
             geom=r["geometry"],
         )
         nd = int(r["NEXT_DOWN"])
-        if nd != 0 and nd in set(rivers["HYRIV_ID"].astype(int)):
+        if nd != 0 and nd in river_ids:
             G.add_edge(hid, nd)  # hid 流向 nd
     return G
+
+
+def group_enterprises_by_reach(enterprises: pd.DataFrame) -> dict[int, list[pd.Series]]:
+    """Index every enterprise on a reach without dropping co-located facilities."""
+    grouped: dict[int, list[pd.Series]] = {}
+    for _, enterprise in enterprises.iterrows():
+        if pd.isna(enterprise["hyriv_id"]):
+            continue
+        grouped.setdefault(int(enterprise["hyriv_id"]), []).append(enterprise)
+    return grouped
 
 
 def upstream_reaches(G: nx.DiGraph, start_hid: int, window_h: float) -> list[dict]:
@@ -133,60 +123,116 @@ def upstream_reaches(G: nx.DiGraph, start_hid: int, window_h: float) -> list[dic
     return sorted(out, key=lambda r: r["travel_h"])
 
 
+def travel_time_metadata(estimate_h: float) -> dict:
+    """Represent heuristic travel time without presenting it as causal evidence."""
+    upper_h = min(TRAVEL_WINDOW_H, max(24.0, estimate_h * 2))
+    return {
+        "estimate_h": round(float(estimate_h), 2),
+        "range_h": [round(float(estimate_h), 2), round(float(upper_h), 2)],
+        "method": "HydroRIVERS reach length / estimated velocity",
+        "causal_evidence": False,
+    }
+
+
+def build_frontend_case(result: dict, readings: pd.DataFrame) -> dict:
+    """Build the frontend projection from the canonical trace result."""
+    anomaly = result["anomaly"]
+    candidate = result["primary_candidate"]
+    event_ts = int(anomaly["event_ts"])
+    indicator = anomaly["indicator"]
+    values = pd.to_numeric(readings[indicator], errors="coerce")
+    window = readings[
+        readings["epoch"].between(event_ts - 9 * 86400, event_ts + 5 * 86400)
+        & values.notna()
+    ].copy()
+    window["value"] = values.loc[window.index]
+    series = [
+        {
+            "dt": pd.Timestamp(row["ts"]).strftime("%m-%d %H:%M"),
+            "v": round(float(row["value"]), 4),
+            "cls": "" if pd.isna(row.get("quality_class")) else str(row["quality_class"]),
+        }
+        for _, row in window.iterrows()
+    ]
+
+    before = window[window["epoch"] < event_ts]
+    baseline_class = ""
+    if not before.empty and "quality_class" in before:
+        classes = before["quality_class"].dropna().astype(str)
+        baseline_class = classes.mode().iloc[0] if not classes.empty else ""
+    event_rows = window.iloc[(window["epoch"] - event_ts).abs().argsort()[:1]]
+    event_class = ""
+    if not event_rows.empty and pd.notna(event_rows.iloc[0].get("quality_class")):
+        event_class = str(event_rows.iloc[0]["quality_class"])
+
+    baseline = float(anomaly["event_baseline"])
+    peak = float(anomaly["event_value"])
+    multiple = round(peak / baseline, 1) if baseline else None
+    return {
+        "title": "③ 真实数据端到端候选溯源演示(太湖国控断面)",
+        "dataset": (
+            f"断面 {anomaly['station_name']}({anomaly['station_id']}) · "
+            f"{INDICATOR_LABELS.get(indicator, indicator)} · "
+            f"{pd.Timestamp(anomaly['event_dt']).strftime('%Y-%m')}"
+        ),
+        "station": {
+            "id": anomaly["station_id"],
+            "name": anomaly["station_name"],
+            "lon": result["station"]["lon"],
+            "lat": result["station"]["lat"],
+        },
+        "primary_candidate": {
+            "name": candidate["enterprise"],
+            "industry": INDUSTRY_LABELS.get(candidate["industry"], candidate["industry"]),
+            "city": candidate["city"],
+            "lon": candidate["lon_wgs84"],
+            "lat": candidate["lat_wgs84"],
+            "dist_km": candidate["dist_km"],
+            "travel_time": candidate["travel_time"],
+            "evidence_status": candidate["evidence_status"],
+            "causal_confirmed": candidate["causal_confirmed"],
+        },
+        "primary_candidate_tie_count": result["primary_candidate_tie_count"],
+        "anomaly": {
+            "indicator": INDICATOR_LABELS.get(indicator, indicator),
+            "event_dt": pd.Timestamp(anomaly["event_dt"]).strftime("%Y-%m-%d %H:%M"),
+            "peak": peak,
+            "baseline": baseline,
+            "multiple": f"约 {multiple:g} 倍基线" if multiple is not None else "基线不可用",
+            "class_shift": f"{baseline_class} → {event_class}" if event_class else baseline_class,
+            "method": "CUSUM (h=7σ)",
+            "severity": {"high": "严重", "medium": "中等", "low": "提示"}.get(
+                anomaly["event_severity"], anomaly["event_severity"]
+            ),
+            "shape": "异常峰前后 14 天实测序列",
+        },
+        "upstream_path": result["upstream_trace"]["upstream_path_sample"],
+        "series": series,
+        "evidence_status": result["evidence_status"],
+        "causal_confirmed": result["causal_confirmed"],
+        "limitations": result["limitations"],
+    }
+
+
 def main() -> None:
-    # ===== 1. 站点坐标匹配 + 吸附 =====
-    coords = pd.read_csv(COVID_CSV := COORD_CSV, encoding="gbk", dtype=str)
-    coords.columns = [c.strip() for c in coords.columns]
-    coords["name"] = coords["name"].str.strip()
-    coords["lon"] = pd.to_numeric(coords["lon"], errors="coerce")
-    coords["lat"] = pd.to_numeric(coords["lat"], errors="coerce")
-    coords = coords.dropna(subset=["lon", "lat"]).drop_duplicates(subset=["name"])
-
-    stations = pd.read_csv(STATIONS_CSV)
-    merged = stations.merge(coords[["name", "lon", "lat", "river"]], on="name", how="left")
-    missing = merged["lon"].isna().sum()
-    print(f"[坐标] 105 站匹配到坐标: {len(merged) - missing}, 缺失: {missing}")
-
-    merged["lon_wgs"], merged["lat_wgs"] = zip(
-        *merged.apply(lambda r: gcj02_to_wgs84(r["lon"], r["lat"]) if pd.notna(r["lon"]) else (np.nan, np.nan), axis=1)
+    # ===== 1. 读取已核验的站点河网吸附 =====
+    st_snap = pd.read_csv(STATIONS_SNAPPED)
+    print(
+        f"[吸附] 断面命中河网(<{SNAP_LIMIT_M}m): "
+        f"{st_snap['matched'].sum()}/{len(st_snap)}; "
+        f"中位吸附距离 {st_snap['snap_dist_m'].median():.0f}m"
     )
-
     rivers = gpd.read_file(RIVERS_SHP)
-    rivers_m = rivers.to_crs(32651)
-    union = rivers_m.geometry
-
-    snap_records = []
-    for _, row in merged.iterrows():
-        if pd.isna(row["lon_wgs"]):
-            snap_records.append({**row.to_dict(), "hyriv_id": None, "next_down": None, "snap_dist_m": None, "matched": False})
-            continue
-        p = gpd.GeoSeries([Point(row["lon_wgs"], row["lat_wgs"])], crs=4326).to_crs(32651).iloc[0]
-        dists = union.distance(p)
-        j = int(dists.idxmin())
-        reach = rivers_m.loc[j]
-        snap_records.append({
-            "station_id": row["station_id"], "name": row["name"], "province": row["province"],
-            "lon_gcj": round(row["lon"], 6), "lat_gcj": round(row["lat"], 6),
-            "lon_wgs": round(row["lon_wgs"], 6), "lat_wgs": round(row["lat_wgs"], 6),
-            "river_ref": row.get("river"),
-            "hyriv_id": int(reach["HYRIV_ID"]), "next_down": int(reach["NEXT_DOWN"]),
-            "dis_av_cms": round(float(reach["DIS_AV_CMS"]), 2), "ord_stra": int(reach["ORD_STRA"]),
-            "snap_dist_m": round(float(dists.min()), 1), "matched": float(dists.min()) < SNAP_LIMIT_M,
-        })
-    st_snap = pd.DataFrame(snap_records)
-    st_snap.to_csv(OUT_DIR / "stations_snapped.csv", index=False)
-    print(f"[吸附] 断面命中河网(<{SNAP_LIMIT_M}m): {st_snap['matched'].sum()}/{len(st_snap)}; "
-          f"中位吸附距离 {st_snap['snap_dist_m'].median():.0f}m")
 
     # ===== 2. 河网图 + 上溯到企业 =====
     G = build_river_graph(rivers)
     print(f"[河网] 节点 {G.number_of_nodes()} 段, 边 {G.number_of_edges()} 条")
 
     ents = pd.read_csv(ENT_SNAPPED)
-    ent_by_hid = {int(r["hyriv_id"]): r for _, r in ents.iterrows() if pd.notna(r["hyriv_id"])}
+    ent_by_hid = group_enterprises_by_reach(ents)
 
     # ===== 3. 挑选有上游企业的异常断面 =====
-    # 行业→污染指标合理性(用于命中后佐证,非数值计算)
+    # 行业→污染指标合理性(用于候选排序佐证,非数值计算)
     industry_indicators = {
         "dyeing": (["codmn", "ammonia_n", "tp"], "印染废水高 COD/氨氮/总磷"),
         "electroplating": (["cr6", "conductivity", "turbidity"], "电镀废水含重金属/高电导"),
@@ -197,7 +243,7 @@ def main() -> None:
         "wwtp": (["ammonia_n", "codmn", "tp"], "污水处理厂出水氨氮/COD/总磷异常"),
     }
     indicators = ["ammonia_n", "codmn", "tp", "do", "turbidity", "conductivity"]
-    # 指标作为工业排污示踪剂的合理性(数值无关,仅用于演示选例与命中佐证)
+    # 指标作为工业排污示踪剂的合理性(数值无关,仅用于演示选例与候选佐证)
     indicator_weight = {"ammonia_n": 3, "codmn": 3, "tp": 2, "conductivity": 1, "turbidity": 0, "do": 0}
 
     candidates = []
@@ -205,7 +251,11 @@ def main() -> None:
         hid = int(s["hyriv_id"])
         ups = upstream_reaches(G, hid, TRAVEL_WINDOW_H)
         ups_hids = {u["hid"] for u in ups}
-        upstream_ents = [ent_by_hid[h] for h in ups_hids if h in ent_by_hid]
+        upstream_ents = [
+            enterprise
+            for upstream_hid in ups_hids
+            for enterprise in ent_by_hid.get(upstream_hid, [])
+        ]
         if not upstream_ents:
             continue
         # 跑 cusum 找该断面最强异常指标
@@ -234,10 +284,11 @@ def main() -> None:
             continue
         candidates.append({
             "station_id": sid, "station_name": s["name"], "hyriv_id": hid,
+            "station_lon": s["lon_wgs"], "station_lat": s["lat_wgs"],
             "indicator": best["indicator"], "n_high": best["n_high"], "n_dets": best["n_dets"],
             "score": best["score"], "upstream_ents": len(upstream_ents),
             "upstream_reaches": len(ups), "detections": best["detections"],
-            "upstream": ups, "upstream_ents_rows": upstream_ents,
+            "upstream": ups,
             "ind_weight": indicator_weight.get(best["indicator"], 0),
         })
 
@@ -253,111 +304,68 @@ def main() -> None:
 
     pick = candidates[0]
 
-    # ===== 4. 上溯命中企业 + 产出结果 =====
+    # ===== 4. 上溯筛选候选企业 + 产出结果 =====
     # 取最严重异常点作为事件窗口
     dets_sorted = sorted(pick["detections"], key=lambda d: abs(d["zscore"]), reverse=True)
     top = dets_sorted[0]
     ts_event = top["ts"]
-    from datetime import datetime, timezone, timedelta
     dt = datetime.fromtimestamp(ts_event, tz=timezone(timedelta(hours=8)))
     win_before_h = 24
     win_after_h = 12
 
-    # 命中企业:在传播时间窗内的上游企业,按 travel_h 升序,行业-指标匹配加权
-    ent_hits = []
+    # 候选企业:在传播时间窗内的上游企业,按 travel_h 升序,行业-指标匹配加权
+    enterprise_candidates = []
     for u in pick["upstream"]:
-        if u["hid"] not in ent_by_hid:
-            continue
-        e = ent_by_hid[u["hid"]]
-        ind_ok, ind_note = industry_indicators.get(e["industry"], ([], ""))
-        ind_match = pick["indicator"] in ind_ok
-        ent_hits.append({
-            "enterprise": e["name"], "city": e["city"], "industry": e["industry"],
-            "credit_code": e["credit_code"], "address": e["address"],
-            "lon_wgs84": e["lon_wgs84"], "lat_wgs84": e["lat_wgs84"],
-            "hyriv_id": int(e["hyriv_id"]), "travel_h": u["travel_h"],
-            "dist_km": u["dist_km"], "snap_dist_m": e["snap_dist_m"],
-            "indicator_match": ind_match, "indicator_note": ind_note,
-            "score": u["travel_h"] - (24 if ind_match else 0),  # 行业匹配减 24h 惩罚(等同更近)
-        })
-    ent_hits.sort(key=lambda x: x["score"])
-    matched = ent_hits[0] if ent_hits else None
-
-    # ===== 5. 指纹比对(match_pollutants,纯函数)=====
-    # 现场观测向量:异常断面检出的指标构成(异常指标权重放大,其余基线指标)
-    from app.engine.fingerprint import match_pollutants
-    from app.data.permit_fingerprints import (
-        real_fingerprint_by_credit, real_fingerprints_by_name, CODE_TO_INDICATOR,
+        for e in ent_by_hid.get(u["hid"], []):
+            ind_ok, ind_note = industry_indicators.get(e["industry"], ([], ""))
+            ind_match = pick["indicator"] in ind_ok
+            enterprise_candidates.append({
+                "enterprise": e["name"], "city": e["city"], "industry": e["industry"],
+                "credit_code": e["credit_code"], "address": e["address"],
+                "lon_wgs84": e["lon_wgs84"], "lat_wgs84": e["lat_wgs84"],
+                "hyriv_id": int(e["hyriv_id"]),
+                "travel_time": travel_time_metadata(u["travel_h"]),
+                "dist_km": u["dist_km"], "snap_dist_m": e["snap_dist_m"],
+                "indicator_match": ind_match, "indicator_note": ind_note,
+                "ranking_score": u["travel_h"] - (24 if ind_match else 0),
+                "evidence_status": "candidate_unverified",
+                "causal_confirmed": False,
+            })
+    enterprise_candidates.sort(key=lambda x: (x["ranking_score"], str(x["enterprise"])))
+    primary_candidate = enterprise_candidates[0] if enterprise_candidates else None
+    if primary_candidate is None:
+        print("[!] 无上游企业候选,停止生成演示结果")
+        return
+    primary_candidate_tie_count = sum(
+        math.isclose(candidate["ranking_score"], primary_candidate["ranking_score"])
+        for candidate in enterprise_candidates
     )
-    real_fp_by_name = real_fingerprints_by_name()
-    # 行业→真实指纹样本(用于许可注销企业的代理指纹)
-    import csv as _csv
-    _v2 = ROOT / "data/interim/taihu_enterprises_v1/taihu_basin_enterprises_v2.csv"
-    _name_ind = {}
-    if _v2.exists():
-        for _r in _csv.DictReader(open(_v2, encoding="utf-8")):
-            _name_ind[_r["name"]] = _r["industry"]
 
-    # 异常指标的引擎键名(读数表 ammonia_n → ammonia)
-    _IND_NORMAL = {"ammonia_n": "ammonia", "codmn": "cod", "tp": "tp", "tn": "tn",
-                   "turbidity": "ss", "conductivity": "cod"}
-    anom_key = _IND_NORMAL.get(pick["indicator"], pick["indicator"])
-    # 现场观测向量:异常指标占主导(0.8),其余指标均分(0.2)
-    _other_keys = [k for k in ["cod", "ammonia", "tp", "tn"] if k != anom_key]
-    query_vec = {anom_key: 0.8}
-    for k in _other_keys:
-        query_vec[k] = 0.2 / len(_other_keys)
-
-    # 构造指纹库:命中的上游企业们,各自取真实指纹(或行业代理)
-    fp_lib = {}
-    fp_source = {}
-    for e in (pick["upstream_ents_rows"] or []):
-        ename = e["name"]
-        vec = real_fp_by_name.get(ename)
-        src = "真实许可证"
-        if not vec:
-            # 许可注销/无数据 → 用同行业真实指纹做代理(取第一个)
-            ind = _name_ind.get(ename, e.get("industry"))
-            same_ind = [v for n, v in real_fp_by_name.items()
-                        if _name_ind.get(n) == ind and ind]
-            if same_ind:
-                vec = same_ind[0]
-                src = f"行业代理(同行业{ind}真实指纹,该企业许可注销/无数据)"
-            else:
-                src = "无指纹(行业无真实样本)"
-        fp_lib[ename] = vec or {}
-        fp_source[ename] = src
-
-    # 跑 match_pollutants(纯函数 min/max 比相似度)
-    ranked_fp = match_pollutants(query_vec, fp_lib) if fp_lib else []
-    # ranked_fp: [{enterprise_id, score}] enterprise_id 即企业名
-    fp_hit = None
-    if matched and ranked_fp:
-        fp_hit = next((r for r in ranked_fp if r["enterprise_id"] == matched["enterprise"]), None)
-
-    # 把指纹结果并入 matched
-    if matched:
-        matched["fingerprint_match"] = {
-            "query_vector": query_vec,
-            "library_size": len(fp_lib),
-            "library_source": {n: fp_source[n] for n in fp_lib},
-            "matched_score": fp_hit["score"] if fp_hit else None,
-            "matched_rank": (next(i for i, r in enumerate(ranked_fp)
-                                  if r["enterprise_id"] == matched["enterprise"]) + 1) if fp_hit else None,
-            "fingerprint_source": fp_source.get(matched["enterprise"]),
-            "all_ranked": ranked_fp[:5],
-            "note": "现场观测向量由异常指标主导(0.8);分数=min/max比相似度(1.0=完全一致);"
-                    "命中的锡北污水厂许可注销,用同行业真实指纹做代理,已如实标注。",
-        }
+    limitations = [
+        "企业仅因位于河网上游且行业指标相符而成为候选,未取得排口同期监测证据。",
+        "传播时间来自 HydroRIVERS 河段长度与估算流速,只用于排序,不是因果证据。",
+        "断面和企业坐标存在地图查询与河网吸附误差,正式归因前必须复核。",
+    ]
+    if primary_candidate_tie_count > 1:
+        limitations.append(
+            f"首位有 {primary_candidate_tie_count} 家同分候选;界面仅展示其中一家,"
+            "不代表其证据优于其他同分候选。"
+        )
+    limitations.append("本结果是算法验证,不是对真实污染事件或企业责任的认定。")
 
     result = {
         "pipeline": "realdata_e2e_trace",
         "summary": {
             "station_id": pick["station_id"], "station_name": pick["station_name"],
-            "indicator": pick["indicator"], "matched_enterprise": matched["enterprise"] if matched else None,
-            "travel_h": matched["travel_h"] if matched else None,
-            "fingerprint_score": matched["fingerprint_match"]["matched_score"] if matched and matched.get("fingerprint_match") else None,
-            "evidence_type": "指纹+拓扑双证据" if matched and matched.get("fingerprint_match", {}).get("matched_score") is not None else "拓扑单证据(候选命中)",
+            "indicator": pick["indicator"],
+            "primary_candidate": primary_candidate["enterprise"],
+            "primary_candidate_tie_count": primary_candidate_tie_count,
+            "evidence_status": "candidate_unverified",
+            "causal_confirmed": False,
+        },
+        "station": {
+            "lon": round(float(pick["station_lon"]), 6),
+            "lat": round(float(pick["station_lat"]), 6),
         },
         "anomaly": {
             "station_id": pick["station_id"], "station_name": pick["station_name"],
@@ -374,8 +382,9 @@ def main() -> None:
             "upstream_enterprises_count": pick["upstream_ents"],
             "upstream_path_sample": pick["upstream"][:20],
         },
-        "matched_enterprise": matched,
-        "candidate_enterprises": ent_hits[:10],
+        "primary_candidate": primary_candidate,
+        "primary_candidate_tie_count": primary_candidate_tie_count,
+        "candidate_enterprises": enterprise_candidates[:10],
         "all_candidates_summary": [{"station": c["station_id"], "name": c["station_name"],
                                     "indicator": c["indicator"], "n_high": c["n_high"],
                                     "upstream_ents": c["upstream_ents"]} for c in candidates[:15]],
@@ -384,33 +393,33 @@ def main() -> None:
             "snap_limit_m": SNAP_LIMIT_M, "travel_window_h": TRAVEL_WINDOW_H,
             "velocity": f"估速 0.3~2.0 m/s(由 DIS_AV_CMS 对数折算),保底 {ASSUMED_V_MS} m/s",
             "anomaly_engine": "backend/app/engine/anomaly.py detect_cusum (h=7σ, 纯函数)",
-            "fingerprint_engine": "backend/app/engine/fingerprint.py match_pollutants (min/max比相似度,纯函数)",
-            "fingerprint_source": "data/processed/taihu_enterprises/outlets_report.json (真实许可证主要污染物年排放量限值)",
-            "note": "数值计算(异常检测/拓扑/吸附/指纹相似度)全走确定性纯函数;"
-                    "命中的锡北污水厂许可已注销无真实指纹,用同行业真实指纹做代理并如实标注;"
-                    "现场观测向量由异常指标主导(0.8),反映断面检出该指标异常的物理含义。",
+            "note": "数值计算(异常检测/拓扑/吸附)全走确定性纯函数;行业-指标映射仅用于候选排序。",
         },
+        "evidence_status": "candidate_unverified",
+        "causal_confirmed": False,
+        "limitations": limitations,
     }
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / "e2e_trace_result.json").write_text(
-        json.dumps(result, ensure_ascii=False, indent=2, default=str))
+        json.dumps(result, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+    picked_readings = pd.read_csv(READINGS_DIR / f"{pick['station_id']}.csv")
+    frontend_case = build_frontend_case(result, picked_readings)
+    FRONTEND_OUT.parent.mkdir(parents=True, exist_ok=True)
+    FRONTEND_OUT.write_text(
+        json.dumps(frontend_case, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
     print("\n" + "=" * 60)
     print(f"[结果] 断面 {pick['station_id']}({pick['station_name']}) 指标={pick['indicator']}")
     print(f"  异常事件: {dt:%Y-%m-%d %H:%M} 值={top['value']} z={top['zscore']} 严重度={top['severity']}")
-    if matched:
-        print(f"  命中企业: {matched['enterprise']}({matched['industry']})")
-        print(f"  行业指标匹配: {matched['indicator_match']}({matched['indicator_note']})")
-        print(f"  传播时间: {matched['travel_h']}h, 距离 {matched['dist_km']}km")
-        fm = matched.get("fingerprint_match", {})
-        if fm.get("matched_score") is not None:
-            print(f"  指纹比对: 分数={fm['matched_score']} 排名={fm['matched_rank']}/{fm['library_size']}")
-            print(f"  指纹来源: {fm['fingerprint_source']}")
-            print(f"  证据类型: 指纹+拓扑双证据命中")
-        else:
-            print(f"  指纹比对: 无(企业无指纹)")
-            print(f"  证据类型: 拓扑单证据(候选命中)")
+    print(f"  首选候选: {primary_candidate['enterprise']}({primary_candidate['industry']})")
+    print(
+        f"  行业指标匹配: {primary_candidate['indicator_match']}"
+        f"({primary_candidate['indicator_note']})"
+    )
+    estimate_h = primary_candidate["travel_time"]["estimate_h"]
+    print(f"  估算传播时间: {estimate_h}h, 距离 {primary_candidate['dist_km']}km")
     print(f"  上游企业候选: {pick['upstream_ents']} 家, 上游河段: {pick['upstream_reaches']} 段")
     print(f"  结果写入: {OUT_DIR / 'e2e_trace_result.json'}")
+    print(f"  前端投影: {FRONTEND_OUT}")
 
 
 if __name__ == "__main__":
