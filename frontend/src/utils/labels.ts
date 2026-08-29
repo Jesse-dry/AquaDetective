@@ -43,7 +43,7 @@ export const indicatorLabel = (code: string): string => INDICATOR_LABEL[code] ??
 export const ETYPE_LABEL: Record<string, string> = {
   sudden: '突发泄漏',
   periodic: '夜间偷排',
-  gradual: '渐变恶化',
+  gradual: '逐渐恶化',
 }
 
 export const etypeLabel = (t: string): string => ETYPE_LABEL[t] ?? t
@@ -52,7 +52,7 @@ export const etypeLabel = (t: string): string => ETYPE_LABEL[t] ?? t
 export const SEVERITY_LABEL: Record<string, string> = {
   high: '严重(需立即处置)',
   medium: '中等(持续关注)',
-  low: '轻微(留观)',
+  low: '轻微(等结果)',
 }
 
 /** 行业编码 → 中文 */

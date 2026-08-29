@@ -52,31 +52,34 @@ export function BenchmarkPage() {
 
   useEffect(() => {
     if (!watershed) return
-    ;(async () => {
-      const events = await getEvents()
-      const nameOf = (id?: string) =>
-        watershed.enterprises.find((e) => e.id === id)?.name ?? null
-      const rows: VerifiedRow[] = []
-      try {
-        const { recordings } = await getRecordings()
-        const invs = await Promise.all(recordings.map(getInvestigation))
-        for (const ev of events) {
-          const inv = invs.find((i) => i.event_id === ev.id && i.status === 'resolved')
-          const src = inv?.conclusion?.source_id
-          rows.push({
-            event: ev,
-            sourceName: nameOf(src ?? undefined),
-            confidence: inv?.conclusion?.confidence ?? null,
-            hit: inv ? src === ev.truth_source : null,
-          })
+      ; (async () => {
+        const events = await getEvents()
+        const nameOf = (id?: string) =>
+          watershed.enterprises.find((e) => e.id === id)?.name ?? null
+        const rows: VerifiedRow[] = []
+        try {
+          const { recordings } = await getRecordings()
+          // recordings 现为摘要对象列表,取 investigation_id 查详情
+          const invs = await Promise.all(
+            recordings.map((rec) => getInvestigation(rec.investigation_id)),
+          )
+          for (const ev of events) {
+            const inv = invs.find((i) => i.event_id === ev.id && i.status === 'resolved')
+            const src = inv?.conclusion?.source_id
+            rows.push({
+              event: ev,
+              sourceName: nameOf(src ?? undefined),
+              confidence: inv?.conclusion?.confidence ?? null,
+              hit: inv ? src === ev.truth_source : null,
+            })
+          }
+        } catch {
+          for (const ev of events) {
+            rows.push({ event: ev, sourceName: null, confidence: null, hit: null })
+          }
         }
-      } catch {
-        for (const ev of events) {
-          rows.push({ event: ev, sourceName: null, confidence: null, hit: null })
-        }
-      }
-      setRows(rows)
-    })().catch(() => {})
+        setRows(rows)
+      })().catch(() => { })
   }, [watershed])
 
   return (
@@ -151,7 +154,7 @@ export function BenchmarkPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-sm font-semibold text-slate-300">④ 核心原理</h2>
+          <h2 className="mb-2 text-sm font-semibold text-slate-300">⑥ 核心原理</h2>
           <p className="rounded-lg border border-edge bg-panel p-4 text-xs leading-relaxed text-slate-400">
             不同行业废水具有特征性三维荧光光谱(EEM)——如同"水质指纹"。本系统与清华苏州环境
             创新研究院落地技术同源:为每个污染源企业建立"光谱指纹 + 特征污染物比例"双指纹档案,

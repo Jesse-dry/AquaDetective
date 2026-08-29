@@ -161,7 +161,15 @@ export interface EemMatrix {
 }
 
 // ---------- /recordings ----------
-// GET /recordings 返回 { recordings: string[] }(仅调查 id 列表)
+// GET /recordings 返回调查列表;附事件摘要供前端渲染可读标签(inv_xxx 裸 id 看不懂)
+export interface RecordingSummary {
+  investigation_id: string
+  event_id?: string
+  station_id?: string
+  indicators?: string[]
+  started_at?: number // 毫秒 epoch(API 契约)
+}
+
 export interface RecordingList {
-  recordings: string[]
+  recordings: RecordingSummary[]
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { usePlaybackStore } from '../../store/playbackStore'
+import { eventLabel, indicatorLabel } from '../../utils/labels'
 
 // 扩散回放控制条:悬浮在地图左上角;播放时以 100ms tick 推进时间游标,
 // 各断面热力值写入 playbackStore,由 WatershedMap 消费着色。
@@ -20,7 +21,7 @@ export function DispersionLayer() {
     <div className="absolute left-3 top-3 z-10 w-80 rounded-lg border border-edge bg-panel/95 p-3 shadow-lg">
       <div className="mb-1 flex items-center justify-between">
         <span className="text-xs font-semibold text-slate-200">
-          🌊 扩散回放 · {pb.eventId} · {pb.indicator}
+          🌊 扩散回放 · {pb.eventId ? eventLabel(pb.eventId) : ''} · {indicatorLabel(pb.indicator)}
         </span>
         <button onClick={pb.close} className="text-xs text-slate-500 hover:text-slate-300">✕</button>
       </div>
@@ -32,10 +33,14 @@ export function DispersionLayer() {
       </div>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => pb.setPlaying(!pb.playing)}
+          onClick={() => {
+            // 已播到终点时,重新点播放 = 从头重放(否则 cursor 卡在 t1,tick 一步就又结束)
+            if (!pb.playing && pb.cursorMs >= pb.t1Ms) pb.replay()
+            else pb.setPlaying(!pb.playing)
+          }}
           className="rounded bg-accent px-3 py-1 text-xs font-semibold text-ink hover:bg-sky-300"
         >
-          {pb.playing ? '⏸ 暂停' : '▶ 播放'}
+          {pb.playing ? '⏸ 暂停' : (pb.cursorMs >= pb.t1Ms ? '↻ 重放' : '▶ 播放')}
         </button>
         <select
           value={pb.speedMs}

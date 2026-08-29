@@ -8,7 +8,7 @@ import { InjectDialog } from './InjectDialog'
 const SCENARIOS = [
   { id: 'evt_001', name: '场景一 · 夜间偷排', hint: '电镀厂 · 指纹溯源全流程' },
   { id: 'evt_002', name: '场景二 · 突发泄漏', hint: '化工园区 · 扩散动画' },
-  { id: 'evt_003', name: '场景三 · 渐变恶化', hint: '污水厂 · CUSUM 长周期检出' },
+  { id: 'evt_003', name: '场景三 · 逐渐恶化', hint: '污水厂 · CUSUM 长周期检出' },
 ]
 
 export function ScenarioBar() {

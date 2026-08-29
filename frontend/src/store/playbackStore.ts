@@ -17,6 +17,7 @@ interface PlaybackState {
   cursorMs: number
   t0Ms: number
   t1Ms: number
+  startMs: number // 播放起点(事件发生时刻,跳过前置基线段)
   playing: boolean
   speedMs: number // 每个 tick(100ms)推进的模拟毫秒数
   series: Record<string, SeriesPoint[]>
@@ -27,6 +28,7 @@ interface PlaybackState {
   load: (ev: PollutionEvent, stationIds: string[]) => Promise<void>
   setPlaying: (playing: boolean) => void
   setSpeed: (speedMs: number) => void
+  replay: () => void
   tick: () => void
   close: () => void
 }
@@ -38,6 +40,7 @@ const initial = {
   cursorMs: 0,
   t0Ms: 0,
   t1Ms: 0,
+  startMs: 0,
   playing: false,
   speedMs: 900 * 1000,
   series: {} as Record<string, SeriesPoint[]>,
@@ -70,6 +73,9 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     for (const pts of Object.values(seriesMap)) {
       for (const p of pts) if (p.value > globalPeak) globalPeak = p.value
     }
+    // 保留用户调好的播放速度;从窗口起点开始播(完整基线 → 事件 → 扩散),
+    // 用户可用进度条/暂停自行跳过基线段
+    const { speedMs } = get()
     set({
       ...initial,
       active: true,
@@ -77,8 +83,10 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       indicator,
       t0Ms: from,
       t1Ms: to,
+      startMs: from,
       cursorMs: from,
       playing: true,
+      speedMs,
       series: seriesMap,
       globalPeak,
     })
@@ -86,6 +94,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
 
   setPlaying: (playing) => set({ playing }),
   setSpeed: (speedMs) => set({ speedMs }),
+  // 从头重放:游标回到事件发生时刻(startMs),热力和消费下标复位
+  replay: () => set({ playing: true, cursorMs: get().startMs, heat: {}, cursors: {} }),
 
   tick: () => {
     const s = get()

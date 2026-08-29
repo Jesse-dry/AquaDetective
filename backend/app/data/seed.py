@@ -31,7 +31,7 @@ SCRIPTED_EVENTS = [
     {
         "id": "evt_003", "etype": "gradual", "source_id": "ent_15",
         "severity": "medium", "onset_day": 20, "duration_d": 30,
-        "indicators": ["ammonia", "cod"], "title": "城东污水处理厂处理能力下降（渐变）",
+        "indicators": ["cod", "ammonia"], "title": "城东污水处理厂处理能力下降（渐变）",
     },
 ]
 

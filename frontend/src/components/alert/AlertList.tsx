@@ -47,12 +47,18 @@ export function AlertList() {
   useEffect(() => {
     if (reportId || conclusion || failed) {
       ;(activeConn as { close?: () => void } | null)?.close?.()
+      // 调查结束后立刻刷新事件状态(resolved/open),不等 30s 轮询
+      refresh()
     }
-  }, [reportId, conclusion, failed])
+  }, [reportId, conclusion, failed, refresh])
 
   const investigate = async (eventId: string) => {
     ;(activeConn as { close?: () => void; stop?: () => void } | null)?.close?.()
     ;(activeConn as { stop?: () => void } | null)?.stop?.()
+    // 本地即时置为 investigating,不等 30s 轮询(按钮立刻切换状态)
+    useAlertStore.setState((s) => ({
+      events: s.events.map((e) => (e.id === eventId ? { ...e, status: 'investigating' } : e)),
+    }))
 
     if (IS_MOCK) {
       inv.start('mock_inv_001')

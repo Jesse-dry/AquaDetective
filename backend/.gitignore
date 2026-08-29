@@ -20,3 +20,4 @@ dist/
 .idea/
 .vscode/
 .DS_Store
+data/recordings_archive/

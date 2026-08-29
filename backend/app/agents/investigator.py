@@ -16,8 +16,8 @@ W = {"eem": 0.40, "pollutant": 0.25, "pattern": 0.20, "strength": 0.15}
 # 通俗化标签:面向普通观众的中文映射(只影响展示文本,不影响数值逻辑)
 INDICATOR_CN = {"cod": "化学需氧量", "ammonia": "氨氮", "tp": "总磷", "cr6": "六价铬",
                 "ph": "pH值", "do": "溶解氧", "codmn": "高锰酸盐指数"}
-ETYPE_CN = {"sudden": "突发泄漏", "periodic": "夜间偷排", "gradual": "渐变恶化"}
-SEVERITY_CN = {"high": "严重(需立即处置)", "medium": "中等(持续关注)", "low": "轻微(留观)"}
+ETYPE_CN = {"sudden": "突发泄漏", "periodic": "夜间偷排", "gradual": "逐渐恶化"}
+SEVERITY_CN = {"high": "严重(需立即处置)", "medium": "中等(持续关注)", "low": "轻微(等结果)"}
 
 
 def _indicators_cn(ev: dict) -> str:
