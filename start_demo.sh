@@ -96,8 +96,8 @@ if (( MOCK )); then
   ok "  前端(Mock): http://localhost:$FRONTEND_PORT"
 else
   ok "  前端:       http://localhost:$FRONTEND_PORT"
-  ok "  后端 API:   http://localhost:$BACKEND_PORT/api/v1"
   ok "  API 文档:   http://localhost:$BACKEND_PORT/docs"
+  ok "  事件接口:   http://localhost:$BACKEND_PORT/api/v1/events"
 fi
 ok "  停止: Ctrl+C"
 ok "======================================================"

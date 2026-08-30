@@ -69,8 +69,8 @@ AquaDetective 是一个面向流域水环境管理的智能体系统，模拟真
 健康等待(轮询接口直到真正可访问)、端口复用(服务已在运行则直接复用)。Ctrl+C 优雅停止本脚本启动的服务。
 
 - 前端: http://localhost:5173
-- 后端 API: http://localhost:8000/api/v1
 - API 文档: http://localhost:8000/docs
+- 事件接口(示例): http://localhost:8000/api/v1/events
 
 现场演示万一环境故障,`--mock` 模式前端全部走本地 mock 数据(含推理流回放),零外部依赖。
 
