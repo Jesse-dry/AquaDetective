@@ -38,9 +38,9 @@ export function DispersionLayer() {
             if (!pb.playing && pb.cursorMs >= pb.t1Ms) pb.replay()
             else pb.setPlaying(!pb.playing)
           }}
-          className="rounded bg-accent px-3 py-1 text-xs font-semibold text-ink hover:bg-sky-300"
+          className="rounded bg-accent px-3 py-1 text-xs font-semibold text-ink hover:bg-sky-300 whitespace-nowrap"
         >
-          {pb.playing ? '⏸ 暂停' : (pb.cursorMs >= pb.t1Ms ? '↻ 重放' : '▶ 播放')}
+          {pb.playing ? '⏸暂停' : (pb.cursorMs >= pb.t1Ms ? '↻重放' : '▶播放')}
         </button>
         <select
           value={pb.speedMs}

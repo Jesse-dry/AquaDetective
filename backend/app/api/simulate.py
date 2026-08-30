@@ -72,3 +72,21 @@ def inject_event(body: dict):
     conn.commit()
     conn.close()
     return {"ok": True, "event_id": ev_id, "alert_station": alert, "summary": summary}
+
+
+@router.delete("/simulate/events/{event_id}")
+def delete_injected_event(event_id: str):
+    """删除手动注入的事件(仅 evt_inj_ 前缀,预置事件受保护)。
+    删除事件行 + 事件观测;readings 时序保留(回放仍可看)。"""
+    if not event_id.startswith("evt_inj_"):
+        raise HTTPException(400, "仅支持删除手动注入事件(evt_inj_ 前缀)")
+    conn = get_conn(get_db_path())
+    row = conn.execute("SELECT id FROM events WHERE id=?", (event_id,)).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(404, "事件不存在")
+    conn.execute("DELETE FROM events WHERE id=?", (event_id,))
+    conn.execute("DELETE FROM event_observations WHERE event_id=?", (event_id,))
+    conn.commit()
+    conn.close()
+    return {"ok": True, "deleted": event_id}

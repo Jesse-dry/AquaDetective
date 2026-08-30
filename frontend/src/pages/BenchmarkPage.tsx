@@ -94,9 +94,14 @@ export function BenchmarkPage() {
           ← 返回大屏
         </Link>
         <h1 className="text-lg font-bold">📊 真实数据对标</h1>
-        <p className="rounded-lg border border-warn/50 bg-warn/10 p-3 text-sm text-warn">
-          声明:演示流域(清源河)为模拟数据;②节验证使用真实太湖国控断面公开数据(2021–2025),③节真实案例仅用于说明算法与行业落地技术同源。
-        </p>
+        <div className="rounded-lg border border-warn/40 bg-warn/5 p-4">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-warn">⚠ 诚实声明</p>
+          <ul className="space-y-1 text-xs leading-relaxed text-slate-300">
+            <li>· 演示流域(清源河)为模拟数据,用于稳定展示完整溯源闭环</li>
+            <li>· ②节验证使用真实太湖国控断面公开数据(2021–2025)</li>
+            <li>· ③节真实案例仅用于说明算法与行业落地技术同源,非真实污染事件认定</li>
+          </ul>
+        </div>
 
         <section>
           <h2 className="mb-2 text-sm font-semibold text-slate-300">① 本系统算法验证(三条预置事件)</h2>

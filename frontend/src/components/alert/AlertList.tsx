@@ -5,6 +5,7 @@ import { usePlaybackStore } from '../../store/playbackStore'
 import { useWatershedStore } from '../../store/watershedStore'
 import { startInvestigation } from '../../api/events'
 import { getInvestigation } from '../../api/investigate'
+import { deleteInjectedEvent } from '../../api/simulate'
 import { IS_MOCK } from '../../api/client'
 import { MockStream } from '../../ws/mockStream'
 import { InvestigationConnection } from '../../ws/connection'
@@ -25,6 +26,15 @@ export function AlertList() {
   const inv = useInvestigationStore()
   const loadPlayback = usePlaybackStore((s) => s.load)
   const stationIds = useWatershedStore((s) => s.data?.stations.map((st) => st.id) ?? [])
+  const removeInjected = async (id: string) => {
+    if (!window.confirm('确定删除此注入事件吗?')) return
+    try {
+      await deleteInjectedEvent(id)
+      await refresh()
+    } catch {
+      alert('删除失败,请稍后重试')
+    }
+  }
 
   // 排序:预置事件(evt_00N)在前按序号,注入事件(evt_inj_00N)在后按序号
   const sortKey = (id: string) => {
@@ -100,11 +110,20 @@ export function AlertList() {
       {sortedEvents.map((ev) => (
         <div
           key={ev.id}
-          className={`rounded-lg border p-3 ${SEVERITY_STYLE[ev.severity]} ${
+          className={`relative rounded-lg border p-3 ${SEVERITY_STYLE[ev.severity]} ${
             ev.status === 'open' ? 'animate-pulse' : ''
           }`}
         >
-          <div className="flex items-center justify-between">
+          {ev.id.startsWith('evt_inj_') && (
+            <button
+              onClick={() => removeInjected(ev.id)}
+              className="absolute right-2 top-2 rounded px-1 text-xs text-slate-500 hover:bg-danger/20 hover:text-danger"
+              title="删除此注入事件"
+            >
+              ✕
+            </button>
+          )}
+          <div className="flex items-center justify-between pr-5">
             <span className="text-sm font-semibold text-slate-100">{eventLabel(ev.id)}</span>
             <span className="text-xs text-slate-400">
               {etypeLabel(ev.etype)} · {SEVERITY_LABEL[ev.severity] ?? ev.severity}
