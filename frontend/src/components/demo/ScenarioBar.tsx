@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { resetWorld } from '../../api/simulate'
 import { useAlertStore } from '../../store/alertStore'
 import { useInvestigationStore } from '../../store/investigationStore'
+import { usePlaybackStore } from '../../store/playbackStore'
 import { InjectDialog } from './InjectDialog'
 
 // 场景脚本栏:三条预置脚本提示 + 一键重置 + 手动注入(演示保险)
@@ -22,6 +23,8 @@ export function ScenarioBar() {
     try {
       await resetWorld()
       resetInv()
+      // 关闭扩散回放:重置后旧事件的时序已失效,回放热力会错乱
+      usePlaybackStore.getState().close()
       await refresh()
     } finally {
       setResetting(false)

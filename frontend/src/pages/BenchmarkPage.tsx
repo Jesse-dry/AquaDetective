@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { PollutionEvent } from '../types'
+import type { Investigation, PollutionEvent } from '../types'
 import { getEvents } from '../api/events'
 import { getRecordings, getInvestigation } from '../api/investigate'
 import { useWatershedStore } from '../store/watershedStore'
@@ -59,10 +59,15 @@ export function BenchmarkPage() {
         const rows: VerifiedRow[] = []
         try {
           const { recordings } = await getRecordings()
-          // recordings 现为摘要对象列表,取 investigation_id 查详情
-          const invs = await Promise.all(
-            recordings.map((rec) => getInvestigation(rec.investigation_id)),
+          // recordings 为摘要对象列表;逐个查详情,单个 404(孤儿录音/调查记录被清)
+          // 不再拖垮整表——失败的跳过,其余正常展示
+          const invs = (
+            await Promise.allSettled(
+              recordings.map((rec) => getInvestigation(rec.investigation_id)),
+            )
           )
+            .filter((r): r is PromiseFulfilledResult<Investigation> => r.status === 'fulfilled')
+            .map((r) => r.value)
           for (const ev of events) {
             const inv = invs.find((i) => i.event_id === ev.id && i.status === 'resolved')
             const src = inv?.conclusion?.source_id
@@ -101,7 +106,7 @@ export function BenchmarkPage() {
                 <tr>
                   <th className="px-3 py-2 text-left">事件</th>
                   <th className="px-3 py-2 text-left">类型</th>
-                  <th className="px-3 py-2 text-left">Ground Truth</th>
+                  <th className="px-3 py-2 text-left" title="模拟事件注入时设定的真实污染源,用于给溯源结果对答案">真实污染源(预设答案)</th>
                   <th className="px-3 py-2 text-left">锁定结果</th>
                   <th className="px-3 py-2 text-left">置信度</th>
                   <th className="px-3 py-2 text-left">判定</th>

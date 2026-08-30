@@ -34,11 +34,13 @@ from app.agents.investigator import (conclude, generate_hypotheses,  # noqa: E40
 from app.agents.monitor import scan_for_events  # noqa: E402
 from app.agents.reporter import build_report  # noqa: E402
 from app.agents.responder import response_plan  # noqa: E402
+from app.agents import tools  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.context import get_db_path, get_watershed  # noqa: E402
 from app.data.seed import ensure_db  # noqa: E402
 from app.data.series_generator import T0, alert_station_for, apply_event  # noqa: E402
 from app.db import get_conn  # noqa: E402
+from app.engine.dispersion import puff_at  # noqa: E402
 
 NODES = [parse_event, generate_hypotheses, verify_hypotheses, conclude,
          compliance_review, response_plan, build_report]
@@ -128,6 +130,15 @@ def main(rounds: int = 12) -> None:
         rank_ids = [h["target_id"] for h in cands]
         rank = rank_ids.index(truth) + 1 if truth in rank_ids else None
 
+        # 传播时间误差(§8 指标):调查的拓扑估时 travel_hours vs 高斯烟团峰值时刻。
+        # 两者都是确定性引擎产出:估时是最短路径距离/流速,真值是烟团浓度峰值 t=argmax c(t)
+        st_node = next(s["node_id"] for s in ws["stations"] if s["id"] == alert)
+        pred_h = tools.travel_hours(ws, ent["node_id"], st_node)
+        t_grid = np.linspace(0.1, 24.0, 480)
+        c_curve = puff_at(ws, ent["node_id"], st_node, 80.0, t_grid)
+        true_h = float(t_grid[int(np.argmax(c_curve))]) if c_curve.max() > 1e-9 else None
+        travel_err = abs(pred_h - true_h) if (pred_h is not None and true_h) else None
+
         results.append({
             "round": i + 1, "etype": etype, "severity": sev,
             "truth": ent["id"], "truth_name": ent["name"],
@@ -139,12 +150,14 @@ def main(rounds: int = 12) -> None:
             "locked": concl.get("source_id") == truth,
             "confidence": concl.get("confidence", 0.0),
             "status": concl.get("status", "failed"),
+            "travel_pred_h": pred_h, "travel_true_h": true_h,
+            "travel_err_h": round(travel_err, 2) if travel_err is not None else None,
             "duration_s": round(dur, 2),
         })
         r = results[-1]
         print(f"  [{i+1:2d}] {etype:8s} {sev:6s} 真凶={ent['name'][:10]:12s} "
               f"排名={rank or '-'} 锁定={'✓' if r['locked'] else '✗'} "
-              f"conf={r['confidence']:.2f} {r['duration_s']}s")
+              f"conf={r['confidence']:.2f} 传播={r['travel_err_h']}h {r['duration_s']}s")
 
         # 回滚:删除评测事件行(readings 增量下轮叠加影响可忽略,每轮窗口独立)
         conn = get_conn(db)
@@ -163,6 +176,7 @@ def main(rounds: int = 12) -> None:
     detected_n = sum(r["detected"] for r in results)
     mrr = sum(1.0 / r["rank"] for r in results if r["rank"]) / n
     confs = [r["confidence"] for r in results if r["locked"]]
+    errs = [r["travel_err_h"] for r in results if r["travel_err_h"] is not None]
 
     print("\n===== 汇总指标 =====")
     print(f"轮数:              {n}")
@@ -174,6 +188,9 @@ def main(rounds: int = 12) -> None:
     print(f"MRR:               {mrr:.3f}")
     if confs:
         print(f"命中样本置信度:    均值 {np.mean(confs):.2f} / 最小 {min(confs):.2f}")
+    if errs:
+        print(f"传播时间误差(h):   均值 {np.mean(errs):.2f} / 最大 {max(errs):.2f} "
+              f"(有效样本 {len(errs)}/{n})")
 
     print("\n===== 按事件类型分组 =====")
     for et in ETYPES:
@@ -196,6 +213,9 @@ def main(rounds: int = 12) -> None:
             "locked": locked / n, "mrr": round(mrr, 4),
             "confidence_mean": round(float(np.mean(confs)), 3) if confs else None,
             "confidence_min": round(min(confs), 3) if confs else None,
+            "travel_err_mean_h": round(float(np.mean(errs)), 2) if errs else None,
+            "travel_err_max_h": round(max(errs), 2) if errs else None,
+            "travel_err_samples": len(errs),
         },
         "results": results,
     }

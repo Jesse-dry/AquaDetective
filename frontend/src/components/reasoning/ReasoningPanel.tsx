@@ -17,10 +17,28 @@ const STATUS_LABEL = {
 export function ReasoningPanel() {
   const inv = useInvestigationStore()
   const watershed = useWatershedStore((s) => s.data)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  // 用户是否贴近底部(新消息自动跟随的前提;用户上翻阅读时不打断)
+  const stickBottom = useRef(true)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = scrollRef.current
+    if (!el) return
+    const onScroll = () => {
+      const distance = el.scrollHeight - el.scrollTop - el.clientHeight
+      stickBottom.current = distance < 60
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    // 仅在用户贴近底部时跟随滚动;且只在面板容器内滚,不把整个页面带走
+    if (!stickBottom.current) return
+    const el = scrollRef.current
+    if (!el || !bottomRef.current) return
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [inv.steps.length, inv.talks.length, inv.conclusion, inv.failed])
 
   const sourceName = inv.conclusion
@@ -31,7 +49,7 @@ export function ReasoningPanel() {
   const [icon, label] = STATUS_LABEL[inv.connStatus]
 
   return (
-    <div className="flex h-full flex-col gap-3 overflow-y-auto p-3">
+    <div ref={scrollRef} className="flex h-full flex-col gap-3 overflow-y-auto p-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-200">🕵️ 侦探推理流</h2>
         <span className="text-xs text-slate-400">

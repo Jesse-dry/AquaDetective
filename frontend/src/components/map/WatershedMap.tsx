@@ -243,10 +243,11 @@ export function WatershedMap() {
         map.addLayer({
           id: 'enterprises', type: 'circle', source: 'enterprises',
           paint: {
-            'circle-radius': ['case', ['get', 'locked'], 10, 5],
-            'circle-color': ['case', ['get', 'locked'], '#ef4444', '#f59e0b'],
-            'circle-stroke-width': 1.5,
-            'circle-stroke-color': '#0b1220',
+            // 锁定企业与其他企业同尺寸同橙色,仅以白色描边突出(避免与断面圆叠出"多一圈"的观感)
+            'circle-radius': 5,
+            'circle-color': '#f59e0b',
+            'circle-stroke-width': ['case', ['get', 'locked'], 2.5, 1.5],
+            'circle-stroke-color': ['case', ['get', 'locked'], '#ffffff', '#0b1220'],
           },
         })
         // 企业名标注(需 glyphs;暂用 HTML overlay 替代避免无 glyphs 报错)
