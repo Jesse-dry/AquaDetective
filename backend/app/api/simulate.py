@@ -45,6 +45,7 @@ def inject_event(body: dict):
             ("etype", "source_id", "severity", "onset_day", "duration_d", "mass_kg")}
     spec.setdefault("onset_day", 30)
     spec.setdefault("duration_d", 3 if etype != "gradual" else 15)
+    spec.setdefault("mass_kg", 80)  # sudden 事件需要,前端不传时用默认值
     if not (0 <= spec["onset_day"] < days):
         raise HTTPException(400, "onset_day 超出范围")
     conn = get_conn(get_db_path())
@@ -56,8 +57,12 @@ def inject_event(body: dict):
         raise HTTPException(400, "事件未影响任何断面")
     alert = alert_station_for(ws, source_id)
     inds = sorted({s["indicator"] for s in summary})
-    ev_id = f"evt_{uuid4().hex[:6]}"
+    # 可读递增 id:evt_inj_001(避免 uuid 乱码,前端展示为"现场注入N")
     conn = get_conn(get_db_path())
+    nums = [int(r[0].rsplit("_", 1)[1]) for r in conn.execute(
+        "SELECT id FROM events WHERE id LIKE 'evt_inj_%'").fetchall()
+        if r[0].rsplit("_", 1)[1].isdigit()]
+    ev_id = f"evt_inj_{(max(nums) + 1 if nums else 1):03d}"
     conn.execute(
         "INSERT INTO events (id,station_id,indicators,onset_ts,severity,etype,truth_source,status) "
         "VALUES (?,?,?,?,?,?,?,?)",

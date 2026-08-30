@@ -17,9 +17,11 @@ export function InjectDialog({ onClose }: { onClose: () => void }) {
     if (!source) return
     setBusy(true)
     try {
-      await injectEvent({ etype, source_enterprise: source, severity })
+      await injectEvent({ etype, source_id: source, severity })
       await refresh()
       onClose()
+    } catch (e) {
+      alert(`注入失败:${e instanceof Error ? e.message : e}`)
     } finally {
       setBusy(false)
     }

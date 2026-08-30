@@ -26,11 +26,18 @@ export function AlertList() {
   const loadPlayback = usePlaybackStore((s) => s.load)
   const stationIds = useWatershedStore((s) => s.data?.stations.map((st) => st.id) ?? [])
 
-  // 按事件序号正序展示(事件1 在前),后端默认按发生时间倒序
+  // 排序:预置事件(evt_00N)在前按序号,注入事件(evt_inj_00N)在后按序号
+  const sortKey = (id: string) => {
+    const inj = id.match(/^evt_inj_0*(\d+)$/i)
+    if (inj) return [1, Number(inj[1])] as const // 注入类,第二序
+    const m = id.match(/^evt_?0*(\d+)$/i)
+    if (m) return [0, Number(m[1])] as const // 预置类,第一序
+    return [2, 0] as const // 其余垫底
+  }
   const sortedEvents = [...events].sort((a, b) => {
-    const na = Number(a.id.match(/(\d+)/)?.[1] ?? 0)
-    const nb = Number(b.id.match(/(\d+)/)?.[1] ?? 0)
-    return na - nb
+    const [ta, na] = sortKey(a.id)
+    const [tb, nb] = sortKey(b.id)
+    return ta !== tb ? ta - tb : na - nb
   })
 
   useEffect(() => {
@@ -109,14 +116,21 @@ export function AlertList() {
           <p className="text-xs text-slate-500">
             {new Date(ev.onset_ts).toLocaleString('zh-CN')}
           </p>
-          {ev.status === 'open' && (
-            <button
-              onClick={() => investigate(ev.id)}
-              className="mt-2 w-full rounded bg-danger px-2 py-1 text-xs font-semibold text-white hover:bg-red-400"
-            >
-              🔍 开始侦查
-            </button>
-          )}
+          <button
+            onClick={() => investigate(ev.id)}
+            disabled={ev.status !== 'open'}
+            className={`mt-2 w-full rounded px-2 py-1 text-xs font-semibold disabled:cursor-not-allowed ${
+              ev.status === 'open'
+                ? 'bg-danger text-white hover:bg-red-400'
+                : ev.status === 'investigating'
+                  ? 'bg-warn/30 text-warn'
+                  : 'bg-edge/40 text-slate-500'
+            }`}
+          >
+            {ev.status === 'open' ? '🔍 开始侦查'
+              : ev.status === 'investigating' ? '⏳ 侦查中…'
+              : '✓ 已侦查'}
+          </button>
           <button
             onClick={() => loadPlayback(ev, stationIds)}
             disabled={stationIds.length === 0}
@@ -124,9 +138,6 @@ export function AlertList() {
           >
             ▶ 扩散回放
           </button>
-          {ev.status === 'investigating' && (
-            <p className="mt-2 text-center text-xs text-warn">侦查中…</p>
-          )}
         </div>
       ))}
     </div>

@@ -7,11 +7,10 @@ export const resetWorld = (seed?: number) =>
 
 export interface InjectBody {
   etype: EventType
-  source_enterprise: string
+  source_id: string
   severity: Severity
-  at?: number // 毫秒 epoch,缺省为当前模拟时间
 }
 
 // POST /simulate/inject 运行时注入污染事件(现场演示按钮)
 export const injectEvent = (body: InjectBody) =>
-  apiPost<{ id: string }>('/simulate/inject', body)
+  apiPost<{ ok: boolean; event_id: string; alert_station: string }>('/simulate/inject', body)

@@ -10,7 +10,7 @@ import { AgentTalk } from './AgentTalk'
 const STATUS_LABEL = {
   connecting: ['🟡', '连接中'],
   open: ['🟢', '实时'],
-  closed: ['⚪', '未连接'],
+  closed: ['⚪', '待命'],
   failed: ['🔴', '连接失败'],
 } as const
 
@@ -22,10 +22,14 @@ export function ReasoningPanel() {
   // 用户是否贴近底部(新消息自动跟随的前提;用户上翻阅读时不打断)
   const stickBottom = useRef(true)
 
+  // 程序触发的滚动会引发 onScroll,用标志抑制它误更新 stickBottom
+  const suppressScroll = useRef(false)
+
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
     const onScroll = () => {
+      if (suppressScroll.current) return
       const distance = el.scrollHeight - el.scrollTop - el.clientHeight
       stickBottom.current = distance < 60
     }
@@ -33,11 +37,24 @@ export function ReasoningPanel() {
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
 
+  // 新调查开始(investigationId 变化):重置滚动状态,从头展示,不自动跟到底
+  useEffect(() => {
+    stickBottom.current = false
+    const el = scrollRef.current
+    if (!el) return
+    suppressScroll.current = true
+    el.scrollTop = 0
+    // 下一帧解除抑制(程序滚动产生的 scroll 事件在此期间被忽略)
+    requestAnimationFrame(() => { suppressScroll.current = false })
+  }, [inv.investigationId])
+
   useEffect(() => {
     // 仅在用户贴近底部时跟随滚动;且只在面板容器内滚,不把整个页面带走
     if (!stickBottom.current) return
     const el = scrollRef.current
     if (!el || !bottomRef.current) return
+    // 内容未溢出容器时不滚,避免空面板把整页拽到底
+    if (el.scrollHeight <= el.clientHeight + 4) return
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [inv.steps.length, inv.talks.length, inv.conclusion, inv.failed])
 
