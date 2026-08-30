@@ -38,6 +38,7 @@ from app.agents import tools  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.context import get_db_path, get_watershed  # noqa: E402
 from app.data.seed import ensure_db  # noqa: E402
+from app.data.event_observations import upsert_event_observation  # noqa: E402
 from app.data.series_generator import T0, alert_station_for, apply_event  # noqa: E402
 from app.db import get_conn  # noqa: E402
 from app.engine.dispersion import puff_at  # noqa: E402
@@ -107,6 +108,9 @@ def main(rounds: int = 12) -> None:
             "INSERT OR REPLACE INTO events (id,station_id,indicators,onset_ts,severity,"
             "etype,truth_source,status) VALUES (?,?,?,?,?,?,?,?)",
             (ev_id, alert, json.dumps(["cod"]), onset_ts, sev, etype, ent["id"], "open"))
+        # 生成事件观测(与 seed 同路径):现场 EEM/污染物以真凶指纹为主导。
+        # 没有它调查只能拿到无标签背景观测,EEM 得分反映的是基线而非案发现场
+        upsert_event_observation(conn, ws, ev_id, alert, ent["id"], 42 + i)
         conn.commit()
         conn.close()
 
@@ -159,9 +163,10 @@ def main(rounds: int = 12) -> None:
               f"排名={rank or '-'} 锁定={'✓' if r['locked'] else '✗'} "
               f"conf={r['confidence']:.2f} 传播={r['travel_err_h']}h {r['duration_s']}s")
 
-        # 回滚:删除评测事件行(readings 增量下轮叠加影响可忽略,每轮窗口独立)
+        # 回滚:删除评测事件行与事件观测(readings 增量下轮叠加影响可忽略,每轮窗口独立)
         conn = get_conn(db)
         conn.execute("DELETE FROM events WHERE id=?", (ev_id,))
+        conn.execute("DELETE FROM event_observations WHERE event_id=?", (ev_id,))
         # 同时清掉监测 Agent 可能生成的 evt_* 检测事件(避免污染告警面板)
         conn.execute("DELETE FROM events WHERE id LIKE 'evt_%' AND etype='detected'")
         conn.commit()

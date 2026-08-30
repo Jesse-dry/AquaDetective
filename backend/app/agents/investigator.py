@@ -165,7 +165,9 @@ def _check_pattern(state, h, ev, db_path, ws) -> tuple[float | None, dict]:
     if not ent:
         return None, {}
     since = int(ev["onset_ts"]) - 7 * 86400
-    pat = tools.periodicity_at(db_path, ws, ev["station_id"], "cr6", since)
+    # 昼夜规律用事件自身的指标分析(此前硬编码 cr6,非 cr6 事件的规律证据会失效)
+    inds = tools.parse_indicators(ev) or ["cod"]
+    pat = tools.periodicity_at(db_path, ws, ev["station_id"], inds[0], since)
     pat_hours = set(int(x) for x in pat.get("active_hours", []))
     active = ent["discharge_pattern"].get("active_hours", [0, 24])
     exp = set(range(int(active[0]), 24)) | set(range(0, int(active[1]))) if active[0] > active[1] \
