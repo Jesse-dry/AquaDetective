@@ -58,6 +58,25 @@ AquaDetective 是一个面向流域水环境管理的智能体系统，模拟真
 
 ## 快速开始
 
+### 一键启动(推荐)
+
+```bash
+./start_demo.sh          # 完整启动:后端 :8000 + 前端 :5173
+./start_demo.sh --mock   # 兜底模式:只起前端(离线 mock,无需后端)
+```
+
+脚本自动完成:依赖自检(Python/Node 缺失自动安装)、数据库构建(`aqua.db` 不存在时自动 seed)、
+健康等待(轮询接口直到真正可访问)、端口复用(服务已在运行则直接复用)。Ctrl+C 优雅停止本脚本启动的服务。
+
+- 前端: http://localhost:5173
+- 后端 API: http://localhost:8000/api/v1
+- API 文档: http://localhost:8000/docs
+
+现场演示万一环境故障,`--mock` 模式前端全部走本地 mock 数据(含推理流回放),零外部依赖。
+
+<details>
+<summary>手动分步启动(不使用脚本时)</summary>
+
 ### 环境要求
 
 - Python 3.11+
@@ -110,6 +129,8 @@ npm run test         # vitest(store 与 WS 消息守卫单测)
 # 直接跑一遍"偷排事件 → 侦探推理 → 锁定 → 报告"全链路
 python scripts/smoke_investigate.py evt_001
 ```
+
+</details>
 
 ## 演示故事线（三条预置事件）
 

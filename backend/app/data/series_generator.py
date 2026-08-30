@@ -149,10 +149,13 @@ def apply_event(conn, watershed: dict, spec: dict, t_min: np.ndarray,
                 else:
                     delta = np.zeros_like(c)
             elif spec["etype"] == "periodic":
+                # 偷排软阶跃:夜间窗口内用 2.5h 上升沿替代方波开关,
+                # 回放时断面颜色能看出渐变(方波会让圈圈瞬间跳红)
                 hour = (t_min[idx] / 60.0) % 24
-                night = _wrap_mask(hour, 22, 3)
+                night = _wrap_mask(hour, 22, 3).astype(float)
+                rise = np.clip(t_h / 2.5, 0.0, 1.0)
                 dil_dump = q_dump / (q_dump + q_st)
-                delta = night * mult * conc * dil_dump
+                delta = night * rise * mult * conc * dil_dump
             else:  # gradual
                 ramp = np.linspace(0.0, 1.5 * (mult - 1.0), len(idx))
                 delta = ramp * conc * fac

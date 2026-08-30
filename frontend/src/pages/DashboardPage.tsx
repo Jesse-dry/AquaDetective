@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useWatershedStore } from '../store/watershedStore'
 import { useUiStore } from '../store/uiStore'
+import { usePlaybackStore } from '../store/playbackStore'
 import { WatershedMap } from '../components/map/WatershedMap'
 import { DispersionLayer } from '../components/map/DispersionLayer'
 import { AlertList } from '../components/alert/AlertList'
@@ -37,9 +38,14 @@ export function DashboardPage() {
           <Link to="/replay" className="text-xs text-slate-400 hover:text-accent">📼 回放</Link>
           <Link to="/benchmark" className="text-xs text-slate-400 hover:text-accent">📊 对标</Link>
           <button
-            onClick={toggleTypewriter}
+            onClick={() => {
+              toggleTypewriter()
+              // 扩散回放正在播时一并跳到终点,一键结束所有演示动画
+              const pb = usePlaybackStore.getState()
+              if (pb.active && pb.playing) pb.skipToEnd()
+            }}
             className="rounded bg-edge px-2 py-1 text-xs text-slate-300 hover:bg-slate-600"
-            title="切换打字机动画"
+            title="关闭打字机动画;扩散回放播放中则跳到终点"
           >
             ⏩ 跳过动画
           </button>

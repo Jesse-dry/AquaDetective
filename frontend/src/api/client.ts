@@ -41,3 +41,15 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
     clearTimeout(timer)
   }
 }
+
+export async function apiDelete<T>(path: string): Promise<T> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE', signal: ctrl.signal })
+    if (!res.ok) throw new Error(`DELETE ${path}: HTTP ${res.status}`)
+    return (await res.json()) as T
+  } finally {
+    clearTimeout(timer)
+  }
+}

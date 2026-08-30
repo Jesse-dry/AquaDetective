@@ -29,6 +29,7 @@ interface PlaybackState {
   setPlaying: (playing: boolean) => void
   setSpeed: (speedMs: number) => void
   replay: () => void
+  skipToEnd: () => void
   tick: () => void
   close: () => void
 }
@@ -96,6 +97,18 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   setSpeed: (speedMs) => set({ speedMs }),
   // 从头重放:游标回到事件发生时刻(startMs),热力和消费下标复位
   replay: () => set({ playing: true, cursorMs: get().startMs, heat: {}, cursors: {} }),
+  // 跳到终点:游标定格末尾,热力取各断面最终值(供"跳过动画"一键结束回放)
+  skipToEnd: () => {
+    const s = get()
+    if (!s.active) return
+    const heat: Record<string, number> = {}
+    const peak = s.globalPeak || 1
+    for (const [sid, points] of Object.entries(s.series)) {
+      const current = points.length ? points[points.length - 1].value : 0
+      heat[sid] = Math.min(current / peak, 1)
+    }
+    set({ playing: false, cursorMs: s.t1Ms, heat })
+  },
 
   tick: () => {
     const s = get()

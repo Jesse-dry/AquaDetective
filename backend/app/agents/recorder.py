@@ -41,3 +41,17 @@ def report_path(inv_id: str) -> Path | None:
 def list_recordings() -> list[str]:
     REC_DIR.mkdir(parents=True, exist_ok=True)
     return sorted(p.stem for p in REC_DIR.glob("*.jsonl"))
+
+
+def delete_recording(inv_id: str) -> bool:
+    """删除一条录音(jsonl + 报告 md)。返回是否存在过。"""
+    # 校验 id 防路径穿越(仅允许字母数字下划线)
+    if not inv_id or not inv_id.replace("_", "").isalnum():
+        return False
+    existed = False
+    for suffix in (".jsonl", ".md"):
+        p = REC_DIR / f"{inv_id}{suffix}"
+        if p.exists():
+            p.unlink()
+            existed = True
+    return existed

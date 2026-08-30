@@ -141,3 +141,11 @@ def get_recording(inv_id: str):
     if not msgs:
         raise HTTPException(404, "记录不存在")
     return {"investigation_id": inv_id, "stream": msgs}
+
+
+@router.delete("/recordings/{inv_id}")
+def delete_recording(inv_id: str):
+    """删除一条历史录音(jsonl + 报告 md)。"""
+    if not rec_mod.delete_recording(inv_id):
+        raise HTTPException(404, "记录不存在")
+    return {"deleted": inv_id}
