@@ -37,22 +37,22 @@ AquaDetective 是一个面向流域水环境管理的智能体系统，模拟真
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  展示层  Web 大屏（开发中）                            │
-│          流域地图 / 推理流 / 浓度动画 / 指纹比对 / 报告   │
+│  展示层  Web 大屏(React + Vite)                       │
+│          流域地图 / 推理流 / 扩散回放 / 指纹比对 / 报告  │
 ├─────────────────────────────────────────────────────┤
-│  API 层  FastAPI：12 个 REST 端点 + WebSocket 推理流   │
+│  API 层  FastAPI:REST 端点 + WebSocket 推理流         │
 ├─────────────────────────────────────────────────────┤
 │  Agent 层  LangGraph 侦探式状态机                     │
 │    监测Agent → 溯源Agent(侦探主编排) → 法规Agent        │
 │    → 处置Agent → 报告Agent                            │
 │    推理状态: parse → 假设生成 → 证据校核循环 → 排除/锁定  │
 ├─────────────────────────────────────────────────────┤
-│  计算引擎  确定性纯函数（LLM 不可触碰）                 │
-│    异常检测 / 高斯烟团扩散 / EEM+污染物指纹 / 拓扑溯源    │
-│    / 昼夜规律分析                                     │
+│  计算引擎  确定性纯函数(LLM 不可触碰)                  │
+│    异常检测(3σ/CUSUM/EWMA/季节基线) / 高斯烟团扩散       │
+│    / EEM+污染物双指纹 / 拓扑溯源 / 昼夜规律分析          │
 ├─────────────────────────────────────────────────────┤
-│  数据层  清源河模拟流域（27 节点 / 10 断面 / 18 企业）    │
-│    90 天时序生成器 / 双指纹库 / 三类事件注入（seed 可复现）│
+│  数据层  清源河模拟流域(27 节点 / 10 断面 / 18 企业)    │
+│    90 天时序生成器 / 双指纹库 / 三类事件注入(seed 可复现)│
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -138,23 +138,30 @@ python scripts/smoke_investigate.py evt_001
 |---|---|---|---|
 | evt_001 | 夜间偷排 | 耀光金属表面处理夜间偷排电镀废水 | Cr⁶⁺ 从 0.003 飙至 0.55 mg/L（超标 11 倍），金属主导、COD 几乎不动——典型电镀指纹；夜间规律分析佐证 |
 | evt_002 | 突发泄漏 | 恒泰精细化工储罐泄漏 | 高斯烟团随水流推进，COD 17→61、氨氮 0.66→4.9；传播时间校核锁定最近源 |
-| evt_003 | 渐变恶化 | 城东污水处理厂处理能力下降 | 30 天缓慢爬坡，考验趋势检测（CUSUM/季节基线） |
+| evt_003 | 逐渐恶化 | 城东污水处理厂处理能力下降 | 30 天缓慢爬坡，考验趋势检测（CUSUM/季节基线） |
 
 现场演示时可用 `POST /api/v1/simulate/reset` 一键重置世界，或 `POST /api/v1/simulate/inject`
-随时注入新事件（模拟真实事故的即时响应）。
+随时注入新事件(模拟真实事故的即时响应)，`DELETE /api/v1/simulate/events/{id}` 删除注入事件(预置事件受保护)。
 
 ## 验证结果
 
-- 引擎单测 **22/22 通过**（异常检测/扩散/指纹/拓扑/规律/数据生成，含真值隔离与边界用例）
+- 引擎单测 **27/27 通过**(异常检测/扩散/指纹/拓扑/规律/数据生成/数据导入,含真值隔离与边界用例)
 - 模拟观测先独立落库，调查引擎不读取 `truth_source`；真值只用于调查结束后的评测
-- 三条预置事件全部正确锁定真凶：**耀光金属 78% / 恒泰化工 79% / 城东污水厂 77%**（模板推理模式实测）
-- 批量评测（`python scripts/batch_eval.py`，12 轮随机注入）：预警检出率 **100%**、
-  上游候选召回 **92%**、Top-3 命中 **67%**、MRR **0.479**，报告见
-  `data/processed/batch_eval_report.json`；gradual 类型 Top-1 偏弱（信号爬坡期指纹区分度低），
-  是评分权重调优的已知方向
-- LangGraph 状态机接线验证通过（7 超步全链路：解析 → 假设 → 校核 → 结论 → 法规 → 处置 → 报告）
-- 端到端 API 实测通过：事件注入、世界重置、WS 流式推送、调查回放、报告生成
-- 前端单测 **7/7 通过**（WS 消息守卫、step 去重、状态分发）；前后端联调全链路实测通过
+- 三条预置事件全部正确锁定真凶：**耀光金属 78% / 恒泰化工 79% / 城东污水厂 77%**(模板推理模式实测)
+- 批量评测(`python scripts/batch_eval.py`，30 轮随机注入，报告见 `data/processed/batch_eval_report.json`)：
+
+  | 指标 | 结果 |
+  |---|---|
+  | 预警检出率 | **100%**(30/30) |
+  | 上游候选召回率 | **87%**(26/30) |
+  | Top-1 / Top-3 命中率 | **77%** / **87%** |
+  | MRR | **0.806** |
+  | 传播时间误差(均值/最大) | **0.04h / 0.10h** |
+  | 分类型 Top-1 | sudden 90% / periodic 80% / gradual 60% |
+
+- LangGraph 状态机接线验证通过(7 超步全链路：解析 → 假设 → 校核 → 结论 → 法规 → 处置 → 报告)
+- 端到端 API 实测通过：事件注入、世界重置、WS 流式推送、调查回放、报告生成、注入事件删除
+- 前端单测 **8/8 通过**(WS 消息守卫、step 去重、状态分发)；前后端联调全链路实测通过
 
 ## 真实数据资产(太湖流域)
 
@@ -166,7 +173,8 @@ python scripts/smoke_investigate.py evt_001
 | 河网拓扑 | 2082 河段 · NEXT_DOWN 有向图 | HydroRIVERS v1.0(太湖 bbox) | 真实上下游溯源 |
 | 企业名录 | 37 家(印染/电镀/化工/制药/造纸/污水厂) | 锡山区政府公告 + gsxt 人工核验 | 真实排污源 |
 | 排口级许可证 | 28 家有许可数据 · 418 条污染物记录 | 全国排污许可证平台(permit.mee.gov.cn)解析 | 企业排放指纹 |
-| 降雨 | CHIRPS 全球月度(太湖裁剪) | UCSB CHIRPS | 水量平衡参考 |
+| 降雨 | CHIRPS 全球月度(太湖裁剪) | UCSB CHIRPS | 水量平衡参考(已入库,代码未引用) |
+| CNEMC 实时存档 | 持续累积 | 国家地表水水质自动监测实时发布系统 | GitHub Actions 定时存档(数据积累) |
 
 **端到端溯源演示**(对标页 ③):钓邾大桥断面 2022-12-02 氨氮异常(CUSUM 检出,峰值 0.698 mg/L,约 7 倍基线,水质 Ⅱ→Ⅲ)→ 河网上溯 8.5km/4.6h → 命中无锡中发水务(锡北污水处理厂)。经 4 视角对抗核验:拓扑 confirmed(0.95)、异常 confirmed(0.78),时空一致性指出 4.6h 为距离排序分非因果证据,已诚实降级为"候选命中"并标注。
 
@@ -185,8 +193,8 @@ AquaDetective/
 │   │   ├── agents/           # 多智能体：状态机/5个Agent/工具/落盘
 │   │   ├── api/              # REST + WebSocket
 │   │   └── main.py           # 入口
-│   ├── scripts/              # 验证/演示脚本（smoke、e2e、verify_*）
-│   ├── tests/                # 22 个单测
+│   ├── scripts/              # 验证/演示脚本(smoke_investigate/e2e_api/batch_eval/verify_*)
+│   ├── tests/                # 27 个单测(引擎/数据/导入/真值隔离)
 │   └── README.md             # 后端详细说明
 ├── docs/
 │   ├── 设计方案.md           # 产品与系统总方案
@@ -232,29 +240,32 @@ AquaDetective/
     │   │   ├── watershedStore.ts # 流域拓扑缓存
     │   │   ├── alertStore.ts     # 事件告警列表
     │   │   ├── investigationStore.ts # 当前调查:步骤流/假设/结论
-    │   │   └── uiStore.ts        # 大屏模式/选中断面/时间窗
+    │   │   ├── playbackStore.ts # 扩散回放(时间游标/热力/重放/跳终点)
+    │   │   └── uiStore.ts        # 大屏模式/选中断面/打字机开关
     │   ├── pages/
     │   │   ├── DashboardPage.tsx # 大屏主页(地图 + 告警 + 推理面板)
     │   │   ├── StationPage.tsx   # 断面详情(时序曲线 + EEM)
     │   │   ├── ReportPage.tsx    # 报告页(Markdown 渲染 + 打印)
     │   │   ├── ReplayPage.tsx    # 历史调查回放(答辩用)
-    │   │   └── BenchmarkPage.tsx # 真实数据对标页(W5)
+    │   │   └── BenchmarkPage.tsx # 真实数据对标页(6 节)
     │   ├── components/
     │   │   ├── map/
-    │   │   │   ├── WatershedMap.tsx   # 流域底图
-    │   │   │   ├── StationLayer.tsx   # 断面状态着色(绿/黄/红)
-    │   │   │   ├── EnterpriseLayer.tsx# 企业/排污口标注
-    │   │   │   └── DispersionLayer.tsx# 扩散动画(浓度随时间流动)
+    │   │   │   ├── WatershedMap.tsx   # 流域底图(断面/企业/HTML 标签碰撞布局)
+    │   │   │   └── DispersionLayer.tsx# 扩散回放控制条(浓度随时间流动)
     │   │   ├── reasoning/
-    │   │   │   ├── ReasoningPanel.tsx # 推理流式面板(核心)
-    │   │   │   ├── StepCard.tsx       # 单步"线索→推理→证据"卡片
+    │   │   │   ├── ReasoningPanel.tsx # 推理流式面板(核心,贴近底部才自动跟随)
+    │   │   │   ├── StepCard.tsx       # 单步"线索→推理→证据"卡片(打字机动画)
+    │   │   │   ├── Typewriter.tsx    # 打字机效果(可跳过,StrictMode 安全)
     │   │   │   ├── EvidenceChip.tsx   # 证据条(eem_score 等)
     │   │   │   ├── HypothesisBoard.tsx# 假设排行榜(分数实时变化)
     │   │   │   └── AgentTalk.tsx      # Agent 会议气泡对话
     │   │   ├── charts/
     │   │   │   ├── SeriesChart.tsx    # 断面时序曲线
     │   │   │   ├── EemContour.tsx     # EEM 等高线图(并排对比)
-    │   │   │   └── ConfidenceBar.tsx  # 嫌疑企业置信度条形图
+    │   │   │   ├── ConfidenceBar.tsx  # 嫌疑企业置信度条形图
+    │   │   │   ├── RealDataValidation.tsx # 真实异常检测验证(太湖)
+    │   │   │   ├── E2ETraceCase.tsx   # 真实端到端溯源(太湖)
+    │   │   │   └── PermitEnterprises.tsx  # 企业许可+指纹向量
     │   │   ├── alert/
     │   │   │   └── AlertList.tsx      # 告警面板(可触发调查)
     │   │   └── demo/
@@ -272,14 +283,17 @@ AquaDetective/
 | GET | `/watershed/enterprises/{id}/fingerprint` | 企业双指纹 |
 | GET | `/watershed/enterprises/{id}/eem` | 企业档案 EEM（与现场同网格，并排对比） |
 | GET | `/stations/{id}/eem?event_id=` | 断面"现场"EEM 荧光矩阵（61×71） |
-| GET | `/series?station=&indicator=&from=&to=` | 断面时序数据 |
+| GET | `/series?station=&indicator=&from=&to=` | 断面时序数据(from/to 毫秒 epoch) |
 | GET | `/events?status=` | 污染事件列表（告警面板） |
 | POST | `/events/{id}/investigate` | 触发溯源调查 |
 | GET | `/investigations/{id}` | 调查状态与推理记录 |
 | GET | `/investigations/{id}/report` | Markdown 溯源报告 |
 | POST | `/simulate/reset?seed=` | 一键重建世界 |
 | POST | `/simulate/inject` | 运行时注入污染事件 |
-| GET | `/recordings` · `/recordings/{id}` | 历史调查回放 |
+| DELETE | `/simulate/events/{id}` | 删除注入事件(仅 evt_inj_ 前缀) |
+| GET | `/recordings` | 历史调查列表(附事件摘要) |
+| GET | `/recordings/{id}` | 单条录音 stream(回放) |
+| DELETE | `/recordings/{id}` | 删除历史录音 |
 | WS | `/ws?investigation_id=` | 推理过程流式推送 |
 
 ## 技术栈
@@ -296,12 +310,13 @@ AquaDetective/
 ## 当前状态与路线图
 
 - ✅ **已完成**：数据引擎、计算引擎、多智能体推理、REST + WebSocket API、
-  前端大屏（地图/推理流/扩散回放/指纹比对/报告/回放/对标页）、测试与验证脚本
+  前端大屏(地图/推理流/扩散回放/指纹比对/报告/回放/对标页 5 页面)、
+  测试与验证脚本、一键启动(`start_demo.sh`)、批量评测(`batch_eval.py`)
 - ✅ **真实数据**：太湖 105 国控断面 + 37 家企业 + 排口级许可证 + HydroRIVERS 河网;
   真实断面异常端到端溯源演示(钓邾大桥氨氮→锡北污水厂,指纹+拓扑双证据);
   真实许可证指纹向量接入溯源系统;CNEMC 前向存档 GitHub Actions 定时工作流
-- 🔄 **进行中**：与 LLM 真实链路联调
-- 📋 **后续规划**：法规 RAG 向量检索化、评分权重调优、答辩演示打磨
+- 📋 **后续规划**：法规 RAG 向量检索化、置信度校准曲线、Cuyahoga 基准溯源评测、
+  监测 Agent 接入季节基线检测、Docker 部署与鉴权(详见 `docs/后续开发计划.md` §10 剩余缺口)
 
 ## 团队
 
