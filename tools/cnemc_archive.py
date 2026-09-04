@@ -98,8 +98,15 @@ def main() -> None:
       f"(系统记录数 {records})")
 
     # ===== 健康检查断言(防静默假成功)=====
-    # 1) 空响应:rows 为 0 说明 API 返回空壳或网络硬失败 → 告警(exit 1)
+    # 1) 空响应:rows 为 0 说明 API 返回空壳或网络硬失败
+    #    北京时间 00-02 为 CNEMC 发布窗口,偶发空响应属正常(新时次未发完),软跳过不告警;
+    #    其他时段空响应才是真异常,exit 1 触发 issue 告警
+    bj_hour = (now.hour + 8) % 24
     if not rows:
+        if 0 <= bj_hour < 2:
+            print(f"[SKIP] 空响应但处北京凌晨发布窗口({bj_hour}:xx),"
+                  f"疑 CNEMC 更新中,软跳过不告警", flush=True)
+            raise SystemExit(0)
         print("[FAILED] 拉取 0 行(空响应/网络错误),退出不提交", flush=True)
         raise SystemExit(1)
 
