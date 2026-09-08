@@ -66,8 +66,14 @@ def fetch_page(page_index: int, retries: int = 3) -> dict:
     raise RuntimeError(f"第 {page_index} 页重试 {retries} 次仍失败: {last_err}")
 
 
-def fetch_all() -> tuple[list[list[str]], dict]:
-    first = fetch_page(1)
+def fetch_all() -> tuple[list[list[str]], dict] | None:
+    """拉取全部页。第一页失败(网络)返回 None 让上层软跳过——
+    GitHub Actions runner(海外 IP)访问 CNEMC 常被限流,属预期网络失败非脚本异常。"""
+    try:
+        first = fetch_page(1)
+    except RuntimeError as e:
+        print(f"[SKIP] 首页拉取失败({e}),疑 runner 网络问题,软跳过不告警", flush=True)
+        return None
     total_pages = int(first.get("total", 1))
     # 防御:total 若是记录数(常见 API 命名歧义)会跑几千空页,设上限 50 页
     if total_pages > 50 or total_pages < 1:
@@ -92,7 +98,10 @@ def clean(cell: str) -> str:
 
 def main() -> None:
     now = datetime.now()
-    rows, first_page = fetch_all()
+    result = fetch_all()
+    if result is None:
+        return  # 首页网络失败已软跳过
+    rows, first_page = result
     records = first_page.get("records")
     print(f"[{now:%Y-%m-%d %H:%M:%S}] 拉取 {len(rows)} 个断面 "
       f"(系统记录数 {records})")
