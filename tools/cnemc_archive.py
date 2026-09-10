@@ -68,11 +68,13 @@ def fetch_page(page_index: int, retries: int = 3) -> dict:
 
 def fetch_all() -> tuple[list[list[str]], dict] | None:
     """拉取全部页。第一页失败(网络)返回 None 让上层软跳过——
-    GitHub Actions runner(海外 IP)访问 CNEMC 常被限流,属预期网络失败非脚本异常。"""
+    GitHub Actions runner(海外 IP)访问 CNEMC 常被限流/SSL 失败,
+    属预期网络失败非脚本异常,不建 issue 刷屏。"""
     try:
         first = fetch_page(1)
-    except RuntimeError as e:
-        print(f"[SKIP] 首页拉取失败({e}),疑 runner 网络问题,软跳过不告警", flush=True)
+    except Exception as e:
+        print(f"[SKIP] 首页拉取失败({type(e).__name__}: {e}),"
+              f"疑 runner 网络问题,软跳过不告警", flush=True)
         return None
     total_pages = int(first.get("total", 1))
     # 防御:total 若是记录数(常见 API 命名歧义)会跑几千空页,设上限 50 页
