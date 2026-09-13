@@ -45,7 +45,7 @@ export function DashboardPage() {
               if (pb.active && pb.playing) pb.skipToEnd()
             }}
             className="rounded bg-edge px-2 py-1 text-xs text-slate-300 hover:bg-slate-600"
-            title="关闭打字机动画;扩散回放播放中则跳到终点"
+            title="关闭打字机动画；扩散回放播放中则跳到终点"
           >
             ⏩ 跳过动画
           </button>

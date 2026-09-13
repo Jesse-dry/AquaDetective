@@ -55,9 +55,9 @@ export const etypeLabel = (t: string): string => ETYPE_LABEL[t] ?? t
 
 /** 严重度 → 中文(含语义,普通观众可懂) */
 export const SEVERITY_LABEL: Record<string, string> = {
-  high: '严重(需立即处置)',
-  medium: '中等(持续关注)',
-  low: '轻微(等结果)',
+  high: '严重（需立即处置）',
+  medium: '中等（持续关注）',
+  low: '轻微（等结果）',
 }
 
 /** 行业编码 → 中文 */

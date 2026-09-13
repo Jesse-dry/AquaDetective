@@ -40,7 +40,7 @@ export function StationPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold">{stationLabel(id)}{eventId && <span className="ml-2 text-sm text-slate-400">{eventLabel(eventId)}</span>}</h1>
         <label className="text-xs text-slate-400">
-          对比企业档案:
+          对比企业档案：
           <select
             value={entId}
             onChange={(e) => setEntId(e.target.value)}
@@ -71,7 +71,7 @@ export function StationPage() {
         )}
       </div>
       <p className="text-xs text-slate-500">
-        相似度打分由后端确定性引擎计算(见推理流 eem_score 证据),本页仅做可视化对比。
+        相似度打分由后端确定性引擎计算（见推理流 eem_score 证据），本页仅做可视化对比。
       </p>
     </div>
   )

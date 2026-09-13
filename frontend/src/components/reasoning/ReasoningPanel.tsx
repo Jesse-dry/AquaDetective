@@ -99,7 +99,7 @@ export function ReasoningPanel() {
 
       {inv.conclusion && (
         <div className="rounded-lg border-2 border-danger/60 bg-danger/10 p-4">
-          <h3 className="mb-1 font-bold text-danger">🎯 锁定污染源:{sourceName}</h3>
+          <h3 className="mb-1 font-bold text-danger">🎯 锁定污染源：{sourceName}</h3>
           <p className="mb-1 text-sm text-slate-200">
             置信度 <span className="font-bold tabular-nums">{Math.round(inv.conclusion.confidence * 100)}%</span>
           </p>
@@ -109,7 +109,7 @@ export function ReasoningPanel() {
 
       {inv.failed && (
         <div className="rounded-lg border-2 border-warn/60 bg-warn/10 p-4">
-          <h3 className="mb-1 font-bold text-warn">⚠️ 无法锁定:{inv.failed.reason}</h3>
+          <h3 className="mb-1 font-bold text-warn">⚠️ 无法锁定：{inv.failed.reason}</h3>
           <ul className="list-inside list-disc text-sm text-slate-300">
             {inv.failed.suggestions.map((sug, i) => (
               <li key={i}>{sug}</li>

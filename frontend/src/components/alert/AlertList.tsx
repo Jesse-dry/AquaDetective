@@ -32,7 +32,7 @@ export function AlertList() {
       await deleteInjectedEvent(id)
       await refresh()
     } catch {
-      alert('删除失败,请稍后重试')
+      alert('删除失败，请稍后重试')
     }
   }
 

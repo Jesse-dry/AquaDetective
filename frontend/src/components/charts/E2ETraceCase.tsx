@@ -128,11 +128,11 @@ export function E2ETraceCase() {
     <section>
       <h2 className="mb-2 text-sm font-semibold text-slate-300">{data.title}</h2>
       <p className="mb-3 text-xs text-slate-500">
-        {data.dataset} · 异常检测 → 河网拓扑上溯 → 筛选上游候选企业,全链路走确定性引擎,真实断面数据
+        {data.dataset} · 异常检测 → 河网拓扑上溯 → 筛选上游候选企业，全链路走确定性引擎，真实断面数据
       </p>
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        {/* 左:异常时序曲线 */}
+        {/* 左：异常时序曲线 */}
         <div className="rounded-lg border border-edge bg-panel p-3 lg:col-span-2">
           <div className="mb-1 flex items-baseline justify-between">
             <span className="text-xs text-slate-400">
@@ -142,36 +142,36 @@ export function E2ETraceCase() {
           </div>
           <div ref={chartRef} className="h-56 w-full" />
           <p className="mt-1 text-xs text-slate-500">
-            检测方法:{a.method} · 形态:{a.shape}
+            检测方法：{a.method} · 形态：{a.shape}
           </p>
         </div>
 
-        {/* 右:候选企业卡片 + 上溯路径 */}
+        {/* 右：候选企业卡片 + 上溯路径 */}
         <div className="rounded-lg border border-edge bg-panel p-3">
           <div className="mb-2 text-xs font-semibold text-emerald-400">
             {data.primary_candidate_tie_count > 1
-              ? `同分候选之一 (${data.primary_candidate_tie_count} 家)`
+              ? `同分候选之一 (${data.primary_candidate_tie_count} 家）`
               : '排序首位候选企业'}
           </div>
           <div className="space-y-1 text-xs text-slate-300">
             <div className="font-medium text-slate-200">{e.name}</div>
-            <div>行业:{e.industry}</div>
-            <div>所在地:{e.city}</div>
+            <div>行业：{e.industry}</div>
+            <div>所在地：{e.city}</div>
             <div>
-              河网距离:<span className="tabular-nums text-sky-300">{e.dist_km} km</span>
+              河网距离：<span className="tabular-nums text-sky-300">{e.dist_km} km</span>
             </div>
             <div>
-              估算传播时间:
+              估算传播时间：
               <span className="tabular-nums text-sky-300">
                 {e.travel_time.range_h[0]} ~ {e.travel_time.range_h[1]} h
               </span>
             </div>
             <div>
-              严重度:<span className="text-amber-400">{a.severity}</span>
+              严重度：<span className="text-amber-400">{a.severity}</span>
             </div>
           </div>
           <div className="mt-3 border-t border-edge pt-2">
-            <div className="mb-1 text-[11px] text-slate-500">上溯河段(72h 窗)</div>
+            <div className="mb-1 text-[11px] text-slate-500">上溯河段（72h 窗）</div>
             <ol className="space-y-0.5 text-[11px] text-slate-400">
               {data.upstream_path.map((u, i) => (
                 <li key={u.hid} className="flex justify-between">
@@ -191,7 +191,7 @@ export function E2ETraceCase() {
                 <div className="flex justify-between">
                   <span>相似度分数</span>
                   <span className="tabular-nums text-sky-300">
-                    {data.fingerprint.score} (排名 {data.fingerprint.rank}/{data.fingerprint.library_size})
+                    {data.fingerprint.score} （排名 {data.fingerprint.rank}/{data.fingerprint.library_size}）
                   </span>
                 </div>
                 <div className="leading-relaxed text-slate-500">

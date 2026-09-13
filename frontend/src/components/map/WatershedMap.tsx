@@ -300,7 +300,7 @@ export function WatershedMap() {
   return (
     <div className="relative h-full w-full rounded-lg border border-edge">
       <div ref={containerRef} className="h-full w-full" />
-      {/* HTML overlay 层:企业名+断面序号,不依赖 MapLibre glyphs */}
+      {/* HTML overlay 层：企业名+断面序号，不依赖 MapLibre glyphs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {overlays
           .filter((o) => playbackActive ? !o.key.startsWith('ent-') : true)

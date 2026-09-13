@@ -1,12 +1,12 @@
 {
-  "title": "④ 真实排口级数据资产(太湖流域 37 家企业)",
+  "title": "④ 真实排口级数据资产（太湖流域 37 家企业）",
   "dataset": "全国排污许可证平台解析 · 主要污染物=年排放量限值非/的污染物",
   "enterprises": [
     {
-      "name": "伟成(无锡)金属有限公司",
+      "name": "伟成（无锡）金属有限公司",
       "credit_code": "91320205725204983U",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": null
@@ -17,7 +17,7 @@
       "name": "德清县上峰纸业有限公司",
       "credit_code": "91330521732436475P",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 93.062,
@@ -29,7 +29,7 @@
       "name": "无锡先进化药化工有限公司",
       "credit_code": "913202056282865181",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 32.8237,
@@ -55,7 +55,7 @@
       "name": "无锡市永平热镀锌有限公司",
       "credit_code": "913202057558662409",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": null
@@ -66,7 +66,7 @@
       "name": "无锡市锡山中荷水务有限公司",
       "credit_code": "91320205MA24KU3Y2Q",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": null
@@ -77,7 +77,7 @@
       "name": "无锡科捷化学有限公司",
       "credit_code": "913202057624311499",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": null
@@ -88,7 +88,7 @@
       "name": "无锡苏纺纺织科技有限公司",
       "credit_code": "91320205713285982F",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": null
@@ -99,7 +99,7 @@
       "name": "无锡达美喷涂有限公司",
       "credit_code": "91320205MA22CLY012",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": null
@@ -110,7 +110,7 @@
       "name": "浙江华源应用新材料股份有限公司",
       "credit_code": "913305006095842023",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": null
@@ -121,7 +121,7 @@
       "name": "浙江大港印染有限公司",
       "credit_code": "913305027332233087",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 132.078,
@@ -133,7 +133,7 @@
       "name": "浙江拓普药业股份有限公司",
       "credit_code": "91330500704459653Q",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 20.251,
@@ -145,7 +145,7 @@
       "name": "浙江拜克生物科技有限公司",
       "credit_code": "91330521MA29J05A6N",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "NH3N",
       "fingerprint": {
         "NH3N": 3.321,
@@ -157,7 +157,7 @@
       "name": "浙江浙北药业有限公司",
       "credit_code": "913305007195378967",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 6.211,
@@ -183,7 +183,7 @@
       "name": "浙江钱江纺织印染有限公司",
       "credit_code": "913305007519080792",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 84.83,
@@ -195,7 +195,7 @@
       "name": "浙江龙威印染有限公司",
       "credit_code": "91330521557545067M",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 39.6,
@@ -207,7 +207,7 @@
       "name": "湖州三友印染有限公司",
       "credit_code": "91330502734506772N",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 107.277,
@@ -219,7 +219,7 @@
       "name": "湖州中环水务有限责任公司",
       "credit_code": "91330500766436502E",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 1460.0,
@@ -233,7 +233,7 @@
       "name": "湖州双林水质净化有限公司",
       "credit_code": "913305006605864576",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 365.0,
@@ -247,7 +247,7 @@
       "name": "湖州复兴纺织印染有限公司",
       "credit_code": "91330502704448495M",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 33.89,
@@ -256,10 +256,10 @@
       "major_count": 2
     },
     {
-      "name": "湖州市水务集团有限公司(碧浪污水处理厂)",
+      "name": "湖州市水务集团有限公司（碧浪污水处理厂）",
       "credit_code": "913305001470538522",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 292.0,
@@ -273,7 +273,7 @@
       "name": "湖州市韶春纸业有限公司",
       "credit_code": "913305211471190143",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 13.86,
@@ -285,7 +285,7 @@
       "name": "湖州新天纸业有限公司",
       "credit_code": "913305211470844729",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 155.61,
@@ -297,7 +297,7 @@
       "name": "湖州诚信污水处理有限公司",
       "credit_code": "91330500786432381F",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 292.0,
@@ -311,7 +311,7 @@
       "name": "湖州金牛纺织印染实业有限公司",
       "credit_code": "91330502147023485D",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 131.466,
@@ -320,10 +320,10 @@
       "major_count": 2
     },
     {
-      "name": "漂莱特(中国)有限公司",
+      "name": "漂莱特（中国）有限公司",
       "credit_code": "913305006095858382",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": 34.32,
@@ -332,10 +332,10 @@
       "major_count": 2
     },
     {
-      "name": "英格瓷(浙江)锆业有限公司",
+      "name": "英格瓷（浙江）锆业有限公司",
       "credit_code": "91330521569388863L",
       "has_data": true,
-      "permit_status": "在业(有许可数据)",
+      "permit_status": "在业（有许可数据）",
       "primary": "COD",
       "fingerprint": {
         "COD": null
@@ -352,7 +352,7 @@
       "major_count": 0
     },
     {
-      "name": "无锡中发水务投资有限公司(锡北污水处理厂)",
+      "name": "无锡中发水务投资有限公司（锡北污水处理厂）",
       "credit_code": "91320205789098198H",
       "has_data": false,
       "permit_status": "在业，许可注销",
@@ -373,7 +373,7 @@
       "name": "湖州华欣印染有限公司",
       "credit_code": "913305037639482897",
       "has_data": false,
-      "permit_status": "2025-11-06注销(宣告破产)",
+      "permit_status": "2025-11-06注销（宣告破产）",
       "primary": "",
       "fingerprint": {},
       "major_count": 0
@@ -388,7 +388,7 @@
       "major_count": 0
     },
     {
-      "name": "爱恩邦德(无锡)技术有限公司",
+      "name": "爱恩邦德（无锡）技术有限公司",
       "credit_code": "913202137827364339",
       "has_data": false,
       "permit_status": "在业，许可注销",

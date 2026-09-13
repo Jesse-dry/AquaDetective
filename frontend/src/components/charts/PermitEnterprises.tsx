@@ -38,12 +38,12 @@ export function PermitEnterprises() {
     <section>
       <h2 className="mb-2 text-sm font-semibold text-slate-300">{data.title}</h2>
       <p className="mb-3 text-xs text-slate-500">
-        {data.dataset} · {s.total} 家企业({s.with_data} 家有许可数据,{s.revoked} 家许可注销/届满,{s.bankrupt} 家破产)
+        {data.dataset} · {s.total} 家企业（{s.with_data} 家有许可数据，{s.revoked} 家许可注销/届满，{s.bankrupt} 家破产）
       </p>
 
       <div className="rounded-lg border border-edge bg-panel p-3">
         <div className="mb-2 flex flex-wrap gap-3 text-[11px] text-slate-400">
-          <span className="text-slate-500">污染物图例:</span>
+          <span className="text-slate-500">污染物图例：</span>
           {Object.entries(legend).map(([code, name]) => (
             <span key={code}>
               <span className="text-sky-300">{code}</span>={name}
@@ -58,7 +58,7 @@ export function PermitEnterprises() {
                 <th className="px-2 py-1 text-left">企业</th>
                 <th className="px-2 py-1 text-left">许可状态</th>
                 <th className="px-2 py-1 text-left">首要污染物</th>
-                <th className="px-2 py-1 text-left">指纹向量(年排放量 t/a)</th>
+                <th className="px-2 py-1 text-left">指纹向量（年排放量 t/a）</th>
               </tr>
             </thead>
             <tbody>
@@ -73,7 +73,7 @@ export function PermitEnterprises() {
                     </td>
                     <td className="px-2 py-1">
                       <span className={revoked ? 'text-rose-400' : e.has_data ? 'text-emerald-400' : 'text-slate-500'}>
-                        {revoked ? '许可注销/失效' : e.has_data ? '在业(有许可)' : '无数据'}
+                        {revoked ? '许可注销/失效' : e.has_data ? '在业（有许可）' : '无数据'}
                       </span>
                     </td>
                     <td className="px-2 py-1 text-sky-300">{e.primary || '—'}</td>
@@ -98,10 +98,10 @@ export function PermitEnterprises() {
       </div>
 
       <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
-        数据来源:全国排污许可证管理信息平台(permit.mee.gov.cn)原始粘贴解析。
-        主要污染物 = 主要排放口合计表中年排放量限值非"/"的污染物;首要污染物 = 年排放量(t/a)最大者。
-        指纹向量已接入溯源系统(backend/app/data/fingerprint_lib.py),供 match_pollutants 做指纹比对。
-        许可注销/破产企业无指纹数据,溯源时用同行业真实指纹做代理并如实标注。
+        数据来源：全国排污许可证管理信息平台（permit.mee.gov.cn）原始粘贴解析。
+        主要污染物 = 主要排放口合计表中年排放量限值非"/"的污染物；首要污染物 = 年排放量（t/a）最大者。
+        指纹向量已接入溯源系统（backend/app/data/fingerprint_lib.py），供 match_pollutants 做指纹比对。
+        许可注销/破产企业无指纹数据，溯源时用同行业真实指纹做代理并如实标注。
       </p>
     </section>
   )

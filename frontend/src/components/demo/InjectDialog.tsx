@@ -21,7 +21,7 @@ export function InjectDialog({ onClose }: { onClose: () => void }) {
       await refresh()
       onClose()
     } catch (e) {
-      alert(`注入失败:${e instanceof Error ? e.message : e}`)
+      alert(`注入失败：${e instanceof Error ? e.message : e}`)
     } finally {
       setBusy(false)
     }

@@ -15,22 +15,22 @@ const REAL_CASES = [
   {
     place: '台州椒江',
     title: '浙江首个企业端"水质指纹"溯源数据库',
-    detail: '清华苏州环境创新研究院技术落地,建立企业端指纹库,实现污染来源快速比对。',
+    detail: '清华苏州环境创新研究院技术落地，建立企业端指纹库，实现污染来源快速比对。',
   },
   {
     place: '山西长治',
     title: '清华技术让"隐形污染显形"',
-    detail: '引入三维荧光光谱指纹技术,识别常规指标难以区分的隐性工业排放。',
+    detail: '引入三维荧光光谱指纹技术，识别常规指标难以区分的隐性工业排放。',
   },
   {
     place: '黄河乌海段',
     title: '24 小时预警溯源系统上线',
-    detail: '全天候自动监测 + 指纹比对,异常发生后自动锁定疑似排放源。',
+    detail: '全天候自动监测 + 指纹比对，异常发生后自动锁定疑似排放源。',
   },
   {
     place: '浙江宁波',
     title: '"水质指纹"最快 21 分钟溯源',
-    detail: '从异常检出到锁定污染源企业最快 21 分钟,验证指纹溯源的工程时效性。',
+    detail: '从异常检出到锁定污染源企业最快 21 分钟，验证指纹溯源的工程时效性。',
   },
 ]
 
@@ -97,21 +97,21 @@ export function BenchmarkPage() {
         <div className="rounded-lg border border-warn/40 bg-warn/5 p-4">
           <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-warn">⚠ 诚实声明</p>
           <ul className="space-y-1 text-xs leading-relaxed text-slate-300">
-            <li>· 演示流域(清源河)为模拟数据,用于稳定展示完整溯源闭环</li>
-            <li>· ②节验证使用真实太湖国控断面公开数据(2021–2025)</li>
-            <li>· ③节真实案例仅用于说明算法与行业落地技术同源,非真实污染事件认定</li>
+            <li>· 演示流域（清源河）为模拟数据，用于稳定展示完整溯源闭环</li>
+            <li>· ②节验证使用真实太湖国控断面公开数据（2021–2025）</li>
+            <li>· ③节真实案例仅用于说明算法与行业落地技术同源，非真实污染事件认定</li>
           </ul>
         </div>
 
         <section>
-          <h2 className="mb-2 text-sm font-semibold text-slate-300">① 本系统算法验证(三条预置事件)</h2>
+          <h2 className="mb-2 text-sm font-semibold text-slate-300">① 本系统算法验证（三条预置事件）</h2>
           <div className="overflow-hidden rounded-lg border border-edge">
             <table className="w-full text-xs">
               <thead className="bg-edge/40 text-slate-300">
                 <tr>
                   <th className="px-3 py-2 text-left">事件</th>
                   <th className="px-3 py-2 text-left">类型</th>
-                  <th className="px-3 py-2 text-left" title="模拟事件注入时设定的真实污染源,用于给溯源结果对答案">真实污染源(预设答案)</th>
+                  <th className="px-3 py-2 text-left" title="模拟事件注入时设定的真实污染源，用于给溯源结果对答案">真实污染源（预设答案）</th>
                   <th className="px-3 py-2 text-left">锁定结果</th>
                   <th className="px-3 py-2 text-left">置信度</th>
                   <th className="px-3 py-2 text-left">判定</th>
@@ -140,7 +140,7 @@ export function BenchmarkPage() {
             </table>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            「未运行」表示该事件尚未在本机完成调查;在大屏触发侦查后本表自动更新。
+            「未运行」表示该事件尚未在本机完成调查；在大屏触发侦查后本表自动更新。
           </p>
         </section>
 
@@ -151,7 +151,7 @@ export function BenchmarkPage() {
         <PermitEnterprises />
 
         <section>
-          <h2 className="mb-2 text-sm font-semibold text-slate-300">⑤ 行业真实落地案例(技术同源背书)</h2>
+          <h2 className="mb-2 text-sm font-semibold text-slate-300">⑤ 行业真实落地案例（技术同源背书）</h2>
           <div className="grid grid-cols-2 gap-3">
             {REAL_CASES.map((c) => (
               <div key={c.place} className="rounded-lg border border-edge bg-panel p-4">
@@ -166,11 +166,11 @@ export function BenchmarkPage() {
         <section>
           <h2 className="mb-2 text-sm font-semibold text-slate-300">⑥ 核心原理</h2>
           <p className="rounded-lg border border-edge bg-panel p-4 text-xs leading-relaxed text-slate-400">
-            不同行业废水具有特征性三维荧光光谱(EEM)——如同"水质指纹"。本系统与清华苏州环境
-            创新研究院落地技术同源:为每个污染源企业建立"光谱指纹 + 特征污染物比例"双指纹档案,
-            异常发生后将断面现场 EEM 与指纹库做确定性相似度比对(余弦相似度 + 比例向量),
-            结合流域拓扑可达性、对流扩散反推与排放规律分析,多路证据闭环锁定污染源。
-            全部数值计算由确定性引擎完成,大模型仅负责推理编排与表达,从机制上杜绝"AI 编数据"。
+            不同行业废水具有特征性三维荧光光谱（EEM）——如同"水质指纹"。本系统与清华苏州环境
+            创新研究院落地技术同源：为每个污染源企业建立"光谱指纹 + 特征污染物比例"双指纹档案，
+            异常发生后将断面现场 EEM 与指纹库做确定性相似度比对（余弦相似度 + 比例向量），
+            结合流域拓扑可达性、对流扩散反推与排放规律分析，多路证据闭环锁定污染源。
+            全部数值计算由确定性引擎完成，大模型仅负责推理编排与表达，从机制上杜绝"AI 编数据"。
           </p>
         </section>
       </div>

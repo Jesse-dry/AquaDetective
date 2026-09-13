@@ -65,13 +65,13 @@ export function RealDataValidation() {
       ],
       series: [
         {
-          name: '平均检出率(越低越克制)',
+          name: '平均检出率（越低越克制）',
           type: 'bar',
           data: methods.map((m) => +(data.per_method[m].avg_detection_rate * 100).toFixed(2)),
           itemStyle: { color: '#38bdf8' },
         },
         {
-          name: '类别一致性通过率(越高越好)',
+          name: '类别一致性通过率（越高越好）',
           type: 'bar',
           yAxisIndex: 1,
           data: methods.map((m) =>
@@ -96,9 +96,9 @@ export function RealDataValidation() {
   return (
     <section>
       <h2 className="mb-2 text-sm font-semibold text-slate-300">
-        ② 真实数据算法验证(太湖国控断面)
+        ② 真实数据算法验证（太湖国控断面）
       </h2>
-      <p className="mb-2 text-xs text-slate-500">{data.dataset} · 验证方法:检出点的官方水质类别(Ⅳ/Ⅴ/劣Ⅴ)富集度 vs 断面基线</p>
+      <p className="mb-2 text-xs text-slate-500">{data.dataset} · 验证方法：检出点的官方水质类别（Ⅳ/Ⅴ/劣Ⅴ）富集度 vs 断面基线</p>
       <div className="rounded-lg border border-edge bg-panel p-3">
         <div ref={chartRef} className="h-64 w-full" />
         <table className="mt-2 w-full text-xs">

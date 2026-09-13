@@ -33,7 +33,7 @@ export function ReplayPage() {
       setRecordings((rs) => rs.filter((r) => r.investigation_id !== id))
       if (inv.investigationId === id) inv.reset()
     } catch {
-      alert('删除失败,请稍后重试')
+      alert('删除失败，请稍后重试')
     }
   }
 
