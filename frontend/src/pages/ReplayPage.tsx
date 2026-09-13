@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { getRecordings, getRecording, deleteRecording } from '../api/investigate'
 import { useInvestigationStore } from '../store/investigationStore'
 import { ReasoningPanel } from '../components/reasoning/ReasoningPanel'
+import { Popconfirm } from '../components/ui/Popconfirm'
 import type { RecordingSummary } from '../types'
 import { eventLabel, stationLabel, indicatorLabel } from '../utils/labels'
 
@@ -25,11 +26,8 @@ export function ReplayPage() {
     rec.stream.forEach(inv.applyMessage)
   }
 
-  // 删除录音:确认后调接口,成功则从列表移除;若删的是当前正显示的调查,同时清空面板
+  // 删除录音:Popconfirm 确认后调接口,成功则从列表移除;若删的是当前正显示的调查,同时清空面板
   const remove = async (id: string) => {
-    const label = recordings.find((r) => r.investigation_id === id)
-    const name = label?.event_id ? eventLabel(label.event_id) : id
-    if (!window.confirm(`确定删除「${name}」的回放记录吗?`)) return
     try {
       await deleteRecording(id)
       setRecordings((rs) => rs.filter((r) => r.investigation_id !== id))
@@ -71,13 +69,19 @@ export function ReplayPage() {
                 </p>
               )}
             </button>
-            <button
-              onClick={() => remove(rec.investigation_id)}
-              className="absolute right-2 top-2 rounded px-1 text-xs text-slate-500 hover:bg-danger/20 hover:text-danger"
-              title="删除此回放"
-            >
-              ✕
-            </button>
+            <div className="absolute right-2 top-2">
+              <Popconfirm
+                message="删除该回放?删除后不可恢复。"
+                onConfirm={() => remove(rec.investigation_id)}
+              >
+                <button
+                  className="rounded px-1 text-xs text-slate-500 hover:bg-danger/20 hover:text-danger"
+                  title="删除此回放"
+                >
+                  ✕
+                </button>
+              </Popconfirm>
+            </div>
           </div>
         ))}
       </aside>
