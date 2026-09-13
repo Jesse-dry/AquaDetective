@@ -9,6 +9,7 @@ import { deleteInjectedEvent } from '../../api/simulate'
 import { IS_MOCK } from '../../api/client'
 import { MockStream } from '../../ws/mockStream'
 import { InvestigationConnection } from '../../ws/connection'
+import { Popconfirm } from '../ui/Popconfirm'
 import type { Severity } from '../../types'
 import { eventLabel, stationLabel, indicatorLabel, etypeLabel, SEVERITY_LABEL } from '../../utils/labels'
 
@@ -27,7 +28,6 @@ export function AlertList() {
   const loadPlayback = usePlaybackStore((s) => s.load)
   const stationIds = useWatershedStore((s) => s.data?.stations.map((st) => st.id) ?? [])
   const removeInjected = async (id: string) => {
-    if (!window.confirm('确定删除此注入事件吗?')) return
     try {
       await deleteInjectedEvent(id)
       await refresh()
@@ -115,13 +115,19 @@ export function AlertList() {
           }`}
         >
           {ev.id.startsWith('evt_inj_') && (
-            <button
-              onClick={() => removeInjected(ev.id)}
-              className="absolute right-2 top-2 rounded px-1 text-xs text-slate-500 hover:bg-danger/20 hover:text-danger"
-              title="删除此注入事件"
-            >
-              ✕
-            </button>
+            <div className="absolute right-2 top-2">
+              <Popconfirm
+                message="删除该注入事件?删除后不可恢复。"
+                onConfirm={() => removeInjected(ev.id)}
+              >
+                <button
+                  className="rounded px-1 text-xs text-slate-500 hover:bg-danger/20 hover:text-danger"
+                  title="删除此注入事件"
+                >
+                  ✕
+                </button>
+              </Popconfirm>
+            </div>
           )}
           <div className="flex items-center justify-between pr-5">
             <span className="text-sm font-semibold text-slate-100">{eventLabel(ev.id)}</span>
