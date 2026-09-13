@@ -132,7 +132,21 @@ def list_recordings():
                             entry["started_at"] = epoch_ms(ev_data["onset_ts"])
                     break
         recordings.append(entry)
-    return {"recordings": recordings}
+    # 同一事件多次调查只保留最新一条(按 started_at 降序取首条),
+    # 避免回放列表里同一事件重复刷屏;无 event_id 的历史录音各自独立保留
+    best: dict[str, dict] = {}
+    others: list[dict] = []
+    for rec in recordings:
+        eid = rec.get("event_id")
+        if not eid:
+            others.append(rec)
+            continue
+        cur = best.get(eid)
+        if cur is None or (rec.get("started_at") or 0) > (cur.get("started_at") or 0):
+            best[eid] = rec
+    # 去重后按调查时间降序(最新在前),无时间戳的排末尾
+    merged = sorted(best.values(), key=lambda r: r.get("started_at") or 0, reverse=True)
+    return {"recordings": merged + others}
 
 
 @router.get("/recordings/{inv_id}")
@@ -145,7 +159,24 @@ def get_recording(inv_id: str):
 
 @router.delete("/recordings/{inv_id}")
 def delete_recording(inv_id: str):
-    """删除一条历史录音(jsonl + 报告 md)。"""
-    if not rec_mod.delete_recording(inv_id):
+    """删除一条历史录音(jsonl + 报告 md)。
+    列表按事件去重显示,故同事件的其余录音一并删除,避免删后旧的又被展示出来。"""
+    conn = get_conn(get_db_path())
+    row = conn.execute("SELECT event_id FROM investigations WHERE id=?", (inv_id,)).fetchone()
+    event_id = row["event_id"] if row else None
+    conn.close()
+    deleted = []
+    if rec_mod.delete_recording(inv_id):
+        deleted.append(inv_id)
+    if event_id:
+        conn2 = get_conn(get_db_path())
+        sibs = [r["id"] for r in conn2.execute(
+            "SELECT id FROM investigations WHERE event_id=? AND id!=?",
+            (event_id, inv_id)).fetchall()]
+        conn2.close()
+        for sid in sibs:
+            if rec_mod.delete_recording(sid):
+                deleted.append(sid)
+    if not deleted:
         raise HTTPException(404, "记录不存在")
-    return {"deleted": inv_id}
+    return {"deleted": deleted}

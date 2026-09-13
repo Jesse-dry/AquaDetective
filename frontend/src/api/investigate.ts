@@ -16,4 +16,5 @@ export const getRecording = (id: string) =>
   )
 
 // DELETE /recordings/{id} 删除一条历史录音(404 = 已不存在)
-export const deleteRecording = (id: string) => apiDelete(`/recordings/${id}`)
+export const deleteRecording = (id: string) =>
+  apiDelete<{ deleted: string[] }>(`/recordings/${id}`)
