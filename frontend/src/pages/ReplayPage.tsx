@@ -71,7 +71,7 @@ export function ReplayPage() {
             </button>
             <div className="absolute right-2 top-2">
               <Popconfirm
-                message="删除该回放?删除后不可恢复。"
+                message="删除该回放？删除后不可恢复。"
                 onConfirm={() => remove(rec.investigation_id)}
               >
                 <button

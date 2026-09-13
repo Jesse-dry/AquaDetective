@@ -117,7 +117,7 @@ export function AlertList() {
           {ev.id.startsWith('evt_inj_') && (
             <div className="absolute right-2 top-2">
               <Popconfirm
-                message="删除该注入事件?删除后不可恢复。"
+                message="删除该注入事件？删除后不可恢复。"
                 onConfirm={() => removeInjected(ev.id)}
               >
                 <button
