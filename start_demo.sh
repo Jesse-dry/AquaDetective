@@ -59,7 +59,8 @@ else
     ok "后端已在运行(端口 $BACKEND_PORT 复用)"
   else
     log "启动后端 FastAPI (端口 $BACKEND_PORT)..."
-    (cd "$BACKEND_DIR" && exec python -m uvicorn app.main:app --port "$BACKEND_PORT") &
+    # --reload:演示/调试期间改后端代码即时生效(否则改了代码不重启=改动不生效)
+    (cd "$BACKEND_DIR" && exec python -m uvicorn app.main:app --reload --port "$BACKEND_PORT") &
     BACK_PID=$!
     wait_http "http://localhost:$BACKEND_PORT/api/v1/events" "后端" 30
   fi
