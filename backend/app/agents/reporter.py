@@ -13,7 +13,7 @@ _TZ_CN = timezone(timedelta(hours=8))
 STEP_CN = {"eem": "荧光指纹", "pollutant": "污染物谱",
            "pattern": "排放规律", "strength": "传播强度"}
 # 证据类型标识 → 中文
-KIND_CN = {"event": "事件", "eem_score": "荧光指纹相似度", "pollutant_score": "污染物谱相似度",
+KIND_CN = {"eem_score": "荧光指纹相似度", "pollutant_score": "污染物谱相似度",
            "pattern_score": "排放规律匹配度", "strength_score": "传播时间评分"}
 
 
@@ -46,15 +46,8 @@ def _indicators_cn(ev: dict) -> str:
 
 
 def _evidence_text(e: dict) -> str:
-    """证据行:事件类证据展开为可读字段,证据类型标识转中文。"""
+    """证据行:证据类型标识转中文,分值保留 4 位。"""
     kind, value = e.get("kind"), e.get("value")
-    if kind == "event" and isinstance(value, dict):
-        return (f"事件 {_event_cn(value.get('id'))} · "
-                f"{_station_cn(value.get('station_id'))} · "
-                f"指标 {_indicators_cn({'indicators': value.get('indicators')})} · "
-                f"类型 {ETYPE_CN.get(value.get('etype'), value.get('etype') or '-')} · "
-                f"严重度 {SEVERITY_CN.get(value.get('severity'), value.get('severity') or '-')} · "
-                f"首达 {_fmt(value.get('onset_ts'))}")
     kind_cn = KIND_CN.get(kind, kind)
     if isinstance(value, float):
         return f"{kind_cn} = {value:.4f}"
@@ -89,8 +82,10 @@ def build_report(state: dict, llm, db_path: str, ws: dict) -> dict:
         lines.append(f"### {i}. {phase}")
         lines.append(f"- 线索：{s.get('clue', '')}")
         lines.append(f"- 推理：{s.get('reasoning', '')}")
-        for e in s.get("evidence", []):
-            lines.append(f"- 证据：{_evidence_text(e)}")
+        # 事件解析步的证据就是事件本身(报告头部已列明),不重复展示
+        if s.get("step_id") != "parse":
+            for e in s.get("evidence", []):
+                lines.append(f"- 证据：{_evidence_text(e)}")
         lines.append("")
     lines.append("## 二、嫌疑排序")
     lines.append("")
