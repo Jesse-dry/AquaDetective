@@ -1,6 +1,8 @@
 """处置 Agent：按事件类型与严重度生成处置与调度建议（agent_talk）。"""
 from __future__ import annotations
 
+from .investigator import ETYPE_CN, SEVERITY_CN
+
 PLANS = {
     "periodic": ["立即对该企业开展夜间突击执法检查", "核查排污许可证与在线监测数据",
                  "对特征污染物（重金属）开展加密监测", "必要时启用应急调蓄设施"],
@@ -19,7 +21,8 @@ def response_plan(state: dict, llm, db_path: str, ws: dict) -> dict:
     etype = ev.get("etype", "detected")
     sev = ev.get("severity", "medium")
     steps = PLANS.get(etype, PLANS["detected"])
-    text = (f"建议处置方案（{etype} · {sev}）：\n"
+    # 事件类型/严重度展示为中文,避免界面出现 gradual · medium 这类内部编码
+    text = (f"建议处置方案（{ETYPE_CN.get(etype, etype)} · {SEVERITY_CN.get(sev, sev)}）：\n"
             + "\n".join(f"{i+1}. {s}" for i, s in enumerate(steps))
             + f"\n\n优先级提示：{SEVERITY_TIP[sev]}")
     stream = list(state["stream"])
