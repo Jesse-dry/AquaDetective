@@ -50,10 +50,6 @@ export function ReportPage() {
             🖨️ 导出 PDF
           </button>
         </div>
-        <p className="mb-3 text-xs text-slate-500 print:hidden">
-          提示：打印对话框中请在「更多设置」取消勾选「页眉和页脚」，否则纸张顶部会带上浏览器
-          自动添加的标题与网址；文件名默认取本页标题（事件名 + 锁定企业 + 日期）。
-        </p>
         {error && <p className="text-danger">报告加载失败：{error}</p>}
         {!markdown && !error && <p className="text-slate-500">加载中…</p>}
         {markdown && (
