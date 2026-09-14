@@ -41,12 +41,20 @@ export function ReportPage() {
   return (
     <div className="min-h-screen bg-ink p-6 text-slate-200 print:bg-white print:p-0 print:text-black">
       <div className="report-print-wrap mx-auto max-w-3xl">
-        <Link
-          to="/"
-          className="mb-3 inline-block rounded bg-edge px-3 py-1 text-xs text-slate-300 hover:bg-slate-600 print:hidden"
-        >
-          ← 返回大屏
-        </Link>
+        <div className="mb-3 flex gap-2 print:hidden">
+          <Link
+            to="/"
+            className="rounded bg-edge px-3 py-1 text-xs text-slate-300 hover:bg-slate-600"
+          >
+            ← 返回大屏
+          </Link>
+          <Link
+            to="/replay"
+            className="rounded bg-edge px-3 py-1 text-xs text-slate-300 hover:bg-slate-600"
+          >
+            ← 返回调查回放
+          </Link>
+        </div>
         <div className="mb-4 flex items-center justify-between print:hidden">
           <h1 className="text-lg font-bold">{docTitle}</h1>
           <button
