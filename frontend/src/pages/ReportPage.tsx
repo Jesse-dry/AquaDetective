@@ -39,8 +39,8 @@ export function ReportPage() {
   }, [docTitle])
 
   return (
-    <div className="min-h-screen bg-ink p-6 text-slate-200 print:bg-white print:text-black">
-      <div className="mx-auto max-w-3xl">
+    <div className="min-h-screen bg-ink p-6 text-slate-200 print:bg-white print:p-0 print:text-black">
+      <div className="report-print-wrap mx-auto max-w-3xl">
         <div className="mb-4 flex items-center justify-between print:hidden">
           <h1 className="text-lg font-bold">{docTitle}</h1>
           <button

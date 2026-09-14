@@ -46,14 +46,26 @@
 }
 
 /* 打印样式:报告导出 PDF 时白底黑字、隐藏交互元素 */
+@page {
+  /* 纸张边距交给 @page 控制,避免与容器内边距叠加导致内容偏离居中 */
+  margin: 18mm 16mm;
+}
+
 @media print {
   body {
     background: #fff;
   }
+  /* 打印时容器不再限宽/居中,由纸张边距决定版面,左右对称 */
+  .report-print-wrap {
+    max-width: none;
+    margin: 0;
+  }
   .report-markdown {
     @apply border-0 bg-white p-0 text-black;
   }
-  .report-markdown h1,
+  .report-markdown h1 {
+    @apply text-center text-black;
+  }
   .report-markdown h2,
   .report-markdown h3,
   .report-markdown strong {
