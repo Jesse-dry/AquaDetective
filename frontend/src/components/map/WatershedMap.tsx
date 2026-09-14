@@ -39,6 +39,9 @@ export function WatershedMap() {
   const [overlays, setOverlays] = useState<OverlayItem[]>([])
   // 企业名上次选中的偏移(滞回):缩放平移时优先沿用旧位置,减少乱跳
   const lastOffsets = useRef<Map<string, [number, number]>>(new Map())
+  // overlay 更新函数的 ref(供 move/zoom 节流回调读取最新闭包)
+  const overlaysFnRef = useRef<() => void>(() => {})
+  const rafRef = useRef(0)
 
   // 把地图坐标转屏幕像素,生成 overlay 列表(企业名+断面序号)
   // 企业名用碰撞布局:依次尝试候选偏移,与已放置标签/圆点的包围盒不相交才落位
@@ -71,9 +74,10 @@ export function WatershedMap() {
       .map((e) => ({ ent: e.ent, p: map.project([e.n.x, e.n.y]) as Pt }))
 
     // 障碍:断面大圆(半径 18 留边距)+ 企业小圆,避免文字盖住圆点
+    // 回放中企业标签不显示,跳过企业碰撞计算(热力更新频繁,省开销)
     const obstacles: Box[] = [
       ...stationPts.map(({ p }) => dotBox(p, 16)),
-      ...entNodes.map(({ p }) => dotBox(p, 10)),
+      ...(playbackActive ? [] : entNodes.map(({ p }) => dotBox(p, 10))),
     ]
     // 断面序号固定放圆点上方(现状样式),其包围盒参与后续碰撞
     const placed: Box[] = []
@@ -90,8 +94,10 @@ export function WatershedMap() {
       [0, -34], [0, 34], [18, -27], [18, 27], [-18, -27], [-18, 27],
       [24, 0], [-24, 0],
     ]
-    // 名字长的先放(更难找到空位)
-    const sorted = [...entNodes].sort((a, b) => b.ent.name.length - a.ent.name.length)
+    // 名字长的先放(更难找到空位);回放中企业标签不显示,整体跳过
+    const sorted = playbackActive
+      ? []
+      : [...entNodes].sort((a, b) => b.ent.name.length - a.ent.name.length)
     for (const e of sorted) {
       // 滞回:上次的位置优先,只要当前无碰撞就沿用,避免缩放时标签来回跳
       const prev = lastOffsets.current.get(e.ent.id)
@@ -117,7 +123,10 @@ export function WatershedMap() {
     }
     setOverlays(items)
   }
+  // 供 move/zoom 节流回调调用最新闭包(每次渲染同步)
+  overlaysFnRef.current = updateOverlays
 
+  // 建图:仅一次;move/zoom 驱动的 HTML overlay 更新用 rAF 节流
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
     const map = new maplibregl.Map({
@@ -128,12 +137,27 @@ export function WatershedMap() {
       attributionControl: false,
     })
     mapRef.current = map
+    const onMove = () => {
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = 0
+        overlaysFnRef.current()
+      })
+    }
+    map.on('move', onMove)
+    map.on('zoom', onMove)
     return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      map.off('move', onMove)
+      map.off('zoom', onMove)
       map.remove()
       mapRef.current = null
     }
   }, [])
 
+  // 结构数据(watershed/告警/结论):重建 source 与图层,并自适应视野。
+  // 不含回放热力——热力单独在下面的 effect 里更新 stations source,
+  // 否则回放中每 100ms 会重建全部 GeoJSON + 重新 fitBounds(视野被不断拉回)
   useEffect(() => {
     const map = mapRef.current
     if (!map || !watershed) return
@@ -156,7 +180,6 @@ export function WatershedMap() {
     const stationFeatures = watershed.stations.flatMap((s) => {
       const n = nodeById.get(s.node_id)
       if (!n) return []
-      // 扩散回放中携带热力值(触发 heat 着色),平时不带
       const properties: Record<string, unknown> = {
         id: s.id,
         num: stationShort(s.id), // 图上仅标注数字序号
@@ -264,37 +287,48 @@ export function WatershedMap() {
         map.on('mouseenter', 'stations', () => { map.getCanvas().style.cursor = 'pointer' })
         map.on('mouseleave', 'stations', () => { map.getCanvas().style.cursor = '' })
 
-        // 自适应视野
+        // 自适应视野(仅流域数据变化时执行一次,不再随热力更新反复重置)
         const xs = watershed.nodes.map((n) => n.x)
         const ys = watershed.nodes.map((n) => n.y)
         map.fitBounds(
           [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]],
           { padding: 60, duration: 0 },
         )
-        // HTML overlay 标注(企业名+断面序号),随平移/缩放更新
-        updateOverlays()
-        map.on('move', updateOverlays)
-        map.on('zoom', updateOverlays)
       }
     }
 
     if (map.isStyleLoaded()) initLayers()
     else map.once('load', initLayers)
-    // 数据更新(告警/结论变化)时只更新 source
     return () => {}
-  }, [watershed, events, conclusion, selectStation, playbackActive, playbackHeat])
+  }, [watershed, events, conclusion, selectStation])
+
+  // 回放热力:只重写 stations source(10 个点),不触碰边/节点/企业,也不重置视野
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !watershed) return
+    const src = map.getSource('stations') as maplibregl.GeoJSONSource | undefined
+    if (!src) return // 图层未就绪时由结构 effect 写入基础数据
+    const nodeById = new Map(watershed.nodes.map((n) => [n.id, n]))
+    const openStationIds = new Set(events.filter((e) => e.status !== 'resolved').map((e) => e.station_id))
+    const features = watershed.stations.flatMap((s) => {
+      const n = nodeById.get(s.node_id)
+      if (!n) return []
+      const properties: Record<string, unknown> = {
+        id: s.id, num: stationShort(s.id), alert: openStationIds.has(s.id),
+      }
+      if (playbackActive) properties.heat = playbackHeat[s.id] ?? 0
+      return [{
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: [n.x, n.y] },
+        properties,
+      }]
+    })
+    src.setData({ type: 'FeatureCollection', features } as never)
+  }, [playbackActive, playbackHeat, watershed, events])
 
   // overlay 依赖 watershed 与 playback(回放时企业 overlay 隐藏),变化时刷新
   useEffect(() => {
     updateOverlays()
-    const map = mapRef.current
-    if (!map) return
-    map.on('move', updateOverlays)
-    map.on('zoom', updateOverlays)
-    return () => {
-      map.off('move', updateOverlays)
-      map.off('zoom', updateOverlays)
-    }
   }, [watershed, playbackActive])
 
   return (
