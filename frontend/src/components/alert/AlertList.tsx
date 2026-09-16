@@ -129,7 +129,7 @@ export function AlertList() {
               </Popconfirm>
             </div>
           )}
-          <div className="flex items-start justify-between gap-2 pr-5">
+          <div className="flex items-center justify-between gap-2 pr-5">
             {/* 标题不换行(否则窄栏里"事件1"会被拆成两行),右侧类型/严重度可折行 */}
             <span className="shrink-0 whitespace-nowrap text-sm font-semibold text-slate-100">
               {eventLabel(ev.id)}
