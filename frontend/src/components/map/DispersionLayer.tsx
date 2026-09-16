@@ -18,7 +18,7 @@ export function DispersionLayer() {
   const progress = (pb.cursorMs - pb.t0Ms) / Math.max(pb.t1Ms - pb.t0Ms, 1)
 
   return (
-    <div className="absolute left-3 top-3 z-10 w-80 rounded-lg border border-edge bg-panel/95 p-3 shadow-lg">
+    <div className="absolute left-3 top-3 z-10 w-[335px] rounded-lg border border-edge bg-panel/95 p-3 shadow-lg">
       <div className="mb-1 flex items-center justify-between">
         <span className="text-xs font-semibold text-slate-200">
           🌊 扩散回放 · {pb.eventId ? eventLabel(pb.eventId) : ''} · {indicatorLabel(pb.indicator)}
