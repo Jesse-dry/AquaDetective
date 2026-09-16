@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AquaDetective 批量评测结果</title>
+<style>
+  /* 1280x720 深色图表页:浏览器打开后整屏截图,直接贴 PPT。
+     数据来自 data/processed/batch_eval_report.json(30 轮随机注入)。 */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1280px; height: 720px; overflow: hidden;
+    background: #0b1220; color: #e2e8f0;
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    padding: 44px 56px; display: flex; flex-direction: column;
+  }
+  .head { margin-bottom: 28px; }
+  .head h1 { font-size: 30px; font-weight: 700; letter-spacing: .5px; }
+  .head h1 span { color: #38bdf8; }
+  .head p { margin-top: 8px; font-size: 15px; color: #94a3b8; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .kpi {
+    border: 1px solid #1f2c4a; border-radius: 12px; background: #0f172a;
+    padding: 20px 22px; position: relative; overflow: hidden;
+  }
+  .kpi::after {
+    content: ""; position: absolute; left: 0; top: 0; width: 4px; height: 100%;
+    background: #38bdf8;
+  }
+  .kpi .v { font-size: 46px; font-weight: 700; color: #38bdf8; line-height: 1; }
+  .kpi .v small { font-size: 22px; margin-left: 2px; }
+  .kpi .k { margin-top: 10px; font-size: 14px; color: #94a3b8; }
+  .kpi.alt .v { color: #22c55e; } .kpi.alt::after { background: #22c55e; }
+  .kpi.warn .v { color: #f59e0b; } .kpi.warn::after { background: #f59e0b; }
+  .body { flex: 1; display: grid; grid-template-columns: 1.05fr .95fr; gap: 34px; margin-top: 30px; }
+  h2 { font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 16px; }
+  h2 em { font-style: normal; color: #64748b; font-size: 13px; margin-left: 8px; }
+  .bars { display: flex; flex-direction: column; gap: 18px; }
+  .bar-row { display: grid; grid-template-columns: 92px 1fr 54px; align-items: center; gap: 12px; }
+  .bar-row .lbl { font-size: 14px; color: #cbd5e1; }
+  .bar-track { height: 22px; background: #111c33; border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; }
+  .bar-row .num { font-size: 15px; font-weight: 600; text-align: right; color: #e2e8f0; }
+  .notes { margin-top: 22px; border-top: 1px solid #1f2c4a; padding-top: 16px; }
+  .notes li { list-style: none; font-size: 13px; color: #94a3b8; line-height: 1.9; }
+  .notes li b { color: #cbd5e1; font-weight: 600; }
+  .funnel { display: flex; flex-direction: column; gap: 10px; }
+  .fstep { display: flex; align-items: center; gap: 12px; }
+  .fstep .n { width: 44px; text-align: right; font-size: 17px; font-weight: 700; color: #38bdf8; }
+  .fstep .t { flex: 1; font-size: 13px; color: #cbd5e1; }
+  .fstep .track { flex: 2; height: 12px; background: #111c33; border-radius: 4px; overflow: hidden; }
+  .fstep .fill { height: 100%; background: linear-gradient(90deg, #0ea5e9, #38bdf8); border-radius: 4px; }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>批量评测 · 30 轮<span>随机事件注入</span></h1>
+    <p>企业、事件类型、严重度、发生时间全部随机 | 调查引擎不读取真值,评测时对答案</p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">100<small>%</small></div><div class="k">预警检出率</div></div>
+    <div class="kpi"><div class="v">77<small>%</small></div><div class="k">Top-1 命中率</div></div>
+    <div class="kpi alt"><div class="v">87<small>%</small></div><div class="k">Top-3 命中率</div></div>
+    <div class="kpi alt"><div class="v">0.806</div><div class="k">MRR(平均倒数排名)</div></div>
+  </div>
+
+  <div class="body">
+    <div>
+      <h2>按事件类型的 Top-1 命中率 <em>分类型分层统计</em></h2>
+      <div class="bars">
+        <div class="bar-row">
+          <span class="lbl">突发泄漏</span>
+          <span class="bar-track"><span class="bar-fill" style="width:90%;background:linear-gradient(90deg,#0ea5e9,#38bdf8)"></span></span>
+          <span class="num">90%</span>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">夜间偷排</span>
+          <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#0ea5e9,#38bdf8)"></span></span>
+          <span class="num">80%</span>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">逐渐恶化</span>
+          <span class="bar-track"><span class="bar-fill" style="width:60%;background:linear-gradient(90deg,#b45309,#f59e0b)"></span></span>
+          <span class="num">60%</span>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>· 传播时间误差:<b>均值 0.04h / 最大 0.10h</b>(30/30 有效样本)</li>
+        <li>· 上游候选召回率 <b>87%</b>,最终锁定命中率 <b>70%</b></li>
+        <li>· 逐渐恶化类型偏弱:缓慢爬坡下指纹区分度低,是已知调优方向</li>
+      </ul>
+    </div>
+    <div>
+      <h2>30 轮漏斗 <em>从注入到锁定</em></h2>
+      <div class="funnel">
+        <div class="fstep"><span class="n">30</span><span class="t">注入随机事件</span><span class="track"><span class="fill" style="width:100%"></span></span></div>
+        <div class="fstep"><span class="n">30</span><span class="t">预警检出</span><span class="track"><span class="fill" style="width:100%"></span></span></div>
+        <div class="fstep"><span class="n">26</span><span class="t">真凶进入上游候选</span><span class="track"><span class="fill" style="width:87%"></span></span></div>
+        <div class="fstep"><span class="n">23</span><span class="t">排名第一</span><span class="track"><span class="fill" style="width:77%"></span></span></div>
+        <div class="fstep"><span class="n">21</span><span class="t">置信度达标并锁定</span><span class="track"><span class="fill" style="width:70%"></span></span></div>
+      </div>
+      <ul class="notes">
+        <li>· 评测脚本:<b>backend/scripts/batch_eval.py</b>,可复跑</li>
+        <li>· 逐轮明细:<b>data/processed/batch_eval_report.json</b></li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
