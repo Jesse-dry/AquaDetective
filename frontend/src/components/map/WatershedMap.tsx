@@ -15,6 +15,7 @@ interface OverlayItem {
   text: string
   color: string
   offset: [number, number] // 相对锚点的像素偏移
+  rotation?: number // 旋转角度(度):流向箭头按河道方向旋转
 }
 
 // 流域底图:空白深色样式 + GeoJSON 绘制节点/边/断面/企业
@@ -58,6 +59,26 @@ export function WatershedMap() {
       return { l: cx - w / 2, r: cx + w / 2, t: top, b: top + 12 }
     }
     const dotBox = (p: Pt, r: number): Box => ({ l: p.x - r, r: p.x + r, t: p.y - r, b: p.y + r })
+
+    // 流向箭头:每条有向边中点放一个指向下游的三角(边方向 = 水流方向)
+    const nodeXY = new Map(watershed.nodes.map((n) => [n.id, n]))
+    for (const e of watershed.edges) {
+      const a = nodeXY.get(e.from_node)
+      const b = nodeXY.get(e.to_node)
+      if (!a || !b) continue
+      const p1 = map.project([a.x, a.y])
+      const p2 = map.project([b.x, b.y])
+      const deg = (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180) / Math.PI
+      items.push({
+        key: `flow-${e.from_node}-${e.to_node}`,
+        x: (p1.x + p2.x) / 2,
+        y: (p1.y + p2.y) / 2,
+        text: '▶',
+        color: '#38bdf8',
+        offset: [0, 0],
+        rotation: deg,
+      })
+    }
 
     const stationPts: Array<{ p: Pt; id: string }> = []
     for (const s of watershed.stations) {
@@ -342,18 +363,25 @@ export function WatershedMap() {
             <span
               key={o.key}
               className={`absolute select-none whitespace-nowrap leading-none ${
-                o.key.startsWith('st-')
-                  ? 'text-[13px] font-bold tracking-wider'
-                  : 'text-[11px] font-medium tracking-wide'
+                o.rotation !== undefined
+                  ? 'text-[9px] opacity-80'
+                  : o.key.startsWith('st-')
+                    ? 'text-[13px] font-bold tracking-wider'
+                    : 'text-[11px] font-medium tracking-wide'
               }`}
               style={{
                 left: o.x + o.offset[0],
                 top: o.y + o.offset[1],
                 color: o.color,
-                textShadow: o.key.startsWith('st-')
-                  ? '0 0 4px #0b1220, 0 1px 3px #0b1220, 0 0 8px rgba(11,18,32,.9)'
-                  : '0 0 2px #0b1220, 0 1px 2px #0b1220, 0 0 6px rgba(11,18,32,.8)',
-                transform: 'translateX(-50%)',
+                textShadow: o.rotation !== undefined
+                  ? '0 0 3px #0b1220'
+                  : o.key.startsWith('st-')
+                    ? '0 0 4px #0b1220, 0 1px 3px #0b1220, 0 0 8px rgba(11,18,32,.9)'
+                    : '0 0 2px #0b1220, 0 1px 2px #0b1220, 0 0 6px rgba(11,18,32,.8)',
+                // 流向箭头:以中点为中心并旋转到河道方向;文字类仍水平居中
+                transform: o.rotation !== undefined
+                  ? `translate(-50%, -50%) rotate(${o.rotation}deg)`
+                  : 'translateX(-50%)',
               }}
             >
               {o.text}
