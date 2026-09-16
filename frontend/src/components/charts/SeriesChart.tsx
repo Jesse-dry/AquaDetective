@@ -12,6 +12,8 @@ import { indicatorLabel, indicatorUnit } from '../../utils/labels'
 export function SeriesChart({ stationId }: { stationId: string | null }) {
   const ref = useRef<HTMLDivElement>(null)
   const chartRef = useRef<echarts.ECharts | null>(null)
+  // 数据请求序号:只有最新一次 effect 发起的请求结果才允许绘制
+  const reqSeq = useRef(0)
   const indicator = useUiStore((s) => s.selectedIndicator)
   // 按字段精确订阅:回放每 100ms 更新 heat/cursors,整体订阅会带来无谓重渲染
   const pbActive = usePlaybackStore((s) => s.active)
@@ -41,6 +43,10 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
   useEffect(() => {
     const chart = chartRef.current
     if (!stationId || !chart) return
+    // 请求序号:异步返回时若已发起更新的请求,丢弃本次结果。
+    // 否则"先切断面/指标(触发常规全量请求)再进入回放"时,慢返回的常规请求
+    // 会用 notMerge 覆盖回放的窗口设置,表现为时间轴范围过大
+    const seq = ++reqSeq.current
     // 纵轴带单位(如 mg/L);轴顶留出名字的空间,故 top 由 24 加到 32
     const yAxisOf = (unit: string) => ({
       type: 'value' as const,
@@ -100,11 +106,15 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
         return
       }
       getSeries({ station: stationId, indicator, from: pbT0Ms, to: pbT1Ms })
-        .then((resp) => drawPlayback(resp.data, indicator))
+        .then((resp) => {
+          if (seq !== reqSeq.current) return // 期间已切换事件/指标,丢弃
+          drawPlayback(resp.data, indicator)
+        })
         .catch(() => {})
       return
     }
     getSeries({ station: stationId, indicator, step: 10 }).then((resp) => {
+      if (seq !== reqSeq.current) return // 期间已进入回放或切换断面,丢弃
       chart.setOption({
         ...base,
         yAxis: yAxisOf(indicatorUnit(indicator)),
