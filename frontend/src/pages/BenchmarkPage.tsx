@@ -54,6 +54,19 @@ export function BenchmarkPage() {
     if (!watershed) return
       ; (async () => {
         const events = await getEvents()
+        // 表格按事件编号升序(事件1/2/3),注入事件排在预置事件之后
+        const sortKey = (id: string) => {
+          const inj = id.match(/^evt_inj_0*(\d+)$/i)
+          if (inj) return [1, Number(inj[1])] as const
+          const m = id.match(/^evt_?0*(\d+)$/i)
+          if (m) return [0, Number(m[1])] as const
+          return [2, 0] as const
+        }
+        events.sort((a, b) => {
+          const [ta, na] = sortKey(a.id)
+          const [tb, nb] = sortKey(b.id)
+          return ta !== tb ? ta - tb : na - nb
+        })
         const nameOf = (id?: string) =>
           watershed.enterprises.find((e) => e.id === id)?.name ?? null
         const rows: VerifiedRow[] = []
