@@ -53,7 +53,8 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <main className="grid min-h-0 flex-1 grid-cols-[280px_1fr_380px] gap-2 p-2">
+      {/* 左栏放宽到 340px:告警卡片的"事件N"与右侧类型/严重度能排在同一行 */}
+      <main className="grid min-h-0 flex-1 grid-cols-[340px_1fr_380px] gap-2 p-2">
         <aside className="min-h-0 rounded-lg border border-edge bg-ink">
           <AlertList />
         </aside>
