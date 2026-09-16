@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useAlertStore } from '../../store/alertStore'
 import { useInvestigationStore } from '../../store/investigationStore'
 import { usePlaybackStore } from '../../store/playbackStore'
+import { useUiStore } from '../../store/uiStore'
 import { useWatershedStore } from '../../store/watershedStore'
 import { startInvestigation } from '../../api/events'
 import { getInvestigation } from '../../api/investigate'
@@ -26,6 +27,8 @@ export function AlertList() {
   const { events, refresh } = useAlertStore()
   const inv = useInvestigationStore()
   const loadPlayback = usePlaybackStore((s) => s.load)
+  const setIndicator = useUiStore((s) => s.setIndicator)
+  const selectStation = useUiStore((s) => s.selectStation)
   const stationIds = useWatershedStore((s) => s.data?.stations.map((st) => st.id) ?? [])
   const removeInjected = async (id: string) => {
     try {
@@ -160,7 +163,13 @@ export function AlertList() {
               : '✓ 已侦查'}
           </button>
           <button
-            onClick={() => loadPlayback(ev, stationIds)}
+            onClick={() => {
+              // 回放开始:选中断面切到事件预警断面、指标切到事件首达指标,
+              // 底部曲线才能立刻显示"该断面在该事件窗口内"的时序
+              selectStation(ev.station_id)
+              setIndicator(ev.indicators[0] ?? 'cod')
+              loadPlayback(ev, stationIds)
+            }}
             disabled={stationIds.length === 0}
             className="mt-1.5 w-full rounded bg-edge px-2 py-1 text-xs text-slate-300 hover:bg-slate-600 disabled:opacity-50"
           >

@@ -57,11 +57,12 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
       grid: { left: 48, right: 16, top: 32, bottom: 24 },
       tooltip: { trigger: 'axis' },
     }
-    if (inPlayback && pbPoints) {
-      // 回放:数据来自回放窗口,横轴锁定事件时间窗,并清掉上一条曲线
+    // 回放态画图:横轴锁事件时间窗 + 游标竖线;animation:false 避免
+    // "竖线从矮长到高""重放时从右滑到左""末尾突然加速"这类动画错觉
+    const drawPlayback = (points: { ts: number; value: number }[], ind: string) => {
       chart.setOption({
         ...base,
-        yAxis: yAxisOf(indicatorUnit(pbIndicator)),
+        yAxis: yAxisOf(indicatorUnit(ind)),
         xAxis: {
           type: 'time',
           min: pbT0Ms,
@@ -69,16 +70,14 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
           axisLabel: { color: '#94a3b8' },
           axisLine: { lineStyle: { color: '#1f2c4a' } },
         },
-        // animation:false —— 回放中每 100ms 更新游标,若开动画会出现
-        // "竖线从矮长到高""重放时从右滑到左""末尾突然加速"这类错觉
         animation: false,
         series: [{
-          name: indicatorLabel(pbIndicator),
+          name: indicatorLabel(ind),
           type: 'line',
           showSymbol: false,
           animation: false,
           lineStyle: { color: '#38bdf8', width: 1.5 },
-          data: pbPoints.map((p) => [p.ts, p.value]),
+          data: points.map((p) => [p.ts, p.value]),
           markLine: {
             silent: true,
             symbol: 'none',
@@ -89,6 +88,17 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
           },
         }],
       }, { notMerge: true })
+    }
+    if (inPlayback) {
+      // 回放中允许切换同一断面的其他指标:
+      // 事件自身指标用已加载的回放数据,其他指标按事件时间窗临时请求
+      if (indicator === pbIndicator && pbPoints) {
+        drawPlayback(pbPoints, pbIndicator)
+        return
+      }
+      getSeries({ station: stationId, indicator, from: pbT0Ms, to: pbT1Ms })
+        .then((resp) => drawPlayback(resp.data, indicator))
+        .catch(() => {})
       return
     }
     getSeries({ station: stationId, indicator, step: 10 }).then((resp) => {
