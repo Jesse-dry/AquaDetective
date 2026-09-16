@@ -3,7 +3,7 @@ import * as echarts from 'echarts'
 import { getSeries } from '../../api/series'
 import { useUiStore } from '../../store/uiStore'
 import { usePlaybackStore } from '../../store/playbackStore'
-import { indicatorLabel } from '../../utils/labels'
+import { indicatorLabel, indicatorUnit } from '../../utils/labels'
 
 // 断面时序曲线。
 // 平时:按选中断面 + 选定指标请求全量时序。
@@ -41,21 +41,27 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
   useEffect(() => {
     const chart = chartRef.current
     if (!stationId || !chart) return
+    // 纵轴带单位(如 mg/L);轴顶留出名字的空间,故 top 由 24 加到 32
+    const yAxisOf = (unit: string) => ({
+      type: 'value' as const,
+      scale: true,
+      axisLabel: { color: '#94a3b8' },
+      splitLine: { lineStyle: { color: '#1f2c4a' } },
+      name: unit,
+      nameLocation: 'end' as const,
+      nameGap: 10,
+      nameTextStyle: { color: '#94a3b8', fontSize: 10 },
+    })
     const base = {
       backgroundColor: 'transparent',
-      grid: { left: 48, right: 16, top: 24, bottom: 24 },
+      grid: { left: 48, right: 16, top: 32, bottom: 24 },
       tooltip: { trigger: 'axis' },
-      yAxis: {
-        type: 'value',
-        scale: true,
-        axisLabel: { color: '#94a3b8' },
-        splitLine: { lineStyle: { color: '#1f2c4a' } },
-      },
     }
     if (inPlayback && pbPoints) {
       // 回放:数据来自回放窗口,横轴锁定事件时间窗,并清掉上一条曲线
       chart.setOption({
         ...base,
+        yAxis: yAxisOf(indicatorUnit(pbIndicator)),
         xAxis: {
           type: 'time',
           min: pbT0Ms,
@@ -88,6 +94,7 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
     getSeries({ station: stationId, indicator, step: 10 }).then((resp) => {
       chart.setOption({
         ...base,
+        yAxis: yAxisOf(indicatorUnit(indicator)),
         xAxis: {
           type: 'time',
           axisLabel: { color: '#94a3b8' },

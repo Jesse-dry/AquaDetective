@@ -44,6 +44,26 @@ export const INDICATOR_LABEL: Record<string, string> = {
 
 export const indicatorLabel = (code: string): string => INDICATOR_LABEL[code] ?? code
 
+/** 指标单位(与后端数据单位一致),用于曲线纵轴标注 */
+export const INDICATOR_UNIT: Record<string, string> = {
+  cod: 'mg/L',
+  codmn: 'mg/L',
+  ammonia: 'mg/L',
+  ammonia_n: 'mg/L',
+  tp: 'mg/L',
+  tn: 'mg/L',
+  cr6: 'mg/L',
+  do: 'mg/L',
+  chla: 'mg/L',
+  toc: 'mg/L',
+  ph: '无量纲',
+  conductivity: 'μS/cm',
+  turbidity: 'NTU',
+  temperature: '℃',
+}
+
+export const indicatorUnit = (code: string): string => INDICATOR_UNIT[code] ?? ''
+
 /** 事件类型 → 中文 */
 export const ETYPE_LABEL: Record<string, string> = {
   sudden: '突发泄漏',
