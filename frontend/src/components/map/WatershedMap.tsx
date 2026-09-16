@@ -55,8 +55,9 @@ export function WatershedMap() {
     const hit = (a: Box, b: Box) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b
     // 标签包围盒:中文按 10px/字估宽,行高 12
     const labelBox = (cx: number, top: number, text: string): Box => {
-      const w = text.length * 10 + 4
-      return { l: cx - w / 2, r: cx + w / 2, t: top, b: top + 12 }
+      // 企业名 11px/字 + 胶囊内边距(px-1);断面序号 13px/字。取 11 兼容两者,略保守
+      const w = text.length * 11 + 10
+      return { l: cx - w / 2, r: cx + w / 2, t: top, b: top + 15 }
     }
     const dotBox = (p: Pt, r: number): Box => ({ l: p.x - r, r: p.x + r, t: p.y - r, b: p.y + r })
 
@@ -367,7 +368,7 @@ export function WatershedMap() {
                   ? 'text-[9px] opacity-80'
                   : o.key.startsWith('st-')
                     ? 'text-[13px] font-bold tracking-wider'
-                    : 'text-[11px] font-medium tracking-wide'
+                    : 'rounded bg-ink/60 px-1 py-0.5 text-[11px] font-semibold tracking-wide'
               }`}
               style={{
                 left: o.x + o.offset[0],
