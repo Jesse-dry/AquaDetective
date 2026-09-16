@@ -63,15 +63,20 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
           axisLabel: { color: '#94a3b8' },
           axisLine: { lineStyle: { color: '#1f2c4a' } },
         },
+        // animation:false —— 回放中每 100ms 更新游标,若开动画会出现
+        // "竖线从矮长到高""重放时从右滑到左""末尾突然加速"这类错觉
+        animation: false,
         series: [{
           name: indicatorLabel(pbIndicator),
           type: 'line',
           showSymbol: false,
+          animation: false,
           lineStyle: { color: '#38bdf8', width: 1.5 },
           data: pbPoints.map((p) => [p.ts, p.value]),
           markLine: {
             silent: true,
             symbol: 'none',
+            animation: false,
             label: { show: false },
             lineStyle: { color: '#f59e0b', width: 1.5, type: 'solid' },
             data: [{ xAxis: pbCursorMs }],
@@ -108,6 +113,7 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
         markLine: {
           silent: true,
           symbol: 'none',
+          animation: false,
           label: { show: false },
           lineStyle: { color: '#f59e0b', width: 1.5, type: 'solid' },
           data: [{ xAxis: pbCursorMs }],
