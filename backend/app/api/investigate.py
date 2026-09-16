@@ -93,7 +93,8 @@ def list_recordings():
     }
     inv_rows = {
         row["id"]: dict(row)
-        for row in conn.execute("SELECT id, event_id, started_at FROM investigations").fetchall()
+        for row in conn.execute(
+            "SELECT id, event_id, started_at, status, conclusion FROM investigations").fetchall()
     }
     conn.close()
     recordings = []
@@ -107,9 +108,14 @@ def list_recordings():
                 entry["station_id"] = ev["station_id"]
                 entry["indicators"] = json.loads(ev["indicators"]) if ev["indicators"] else []
             entry["started_at"] = epoch_ms(row["started_at"])
+            entry["status"] = row["status"]
+            concl = json.loads(row["conclusion"]) if row.get("conclusion") else None
+            if isinstance(concl, dict):
+                entry["source_id"] = concl.get("source_id")
+                entry["confidence"] = concl.get("confidence")
         else:
             # 兜底:investigations 表已重建(seed --force)的历史录音,
-            # 从 stream 首条 parse step 的证据里恢复事件字段
+            # 从 stream 里恢复事件字段与结论(对标页据此判定是否运行过)
             for msg in rec_mod.replay(inv_id):
                 data = msg.get("data") or {}
                 if data.get("step_id") == "parse":
@@ -128,9 +134,17 @@ def list_recordings():
                             except ValueError:
                                 raw_ind = []
                         entry["indicators"] = raw_ind or []
-                        if ev_data.get("onset_ts"):
-                            entry["started_at"] = epoch_ms(ev_data["onset_ts"])
-                    break
+                        raw_onset = ev_data.get("onset_ts")
+                        if raw_onset:
+                            # parse 步证据里的 onset_ts 已是毫秒,不能再 epoch_ms(会变微秒)
+                            entry["started_at"] = int(raw_onset) if raw_onset > 1e11 \
+                                else epoch_ms(raw_onset)
+                elif msg.get("type") == "conclusion":
+                    entry["status"] = "resolved"
+                    entry["source_id"] = data.get("source_id")
+                    entry["confidence"] = data.get("confidence")
+                elif msg.get("type") == "failed":
+                    entry["status"] = "failed"
         recordings.append(entry)
     # 同一事件多次调查只保留最新一条(按 started_at 降序取首条),
     # 避免回放列表里同一事件重复刷屏;无 event_id 的历史录音各自独立保留

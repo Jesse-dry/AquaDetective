@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { Investigation, PollutionEvent } from '../types'
+import type { PollutionEvent } from '../types'
 import { getEvents } from '../api/events'
-import { getRecordings, getInvestigation } from '../api/investigate'
+import { getRecordings } from '../api/investigate'
 import { useWatershedStore } from '../store/watershedStore'
 import { RealDataValidation } from '../components/charts/RealDataValidation'
 import { E2ETraceCase } from '../components/charts/E2ETraceCase'
@@ -58,24 +58,21 @@ export function BenchmarkPage() {
           watershed.enterprises.find((e) => e.id === id)?.name ?? null
         const rows: VerifiedRow[] = []
         try {
+          // 直接用 recordings 摘要(已带 status/source_id/confidence),不再逐个查调查详情:
+          // 老录音可能查不到调查记录(404),且 N 次请求容易整体失败导致全表"未运行"
           const { recordings } = await getRecordings()
-          // recordings 为摘要对象列表;逐个查详情,单个 404(孤儿录音/调查记录被清)
-          // 不再拖垮整表——失败的跳过,其余正常展示
-          const invs = (
-            await Promise.allSettled(
-              recordings.map((rec) => getInvestigation(rec.investigation_id)),
-            )
+          const byEvent = new Map(
+            recordings.filter((r) => r.event_id).map((r) => [r.event_id as string, r]),
           )
-            .filter((r): r is PromiseFulfilledResult<Investigation> => r.status === 'fulfilled')
-            .map((r) => r.value)
           for (const ev of events) {
-            const inv = invs.find((i) => i.event_id === ev.id && i.status === 'resolved')
-            const src = inv?.conclusion?.source_id
+            const rec = byEvent.get(ev.id)
+            const resolved = rec?.status === 'resolved'
+            const src = resolved ? (rec?.source_id ?? null) : null
             rows.push({
               event: ev,
-              sourceName: nameOf(src ?? undefined),
-              confidence: inv?.conclusion?.confidence ?? null,
-              hit: inv ? src === ev.truth_source : null,
+              sourceName: resolved ? nameOf(src ?? undefined) : null,
+              confidence: resolved ? (rec?.confidence ?? null) : null,
+              hit: rec == null ? null : resolved && src === ev.truth_source,
             })
           }
         } catch {

@@ -168,6 +168,9 @@ export interface RecordingSummary {
   station_id?: string
   indicators?: string[]
   started_at?: number // 毫秒 epoch(API 契约)
+  status?: string // resolved / failed / running
+  source_id?: string | null // 锁定的企业 id(resolved 时)
+  confidence?: number
 }
 
 export interface RecordingList {
