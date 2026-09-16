@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useWatershedStore } from '../store/watershedStore'
 import { useUiStore } from '../store/uiStore'
 import { usePlaybackStore } from '../store/playbackStore'
+import { useAlertStore } from '../store/alertStore'
 import { WatershedMap } from '../components/map/WatershedMap'
 import { DispersionLayer } from '../components/map/DispersionLayer'
 import { AlertList } from '../components/alert/AlertList'
@@ -18,11 +19,21 @@ export function DashboardPage() {
   const selectedStationId = useUiStore((s) => s.selectedStationId)
   const selectedIndicator = useUiStore((s) => s.selectedIndicator)
   const setIndicator = useUiStore((s) => s.setIndicator)
+  const selectStation = useUiStore((s) => s.selectStation)
   const toggleTypewriter = useUiStore((s) => s.toggleTypewriter)
+  const events = useAlertStore((s) => s.events)
 
   useEffect(() => {
     loadWatershed()
   }, [loadWatershed])
+
+  // 默认选中一个断面(有未处置告警的优先),避免刚进大屏底部曲线区空白
+  useEffect(() => {
+    if (!watershed || selectedStationId) return
+    const alertStation = events.find((e) => e.status !== 'resolved')?.station_id
+    const pick = alertStation ?? watershed.stations[0]?.id
+    if (pick) selectStation(pick)
+  }, [watershed, selectedStationId, events, selectStation])
 
   // 选中断面的可监测指标列表
   const indicators =
