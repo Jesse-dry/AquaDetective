@@ -60,6 +60,9 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
     // 回放态画图:横轴锁事件时间窗 + 游标竖线;animation:false 避免
     // "竖线从矮长到高""重放时从右滑到左""末尾突然加速"这类动画错觉
     const drawPlayback = (points: { ts: number; value: number }[], ind: string) => {
+      // 取 store 的最新游标:切指标走异步请求,用闭包里的旧值会让橙线先画在偏左
+      // 位置、下一 tick 才追上(表现为"切换时橙线突然往左跳")
+      const cursorMs = usePlaybackStore.getState().cursorMs
       chart.setOption({
         ...base,
         yAxis: yAxisOf(indicatorUnit(ind)),
@@ -84,7 +87,7 @@ export function SeriesChart({ stationId }: { stationId: string | null }) {
             animation: false,
             label: { show: false },
             lineStyle: { color: '#f59e0b', width: 1.5, type: 'solid' },
-            data: [{ xAxis: pbCursorMs }],
+            data: [{ xAxis: cursorMs }],
           },
         }],
       }, { notMerge: true })
