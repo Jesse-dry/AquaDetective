@@ -4,51 +4,48 @@
 <meta charset="utf-8">
 <title>AquaDetective 批量评测结果</title>
 <style>
-  /* 1280x720 深色图表页:浏览器打开后整屏截图,直接贴 PPT。
+  /* 1280x720 白底图表页:浏览器打开后整屏截图,直接贴 PPT。
      数据来自 data/processed/batch_eval_report.json(30 轮随机注入)。 */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     width: 1280px; height: 720px; overflow: hidden;
-    background: #0b1220; color: #e2e8f0;
+    background: #ffffff; color: #1e293b;
     font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
     padding: 44px 56px; display: flex; flex-direction: column;
   }
-  .head { margin-bottom: 28px; }
-  .head h1 { font-size: 30px; font-weight: 700; letter-spacing: .5px; }
-  .head h1 span { color: #38bdf8; }
-  .head p { margin-top: 8px; font-size: 15px; color: #94a3b8; }
+  .head { margin-bottom: 26px; }
+  .head h1 { font-size: 30px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+  .head h1 span { color: #0284c7; }
+  .head p { margin-top: 8px; font-size: 15px; color: #64748b; }
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
   .kpi {
-    border: 1px solid #1f2c4a; border-radius: 12px; background: #0f172a;
+    border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc;
     padding: 20px 22px; position: relative; overflow: hidden;
   }
-  .kpi::after {
-    content: ""; position: absolute; left: 0; top: 0; width: 4px; height: 100%;
-    background: #38bdf8;
-  }
-  .kpi .v { font-size: 46px; font-weight: 700; color: #38bdf8; line-height: 1; }
+  .kpi::after { content: ""; position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: #0284c7; }
+  .kpi .v { font-size: 46px; font-weight: 700; color: #0284c7; line-height: 1; }
   .kpi .v small { font-size: 22px; margin-left: 2px; }
-  .kpi .k { margin-top: 10px; font-size: 14px; color: #94a3b8; }
-  .kpi.alt .v { color: #22c55e; } .kpi.alt::after { background: #22c55e; }
-  .kpi.warn .v { color: #f59e0b; } .kpi.warn::after { background: #f59e0b; }
-  .body { flex: 1; display: grid; grid-template-columns: 1.05fr .95fr; gap: 34px; margin-top: 30px; }
-  h2 { font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 16px; }
-  h2 em { font-style: normal; color: #64748b; font-size: 13px; margin-left: 8px; }
+  .kpi .k { margin-top: 10px; font-size: 14px; color: #64748b; }
+  .kpi.alt .v { color: #16a34a; } .kpi.alt::after { background: #16a34a; }
+  .body { flex: 1; display: grid; grid-template-columns: 1.05fr .95fr; gap: 34px; margin-top: 28px; }
+  h2 { font-size: 16px; font-weight: 600; color: #334155; margin-bottom: 16px; }
+  h2 em { font-style: normal; color: #94a3b8; font-size: 13px; margin-left: 8px; }
   .bars { display: flex; flex-direction: column; gap: 18px; }
   .bar-row { display: grid; grid-template-columns: 92px 1fr 54px; align-items: center; gap: 12px; }
-  .bar-row .lbl { font-size: 14px; color: #cbd5e1; }
-  .bar-track { height: 22px; background: #111c33; border-radius: 6px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 6px; }
-  .bar-row .num { font-size: 15px; font-weight: 600; text-align: right; color: #e2e8f0; }
-  .notes { margin-top: 22px; border-top: 1px solid #1f2c4a; padding-top: 16px; }
-  .notes li { list-style: none; font-size: 13px; color: #94a3b8; line-height: 1.9; }
-  .notes li b { color: #cbd5e1; font-weight: 600; }
+  .bar-row .lbl { font-size: 14px; color: #334155; }
+  /* 关键:span 默认 inline,必须 block 才能让 width/height 生效 */
+  .bar-track { display: block; height: 22px; background: #eef2f7; border-radius: 6px; overflow: hidden; }
+  .bar-fill { display: block; height: 100%; border-radius: 6px; }
+  .bar-row .num { font-size: 15px; font-weight: 600; text-align: right; color: #0f172a; }
+  .notes { margin-top: 22px; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+  .notes li { list-style: none; font-size: 13px; color: #64748b; line-height: 1.9; }
+  .notes li b { color: #334155; font-weight: 600; }
   .funnel { display: flex; flex-direction: column; gap: 10px; }
   .fstep { display: flex; align-items: center; gap: 12px; }
-  .fstep .n { width: 44px; text-align: right; font-size: 17px; font-weight: 700; color: #38bdf8; }
-  .fstep .t { flex: 1; font-size: 13px; color: #cbd5e1; }
-  .fstep .track { flex: 2; height: 12px; background: #111c33; border-radius: 4px; overflow: hidden; }
-  .fstep .fill { height: 100%; background: linear-gradient(90deg, #0ea5e9, #38bdf8); border-radius: 4px; }
+  .fstep .n { width: 44px; text-align: right; font-size: 17px; font-weight: 700; color: #0284c7; }
+  .fstep .t { flex: 1; font-size: 13px; color: #334155; }
+  .fstep .track { display: block; flex: 2; height: 12px; background: #eef2f7; border-radius: 4px; overflow: hidden; }
+  .fstep .fill { display: block; height: 100%; background: linear-gradient(90deg, #0284c7, #38bdf8); border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -70,17 +67,17 @@
       <div class="bars">
         <div class="bar-row">
           <span class="lbl">突发泄漏</span>
-          <span class="bar-track"><span class="bar-fill" style="width:90%;background:linear-gradient(90deg,#0ea5e9,#38bdf8)"></span></span>
+          <span class="bar-track"><span class="bar-fill" style="width:90%;background:linear-gradient(90deg,#0284c7,#38bdf8)"></span></span>
           <span class="num">90%</span>
         </div>
         <div class="bar-row">
           <span class="lbl">夜间偷排</span>
-          <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#0ea5e9,#38bdf8)"></span></span>
+          <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#0284c7,#38bdf8)"></span></span>
           <span class="num">80%</span>
         </div>
         <div class="bar-row">
           <span class="lbl">逐渐恶化</span>
-          <span class="bar-track"><span class="bar-fill" style="width:60%;background:linear-gradient(90deg,#b45309,#f59e0b)"></span></span>
+          <span class="bar-track"><span class="bar-fill" style="width:60%;background:linear-gradient(90deg,#d97706,#f59e0b)"></span></span>
           <span class="num">60%</span>
         </div>
       </div>
