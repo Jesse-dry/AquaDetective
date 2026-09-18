@@ -2,17 +2,24 @@
 from __future__ import annotations
 
 import json
+import re
 from contextlib import closing
 from statistics import median
-from uuid import uuid4
 
 import numpy as np
 
 from ..db import get_conn
-from ..engine.anomaly import detect
+from ..engine.anomaly import detect, significant
 
 
 METHODS = {"cusum", "ewma", "threesigma", "seasonal"}
+_SCAN_ID_RE = re.compile(r"^evt_scan_(\d+)$")
+
+
+def _next_scan_seq(conn) -> int:
+    rows = conn.execute("SELECT id FROM events WHERE id LIKE 'evt_scan_%'").fetchall()
+    return max((int(m.group(1)) for row in rows
+                if (m := _SCAN_ID_RE.match(row["id"]))), default=0) + 1
 
 
 def scan(db_path: str, ws: dict, window_h: int = 24, method: str = "cusum", *,
@@ -28,6 +35,7 @@ def scan(db_path: str, ws: dict, window_h: int = 24, method: str = "cusum", *,
               "insufficient_series": 0, "extended_series": 0, "latest_data_ts": None}
     with closing(get_conn(db_path)) as conn, conn:
         conn.execute("BEGIN IMMEDIATE")
+        seq = _next_scan_seq(conn)
         for st in ws["stations"]:
             for ind in st["indicators"]:
                 tail = conn.execute(
@@ -68,7 +76,7 @@ def scan(db_path: str, ws: dict, window_h: int = 24, method: str = "cusum", *,
                     result["insufficient_series"] += 1
                     continue
                 kw = {"period": period} if method == "seasonal" else {}
-                anomalies = detect(x, ts, method=method, **kw)
+                anomalies = significant(detect(x, ts, method=method, **kw), x)
                 result["scanned_series"] += 1
                 for anomaly in anomalies:
                     onset = int(anomaly["ts"])
@@ -85,7 +93,8 @@ def scan(db_path: str, ws: dict, window_h: int = 24, method: str = "cusum", *,
                         (st["id"], onset - 48 * 3600, onset + 48 * 3600)).fetchall()
                     if any(ind in json.loads(row["indicators"]) for row in existing):
                         continue
-                    ev_id = f"evt_{uuid4().hex[:12]}"
+                    ev_id = f"evt_scan_{seq:03d}"
+                    seq += 1
                     conn.execute(
                         "INSERT INTO events "
                         "(id,station_id,indicators,onset_ts,severity,etype,truth_source,status) "

@@ -87,6 +87,7 @@ app/
 | GET | /events?status= | 污染事件列表 |
 | POST | /monitor/scan | 立即扫描水质时序并生成告警 |
 | GET | /monitor/status | 定时监测配置、运行状态和最近结果 |
+| POST | /monitor/config | 暂停/恢复巡检，调整间隔、窗口和检测方法 |
 | POST | /events/{id}/investigate | 触发溯源调查 |
 | GET | /investigations/{id} | 调查状态 |
 | GET | /investigations/{id}/report | Markdown 报告 |
@@ -99,11 +100,11 @@ app/
 
 ## 监测运行
 
-告警面板的“立即扫描”调用 `POST /api/v1/monitor/scan`，无需请求体。扫描生成
+大屏监测状态条的“立即扫描”调用 `POST /api/v1/monitor/scan`，无需请求体。扫描生成
 `etype=detected`、`truth_source=NULL` 的事件，刷新后可点击“开始侦查”。监测不调用
 LLM，也不会自动发起调查。Mock 模式禁用扫描按钮。
 
-默认仅手动扫描。后台定时扫描在 `backend/.env` 配置后重启服务：
+默认启用定时扫描，可在状态条暂停/恢复。持久配置在 `backend/.env` 配置后重启服务：
 
 ```dotenv
 AQ_MONITOR_ENABLED=true
@@ -112,7 +113,10 @@ AQ_MONITOR_WINDOW_H=24
 AQ_MONITOR_METHOD=cusum
 ```
 
-启用后在服务启动时扫描一次，此后每次完成后等待指定间隔；关闭服务时停止任务。
+启用后首次等待指定间隔，此后每次完成后等待指定间隔；关闭服务时停止任务。
+`POST /api/v1/monitor/config` 可调整 enabled、interval_s、window_h 和 method；
+运行时配置仅在当前进程生效，重启后恢复环境配置。状态条显示倒计时、累计检出、
+最近告警及数据时间。running 表示正在扫描，scheduler_running 表示调度线程存活。
 方法支持 `cusum`、`ewma`、`threesigma`、`seasonal`。建议单个 Uvicorn worker 运行
 定时任务；多个 worker 各自维护调度和状态，但 SQLite 事务可避免重复写入告警。
 

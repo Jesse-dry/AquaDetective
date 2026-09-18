@@ -10,6 +10,7 @@ import { AlertList } from '../components/alert/AlertList'
 import { ReasoningPanel } from '../components/reasoning/ReasoningPanel'
 import { SeriesChart } from '../components/charts/SeriesChart'
 import { ScenarioBar } from '../components/demo/ScenarioBar'
+import { MonitorBar } from '../components/demo/MonitorBar'
 import { stationLabel, indicatorLabel } from '../utils/labels'
 
 // 大屏主页:左告警 / 中地图 / 右推理 / 底部曲线
@@ -63,6 +64,8 @@ export function DashboardPage() {
           <ScenarioBar />
         </div>
       </header>
+
+      <MonitorBar />
 
       {/* 左栏放宽到 340px:告警卡片的"事件N"与右侧类型/严重度能排在同一行 */}
       <main className="grid min-h-0 flex-1 grid-cols-[330px_1fr_380px] gap-2 p-2">

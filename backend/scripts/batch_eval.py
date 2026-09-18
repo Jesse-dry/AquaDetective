@@ -10,7 +10,9 @@
 设计要点:
 - 评测走与线上完全相同的调查链路(节点函数直调,LLM=None 模板降级,无副作用落盘)
 - 真值隔离:调查引擎只拿观测数据,truth_source 仅在本脚本内做对答案
-- 每轮注入后回滚 readings(避免污染叠加影响后续轮次)
+- 全程在演示库的**副本**上跑(注入会写 readings),演示库保持干净可复现
+- 检出率口径:注入时点落在监测扫描窗口(最近 24h)内,且以真实首达断面是否被
+  检出为准(不是"扫到了任何东西")
 
 用法:
     python scripts/batch_eval.py [轮数]   # 默认 12 轮
@@ -18,7 +20,10 @@
 from __future__ import annotations
 
 import json
+import sqlite3
+from contextlib import closing
 import sys
+import tempfile
 import time
 from pathlib import Path
 from uuid import uuid4
@@ -66,14 +71,39 @@ def run_investigation(event_row: dict, db: str, ws: dict) -> dict:
     return state
 
 
-def main(rounds: int = 12) -> None:
+def _copy_database(source: str, target: str) -> None:
+    """SQLite backup includes committed WAL pages, unlike copying the main file."""
+    with closing(sqlite3.connect(source)) as src, closing(sqlite3.connect(target)) as dst:
+        src.backup(dst)
+
+
+def main(rounds: int = 12, output_path: Path | None = None) -> None:
+    if rounds < 1:
+        raise ValueError("rounds must be positive")
     ensure_db(settings)
-    db, ws = get_db_path(), get_watershed()
+    with tempfile.TemporaryDirectory(prefix="aqua_eval_") as directory:
+        baseline = str(Path(directory) / "baseline.db")
+        db = str(Path(directory) / "round.db")
+        _copy_database(get_db_path(), baseline)
+        # Existing detected events must not suppress the injected test events.
+        with closing(get_conn(baseline)) as conn, conn:
+            conn.execute("DELETE FROM event_observations WHERE event_id IN "
+                         "(SELECT id FROM events WHERE etype='detected')")
+            conn.execute("DELETE FROM investigations WHERE event_id IN "
+                         "(SELECT id FROM events WHERE etype='detected')")
+            conn.execute("DELETE FROM events WHERE etype='detected'")
+            conn.execute("DELETE FROM monitor_cursors")
+        _copy_database(baseline, db)
+        _evaluate(rounds, baseline, db, output_path)
+
+
+def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> None:
+    ws = get_watershed()
     rng = np.random.default_rng(42)
 
     # 注入时间轴:与 seed 完全一致的全程 t_min(相对分钟,0 起,15min 步长)。
     # apply_event 的 onset_day 是数组下标基准(onset_day*96),必须用全程序列;
-    # onset 只随机在末段 20 天(避开预置事件,留传播余量)
+    # onset 位于末日，与最近 24 小时扫描窗口一致。
     conn = get_conn(db)
     ts_max = conn.execute("SELECT MAX(ts) FROM readings").fetchone()[0]
     total_min = (ts_max - T0) // 60
@@ -83,24 +113,37 @@ def main(rounds: int = 12) -> None:
 
     ents = [e for e in ws["enterprises"]]
     results = []
-    print(f"===== 批量评测: {rounds} 轮(注入窗口: 末段 20 天)=====")
+    print(f"===== 批量评测: {rounds} 轮(注入窗口: 最近 24h)=====")
 
     for i in range(rounds):
+        # Restore the same baseline each round; injected readings never accumulate.
+        _copy_database(baseline, db)
         etype = ETYPES[i % len(ETYPES)]
         sev = SEVERITIES[i % len(SEVERITIES)]
         ent = ents[int(rng.integers(len(ents)))]
-        # onset_day:数据起点起的绝对天数,随机在末段 15 天(留 5 天传播余量)
-        onset_day = last_day - 15 + int(rng.integers(0, 15))
+        # onset_day:必须落在监测扫描窗口(最近 24h)内,否则测的不是检出能力
+        onset_day = last_day
 
         spec = {"etype": etype, "source_id": ent["id"], "severity": sev,
                 "onset_day": onset_day, "duration_d": 3}
         if etype == "sudden":
             spec["mass_kg"] = 80.0
 
-        # 注入 → 生成事件行(告警断面 = 真实首达断面,与 seed 相同逻辑)
+        # 注入时序(告警断面 = 真实首达断面,与 seed 相同逻辑)
         conn = get_conn(db)
         apply_event(conn, ws, spec, t_min, rng)
+        conn.commit()
+        conn.close()
         alert = alert_station_for(ws, ent["id"]) or ws["stations"][0]["id"]
+
+        # 监测 Agent 扫描:线上告警由它产生,故注入后先扫再建事件行。
+        # 检出率口径 = 真实首达断面出现在本轮新告警里(而非"扫到了任何东西")
+        detected = scan_for_events(db, ws, window_h=24)
+        hit = any(d["station_id"] == alert for d in detected)
+
+        # 清掉本轮监测告警,再用同一断面建调查用事件行(走与线上一致的调查链路)
+        conn = get_conn(db)
+        conn.execute("DELETE FROM events WHERE id LIKE 'evt_scan_%'")
         ev_id = f"evalevt_{i:03d}"
         # onset 绝对时间 = T0 + 相对分钟×60(与 readings.ts 同基准)
         onset_ts = T0 + spec["onset_day"] * 1440 * 60
@@ -113,9 +156,6 @@ def main(rounds: int = 12) -> None:
         upsert_event_observation(conn, ws, ev_id, alert, ent["id"], 42 + i)
         conn.commit()
         conn.close()
-
-        # 监测 Agent 扫描(预警检出率口径:窗口内该断面出现新告警)
-        detected = scan_for_events(db, ws, window_h=24)
 
         # 完整调查(与线上同链路)
         conn = get_conn(db)
@@ -146,7 +186,7 @@ def main(rounds: int = 12) -> None:
         results.append({
             "round": i + 1, "etype": etype, "severity": sev,
             "truth": ent["id"], "truth_name": ent["name"],
-            "alert_station": alert, "detected": bool(detected),
+            "alert_station": alert, "detected": hit,
             "n_hypotheses": len(hyps),
             "recall_upstream": truth in [h["target_id"] for h in hyps],
             "rank": rank,
@@ -163,7 +203,7 @@ def main(rounds: int = 12) -> None:
               f"排名={rank or '-'} 锁定={'✓' if r['locked'] else '✗'} "
               f"conf={r['confidence']:.2f} 传播={r['travel_err_h']}h {r['duration_s']}s")
 
-        # 回滚:删除评测事件行与事件观测(readings 增量下轮叠加影响可忽略,每轮窗口独立)
+        # 清理本轮事件；下一轮会从基线恢复全部 readings。
         conn = get_conn(db)
         conn.execute("DELETE FROM events WHERE id=?", (ev_id,))
         conn.execute("DELETE FROM event_observations WHERE event_id=?", (ev_id,))
@@ -204,13 +244,21 @@ def main(rounds: int = 12) -> None:
             continue
         t1 = sum(r["top1"] for r in sub)
         lk = sum(r["locked"] for r in sub)
-        print(f"{et:8s}: Top-1 {t1}/{len(sub)} ({t1/len(sub):.0%}), "
+        de = sum(r["detected"] for r in sub)
+        print(f"{et:8s}: 检出 {de}/{len(sub)} ({de/len(sub):.0%}), "
+              f"Top-1 {t1}/{len(sub)} ({t1/len(sub):.0%}), "
               f"锁定 {lk}/{len(sub)} ({lk/len(sub):.0%})")
 
     # 落盘评测报告
     out = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "rounds": n,
+        "methodology": {
+            "round_isolation": "SQLite backup restored before every injection",
+            "detection": "First arrival station appears in new alerts within the latest 24 hours",
+            "investigation": "All injected events investigated independently of detection",
+            "sampling": "Seed 42; random enterprise; cyclic type/severity pairs",
+        },
         "summary": {
             "detection_rate": detected_n / n,
             "upstream_recall": recall_up / n,
@@ -224,11 +272,10 @@ def main(rounds: int = 12) -> None:
         },
         "results": results,
     }
-    out_path = BACKEND.parent / "data" / "processed" / "batch_eval_report.json"
+    out_path = output_path or BACKEND.parent / "data" / "processed" / "batch_eval_report.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n评测报告已写入: {out_path}")
-
 
 if __name__ == "__main__":
     main(int(sys.argv[1]) if len(sys.argv) > 1 else 12)

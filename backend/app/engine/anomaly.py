@@ -33,6 +33,40 @@ def _pack(x, ts, idx, baseline, z) -> list[dict]:
     return out
 
 
+def _resolution(x: np.ndarray) -> float:
+    """推断数据的量化分辨率(最小非零相邻差值);无法推断时返回 0(该项门槛不生效)。"""
+    u = np.unique(np.round(x, 6))
+    d = np.diff(u)
+    d = d[d > 0]
+    return float(d.min()) if len(d) else 0.0
+
+
+def significant(anoms: list[dict], x: np.ndarray, min_rel_rise: float = 0.2,
+                min_snr: float = 3.0, min_res_mult: float = 5.0) -> list[dict]:
+    """从检出中筛出"值得报警"的:统计显著不等于物理有意义。
+
+    低浓度指标的读数常被量化成少数几档(如 cr6 只有 0.002/0.003/0.004),
+    此时稳健标准差退化为 0,CUSUM 的 z 值虚高,会出现"涨了 0.001 mg/L 也判高风险"
+    的误报。故要求同时满足两条:
+    1. 事件峰值偏离 >= max(min_snr × 基线稳健标准差, min_res_mult × 量化分辨率)
+    2. 峰值相对基线涨幅 >= min_rel_rise
+
+    幅度取**触发点之后窗口内的峰值**,而非触发点本身:变点检测报的是变化起始处,
+    那一刻幅度还很小,拿它判幅度会把真实污染也一并抑制掉。
+    """
+    if not anoms:
+        return []
+    floor = max(min_snr * _robust_sigma(x), min_res_mult * _resolution(x))
+    out = []
+    for a in anoms:
+        i = int(a.get("idx", 0))
+        base = float(a["baseline"])
+        peak = float(np.max(np.abs(x[i:] - base))) if i < len(x) else 0.0
+        if peak >= floor and peak / max(abs(base), 1e-9) >= min_rel_rise:
+            out.append(a)
+    return out
+
+
 def _rolling_stats(x: np.ndarray, window: int) -> tuple[np.ndarray, np.ndarray]:
     w = np.lib.stride_tricks.sliding_window_view(x, window)
     m = w.mean(axis=1)

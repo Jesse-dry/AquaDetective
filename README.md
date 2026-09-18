@@ -26,7 +26,7 @@ AquaDetective 是一个面向流域水环境管理的智能体系统，模拟真
 |---|---|
 | 🕵️ 侦探式溯源推理 | 假设生成 → 工具验证 → 排除/锁定，每步产出"线索→推理→证据"三元组，流式推送到前端 |
 | 🧬 水质双指纹 | EEM 荧光光谱指纹 + 特征污染物比例指纹（一厂一谱），双通道比对打分 |
-| 🤖 多智能体协作 | 监测 / 溯源侦探 / 法规 / 处置 / 报告 五个 Agent，LangGraph 状态机编排 |
+| 🤖 多智能体协作 | 监测 / 溯源侦探 / 法规 / 处置 / 报告 五个 Agent。监测 Agent 后台定时扫描断面时序自动生成告警(大屏状态条可见可暂停),其余四个由 LangGraph 状态机编排 |
 | 🛡️ 防幻觉护城河 | 数值全部来自确定性引擎（NumPy/SciPy/NetworkX），LLM 无编造数据的工具 |
 | 📡 流式推理展示 | WebSocket 实时推送 6 类消息（step/hypothesis/agent_talk/conclusion/failed/report_ready） |
 | 🎲 可复现演示 | 模拟数据同 seed 逐字节可复现，一键重置世界，现场注入任意事件 |
@@ -42,9 +42,9 @@ AquaDetective 是一个面向流域水环境管理的智能体系统，模拟真
 ├─────────────────────────────────────────────────────┤
 │  API 层  FastAPI:REST 端点 + WebSocket 推理流         │
 ├─────────────────────────────────────────────────────┤
-│  Agent 层  LangGraph 侦探式状态机                     │
-│    监测Agent → 溯源Agent(侦探主编排) → 法规Agent        │
-│    → 处置Agent → 报告Agent                            │
+│  Agent 层  监测Agent(后台定时扫描 → 生成告警事件)       │
+│    LangGraph 侦探式状态机:溯源Agent(侦探主编排)          │
+│    → 法规Agent → 处置Agent → 报告Agent                 │
 │    推理状态: parse → 假设生成 → 证据校核循环 → 排除/锁定  │
 ├─────────────────────────────────────────────────────┤
 │  计算引擎  确定性纯函数(LLM 不可触碰)                  │
@@ -173,6 +173,23 @@ AQ_LLM_COMPLIANCE_MODEL=qwen2.5:7b
 未填写的字段自动回落到全局默认值；**一项都不配时，各 Agent 与全局配置完全一致**（即维持现状）。
 实现见 `backend/app/config.py` 的 `llm_profile(agent)` 与 `backend/app/context.py` 的 `get_llm(agent)`。
 
+### 监测 Agent 配置（可选）
+
+监测 Agent 在服务启动时拉起一个后台任务，按固定间隔扫描全部断面的最近时序，
+检出异常即生成待溯源事件（`evt_scan_NNN`，真值未知）。大屏顶部状态条可看运行状态、
+手动触发扫描、随时暂停巡检。
+
+```env
+AQ_MONITOR_ENABLED=1      # 是否启用后台定时扫描(默认 1)
+AQ_MONITOR_INTERVAL_S=300 # 扫描间隔秒数(默认 300,最小 30)
+AQ_MONITOR_WINDOW_H=24    # 每次扫描回看的窗口小时数(默认 24)
+```
+
+报警判定有两条门槛（`backend/app/engine/anomaly.py` 的 `significant`）：
+峰值偏离须超过「3×基线稳健标准差」与「5×量化分辨率」的较大者，且相对基线涨幅 ≥20%。
+第二条门槛用于排除量化噪声误报——低浓度指标（如 Cr⁶⁺ 只有 0.002/0.003/0.004 三档）
+会让稳健标准差退化为 0，使 CUSUM 的 z 值虚高，从而在毫无意义的 0.001 mg/L 波动上报警。
+
 ### 快速体验（不启动服务）
 
 ```bash
@@ -195,19 +212,28 @@ python scripts/smoke_investigate.py evt_001
 
 ## 验证结果
 
-- 引擎单测 **27/27 通过**(异常检测/扩散/指纹/拓扑/规律/数据生成/数据导入,含真值隔离与边界用例)
+- 引擎单测 **29/29 通过**(异常检测/扩散/指纹/拓扑/规律/数据生成,含真值隔离与边界用例;
+  另有 3 个数据导入用例依赖 pytest 的 `tmp_path`,需用 pytest 运行)
 - 模拟观测先独立落库，调查引擎不读取 `truth_source`；真值只用于调查结束后的评测
 - 三条预置事件全部正确锁定真凶：**耀光金属 78% / 恒泰化工 79% / 城东污水厂 77%**(模板推理模式实测)
 - 批量评测(`python scripts/batch_eval.py`，30 轮随机注入，报告见 `data/processed/batch_eval_report.json`)：
 
   | 指标 | 结果 |
   |---|---|
-  | 预警检出率 | **100%**(30/30) |
+  | 预警检出率 | **20%**(6/30) |
   | 上游候选召回率 | **87%**(26/30) |
-  | Top-1 / Top-3 命中率 | **77%** / **87%** |
-  | MRR | **0.806** |
+  | Top-1 / Top-3 命中率 | **73%** / **87%** |
+  | 最终锁定命中率 | **73%**(22/30) |
+  | MRR | **0.789** |
   | 传播时间误差(均值/最大) | **0.04h / 0.10h** |
-  | 分类型 Top-1 | sudden 90% / periodic 80% / gradual 60% |
+  | 分类型检出率 | sudden 60% / periodic 0% / gradual 0% |
+  | 分类型 Top-1 | sudden 80% / periodic 60% / gradual 80% |
+
+  > 检出率口径:注入时点落在监测扫描窗口(最近 24h)内,以**真实首达断面是否被检出**为准。
+  > 早期版本该指标写作 100%,是把"扫到了任何告警"当成命中、且注入时点常在窗口外所致;
+  > 同期监测 Agent 还会在量化噪声上误报(已由 `engine.anomaly.significant` 门槛修复)。
+  > 合并复测逐轮恢复 SQLite 基线，避免污染累积，检出率由旧报告的 73% 降至 20%。
+  > 24h 窗口下周期性、渐变检测仍需改进；以上溯源排名对全部注入事件单独计算，并非自动检出后的端到端成功率。
 
 - LangGraph 状态机接线验证通过(7 超步全链路：解析 → 假设 → 校核 → 结论 → 法规 → 处置 → 报告)
 - 端到端 API 实测通过：事件注入、世界重置、WS 流式推送、调查回放、报告生成、注入事件删除
@@ -337,6 +363,7 @@ AquaDetective/
 | GET | `/events?status=` | 污染事件列表（告警面板） |
 | POST | `/monitor/scan` | 立即扫描观测并生成监测告警 |
 | GET | `/monitor/status` | 监测配置、运行状态与最近结果 |
+| POST | `/monitor/config` | 暂停/恢复及运行时监测参数 |
 | POST | `/events/{id}/investigate` | 触发溯源调查 |
 | GET | `/investigations/{id}` | 调查状态与推理记录 |
 | GET | `/investigations/{id}/report` | Markdown 溯源报告 |
@@ -346,6 +373,9 @@ AquaDetective/
 | GET | `/recordings` | 历史调查列表(附事件摘要) |
 | GET | `/recordings/{id}` | 单条录音 stream(回放) |
 | DELETE | `/recordings/{id}` | 删除历史录音 |
+| GET | `/monitor/status` | 监测 Agent 运行状态(状态条轮询) |
+| POST | `/monitor/scan` | 立即执行一次断面异常扫描 |
+| POST | `/monitor/config` | 调整监测开关/间隔/窗口 |
 | WS | `/ws?investigation_id=` | 推理过程流式推送 |
 
 ## 技术栈

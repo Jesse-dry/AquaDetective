@@ -50,50 +50,50 @@
 <body>
   <div class="head">
     <h1>批量评测 · 30 轮<span>随机事件注入</span></h1>
-    <p>企业、事件类型、严重度、发生时间全部随机 | 调查引擎不读取真值,评测时对答案</p>
+    <p>企业随机 · 类型/严重度固定轮换 · 末日注入 · 每轮恢复基线 | 调查引擎不读取真值</p>
   </div>
 
   <div class="kpis">
-    <div class="kpi"><div class="v">100<small>%</small></div><div class="k">预警检出率</div></div>
-    <div class="kpi"><div class="v">77<small>%</small></div><div class="k">Top-1 命中率</div></div>
+    <div class="kpi"><div class="v">20<small>%</small></div><div class="k">预警检出率</div></div>
+    <div class="kpi"><div class="v">73<small>%</small></div><div class="k">Top-1 命中率</div></div>
     <div class="kpi alt"><div class="v">87<small>%</small></div><div class="k">Top-3 命中率</div></div>
-    <div class="kpi alt"><div class="v">0.806</div><div class="k">MRR(平均倒数排名)</div></div>
+    <div class="kpi alt"><div class="v">0.789</div><div class="k">MRR(平均倒数排名)</div></div>
   </div>
 
   <div class="body">
     <div>
-      <h2>按事件类型的 Top-1 命中率 <em>分类型分层统计</em></h2>
+      <h2>按事件类型的 Top-1 命中率 <em>分类型分层统计(检出率 突发60% / 偷排0% / 渐变0%)</em></h2>
       <div class="bars">
         <div class="bar-row">
           <span class="lbl">突发泄漏</span>
-          <span class="bar-track"><span class="bar-fill" style="width:90%;background:linear-gradient(90deg,#0284c7,#38bdf8)"></span></span>
-          <span class="num">90%</span>
-        </div>
-        <div class="bar-row">
-          <span class="lbl">夜间偷排</span>
           <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#0284c7,#38bdf8)"></span></span>
           <span class="num">80%</span>
         </div>
         <div class="bar-row">
-          <span class="lbl">逐渐恶化</span>
-          <span class="bar-track"><span class="bar-fill" style="width:60%;background:linear-gradient(90deg,#d97706,#f59e0b)"></span></span>
+          <span class="lbl">夜间偷排</span>
+          <span class="bar-track"><span class="bar-fill" style="width:60%;background:linear-gradient(90deg,#0284c7,#38bdf8)"></span></span>
           <span class="num">60%</span>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">逐渐恶化</span>
+          <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#d97706,#f59e0b)"></span></span>
+          <span class="num">80%</span>
         </div>
       </div>
       <ul class="notes">
         <li>· 传播时间误差:<b>均值 0.04h / 最大 0.10h</b>(30/30 有效样本)</li>
-        <li>· 上游候选召回率 <b>87%</b>,最终锁定命中率 <b>70%</b></li>
-        <li>· 逐渐恶化类型偏弱:缓慢爬坡下指纹区分度低,是已知调优方向</li>
+        <li>· 上游候选召回率 <b>87%</b>,最终锁定命中率 <b>73%</b></li>
+        <li>· 逐轮恢复基线后检出20%：周期性/渐变检测待改进</li>
       </ul>
     </div>
     <div>
-      <h2>30 轮漏斗 <em>从注入到锁定</em></h2>
+      <h2>30 轮指标 <em>检测与调查分别统计</em></h2>
       <div class="funnel">
         <div class="fstep"><span class="n">30</span><span class="t">注入随机事件</span><span class="track"><span class="fill" style="width:100%"></span></span></div>
-        <div class="fstep"><span class="n">30</span><span class="t">预警检出</span><span class="track"><span class="fill" style="width:100%"></span></span></div>
+        <div class="fstep"><span class="n">6</span><span class="t">预警检出</span><span class="track"><span class="fill" style="width:20%"></span></span></div>
         <div class="fstep"><span class="n">26</span><span class="t">真凶进入上游候选</span><span class="track"><span class="fill" style="width:87%"></span></span></div>
-        <div class="fstep"><span class="n">23</span><span class="t">排名第一</span><span class="track"><span class="fill" style="width:77%"></span></span></div>
-        <div class="fstep"><span class="n">21</span><span class="t">置信度达标并锁定</span><span class="track"><span class="fill" style="width:70%"></span></span></div>
+        <div class="fstep"><span class="n">22</span><span class="t">排名第一</span><span class="track"><span class="fill" style="width:73%"></span></span></div>
+        <div class="fstep"><span class="n">22</span><span class="t">置信度达标并锁定</span><span class="track"><span class="fill" style="width:73%"></span></span></div>
       </div>
       <ul class="notes">
         <li>· 评测脚本:<b>backend/scripts/batch_eval.py</b>,可复跑</li>

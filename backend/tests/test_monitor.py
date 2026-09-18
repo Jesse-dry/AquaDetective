@@ -171,7 +171,20 @@ def test_api_creates_visible_events_and_uses_milliseconds(source, monkeypatch):
         assert event["onset_ts"] == result["events"][0]["ts"]
         status = client.get("/api/v1/monitor/status").json()
         assert status["last_finished_at"] > 1e12
-        assert status["last_result"] == result
+        assert status["last_result"] == {key: result[key] for key in status["last_result"]}
+        assert result["created"] == result["events"]
+        assert result["count"] == result["created_count"]
+        assert status["recent"][0]["ts"] == event["onset_ts"]
+        assert event["id"] == "evt_scan_001"
+        assert status["scheduler_running"]
+        enabled = client.post("/api/v1/monitor/config", json={"enabled": True, "interval_s": 10})
+        assert enabled.status_code == 200
+        assert enabled.json()["next_scan_ms"] > enabled.json()["server_ms"]
+        paused = client.post("/api/v1/monitor/config", json={"enabled": False}).json()
+        assert paused["next_scan_ms"] is None
+        assert not paused["enabled"]
+        for config in ({"interval_s": 0}, {"window_h": 0}, {"method": "unknown"}):
+            assert client.post("/api/v1/monitor/config", json=config).status_code == 422
         service = main.app.state.monitor
         service._lock.acquire()
         try:
@@ -228,3 +241,27 @@ def test_scan_failure_releases_lock_and_exposes_status(source, monkeypatch):
             service.run()
     finally:
         service._lock.release()
+
+
+def test_scheduler_can_be_enabled_after_disabled_start(source, monkeypatch):
+    db, ws = source
+    service = MonitorService(db, lambda: ws, enabled=False, interval_s=0.01)
+    scanned = threading.Event()
+    module = importlib.import_module("app.monitoring")
+    original = module.scan
+
+    def record_scan(*args, **kwargs):
+        result = original(*args, **kwargs)
+        scanned.set()
+        return result
+
+    monkeypatch.setattr(module, "scan", record_scan)
+    service.start()
+    try:
+        assert not scanned.wait(0.15)
+        service.configure(enabled=True)
+        assert scanned.wait(2)
+        service.configure(enabled=False)
+        assert service.status()["next_scan_at"] is None
+    finally:
+        service.stop()

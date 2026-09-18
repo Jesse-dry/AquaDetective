@@ -1,13 +1,15 @@
 // 通俗化显示标签:面向普通观众,把内部 id/编码转成中文可读名
 // 只影响展示,不改变任何数据
 
-/** evt_001 → 事件1;evt_inj_001 → 现场注入1;其他原样返回 */
+/** evt_001 → 事件1;evt_inj_001 → 现场注入1;evt_scan_001 → 监测告警1;其他原样返回 */
 export function eventLabel(id: string): string {
+  const scan = id.match(/^evt_scan_0*(\d+)$/i)
+  if (scan) return `监测告警${Number(scan[1])}`
   const inj = id.match(/^evt_inj_0*(\d+)$/i)
   if (inj) return `现场注入${Number(inj[1])}`
   const m = id.match(/^evt_?0*(\d+)$/i)
   if (m) return `事件${Number(m[1])}`
-  // 其余 evt_ 前缀(监测自动生成等),可读兜底
+  // 其余 evt_ 前缀,可读兜底
   if (/^evt_/i.test(id)) return '监测告警'
   return id
 }
