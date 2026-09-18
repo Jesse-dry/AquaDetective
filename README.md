@@ -79,8 +79,19 @@ AquaDetective 是一个面向流域水环境管理的智能体系统，模拟真
 
 ### 环境要求
 
-- Python 3.11+
+- Python **3.11+**、Node 18+
 - 依赖：fastapi、uvicorn、langgraph、numpy、scipy、networkx、pydantic-settings（见 `backend/pyproject.toml`）
+
+**macOS 注意**：系统只自带 `python3`（版本 3.9，**不满足 3.11+**），且没有 `python` / `pip`
+命令——它们只存在于虚拟环境里。所以要么 `brew install python@3.12`，要么按下面的步骤建 venv。
+`./start_demo.sh` 会自动探测可用的解释器（优先项目内 `.venv`，其次 `python3`），
+版本不够时会直接给出提示，不会跑到一半才报错。
+
+```bash
+# macOS 首次准备(建 venv 后,venv 里才有 python / pip)
+brew install python@3.12          # 或从 python.org 装 3.12
+cd backend && python3.12 -m venv .venv && source .venv/bin/activate
+```
 
 ### 启动后端
 
