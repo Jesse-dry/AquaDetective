@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8000
 
+    # 监测 Agent(后台定时扫描断面时序,自动生成待溯源事件)
+    monitor_enabled: bool = True
+    monitor_interval_s: int = 300
+    monitor_window_h: int = 24
+
     # 支持按 Agent 覆盖 LLM 配置的 Agent 名(与 graph.py 中节点分组一致)
     LLM_AGENTS: ClassVar[tuple[str, ...]] = (
         "investigator", "compliance", "responder", "reporter")

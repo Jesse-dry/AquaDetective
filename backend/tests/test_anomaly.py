@@ -1,7 +1,8 @@
 """异常检测引擎测试（纯函数，固定 seed）。"""
 import numpy as np
 
-from app.engine.anomaly import detect, detect_cusum, detect_seasonal, detect_threesigma
+from app.engine.anomaly import (detect, detect_cusum, detect_seasonal,
+                                detect_threesigma, significant)
 
 
 def _series(seed=0, n=2000):
@@ -48,3 +49,42 @@ def test_detect_dispatch():
         assert False
     except ValueError:
         pass
+
+
+def test_significant_rejects_quantized_noise():
+    """量化到 3 档的低浓度序列:涨 0.001 mg/L 不应报警(现场误报根因)。"""
+    x = np.array([0.003] * 80 + [0.004] * 10 + [0.002] * 10)
+    ts = np.arange(len(x)) * 900
+    anoms = detect_cusum(x, ts)
+    assert anoms, "CUSUM 本身会触发(统计显著)"
+    assert significant(anoms, x) == [], "但物理上无意义,应被门槛拦下"
+
+
+def test_significant_keeps_real_event():
+    """真实污染:cr6 从 0.003 涨到 0.5(带传感器噪声),必须保留。"""
+    rng = np.random.default_rng(2)
+    x = np.concatenate([rng.normal(0.003, 0.0004, 80), rng.normal(0.5, 0.01, 20)])
+    anoms = [{"idx": 80, "value": 0.5, "baseline": 0.003, "severity": "high"}]
+    assert significant(anoms, x)
+
+
+def test_significant_keeps_small_relative_rise_on_high_baseline():
+    """高基线指标的缓升(cod 18 -> 24,仅 1.3 倍)也应保留:门槛看绝对量级。"""
+    rng = np.random.default_rng(3)
+    x = np.concatenate([rng.normal(18.0, 0.6, 200), rng.normal(24.0, 0.6, 100)])
+    anoms = [{"idx": 200, "value": 24.0, "baseline": 18.0, "severity": "medium"}]
+    assert significant(anoms, x)
+
+
+def test_significant_rejects_tiny_relative_rise():
+    """高基线上的微小相对波动(cod 18.0 -> 18.1)应被相对涨幅门槛拦下。"""
+    x = np.full(300, 18.0)
+    anoms = [{"idx": 150, "value": 18.1, "baseline": 18.0, "severity": "high"}]
+    assert significant(anoms, x) == []
+
+
+def test_significant_judges_by_peak_not_trigger_point():
+    """触发点落在上升沿、幅度还很小;须按事件峰值判定,否则真实污染被误抑制。"""
+    x = np.concatenate([np.full(50, 0.003), np.linspace(0.003, 10.0, 50)])
+    trigger = {"idx": 50, "value": 0.0031, "baseline": 0.003, "severity": "high"}
+    assert significant([trigger], x)
