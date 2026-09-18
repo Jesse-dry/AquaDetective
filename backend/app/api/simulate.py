@@ -5,7 +5,7 @@ import json
 from uuid import uuid4
 
 import numpy as np
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from ..config import settings
 from ..context import get_db_path, get_watershed
@@ -20,9 +20,13 @@ VALID_ETYPES = {"sudden", "periodic", "gradual"}
 
 
 @router.post("/simulate/reset")
-def reset_world(seed: int | None = None):
+def reset_world(request: Request, seed: int | None = None):
     """一键重建世界（同 seed 可复现）。"""
     summary = seed_mod.run(settings, seed=seed)
+    # 监测统计在内存里,重建世界不会动;不清会继续显示上一个世界的检出与累计数
+    monitor = getattr(request.app.state, "monitor", None)
+    if monitor is not None:
+        monitor.reset_status()
     return {"ok": True, **summary}
 
 

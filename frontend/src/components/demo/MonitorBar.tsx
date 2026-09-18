@@ -3,7 +3,6 @@ import { configureMonitor, getMonitorStatus, scanNow } from '../../api/monitor'
 import { IS_MOCK } from '../../api/client'
 import type { MonitorStatus } from '../../api/monitor'
 import { useAlertStore } from '../../store/alertStore'
-import { eventLabel, indicatorLabel, stationLabel } from '../../utils/labels'
 
 // 监测 Agent 状态条:展示后台定时扫描的存活/节奏/检出,并可手动触发或暂停
 const POLL_MS = 5000
@@ -150,25 +149,6 @@ export function MonitorBar() {
             累计扫描 <span className="text-slate-300">{status.scan_count}</span> 次
             · 生成事件 <span className="text-slate-300">{status.total_created}</span> 起
           </span>
-
-          {status.recent.length > 0 && (
-            <span className="flex items-center gap-1">
-              <span>最近检出:</span>
-              {status.recent.slice(0, 4).map((h) => (
-                <span
-                  key={h.id}
-                  title={`${eventLabel(h.id)} · ${stationLabel(h.station_id)} ${indicatorLabel(h.indicator)}`}
-                  className={`rounded border px-1.5 py-0.5 ${
-                    h.severity === 'high'
-                      ? 'border-rose-500/40 bg-rose-500/10 text-rose-300'
-                      : 'border-warn/40 bg-warn/10 text-warn'
-                  }`}
-                >
-                  {stationLabel(h.station_id)}·{indicatorLabel(h.indicator)}
-                </span>
-              ))}
-            </span>
-          )}
 
           {status.last_error && (
             <span className="text-rose-400" title={status.last_error}>扫描异常</span>

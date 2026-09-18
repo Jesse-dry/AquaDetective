@@ -43,6 +43,21 @@ class MonitorService:
                     "scheduler_running": bool(self._thread and self._thread.is_alive()),
                     **self._status}
 
+    def reset_status(self):
+        """世界重建后清空运行统计。
+
+        这些计数只在内存里,重建世界不会动它们,于是状态条会继续显示上一个世界的
+        检出记录与累计数(实测残留 4 条同名事件,因为 evt_scan_NNN 编号会复用)。
+        """
+        with self._state_lock:
+            self._status.update(last_result=None, last_created=0, total_created=0,
+                                scan_count=0, last_error=None, recent=[],
+                                last_started_at=None, last_finished_at=None,
+                                last_duration_ms=None)
+            self._schedule()
+        self._wake.set()
+        return self.status()
+
     def configure(self, **changes):
         with self._state_lock:
             for key in ("enabled", "interval_s", "window_h", "method"):

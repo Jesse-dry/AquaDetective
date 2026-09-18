@@ -287,3 +287,23 @@ def test_dedupe_detections_keeps_one_per_series():
     st1 = next(d for d in out if d["station_id"] == "st_01")
     assert st1["ts"] == 100, "应取最早触发时刻"
     assert st1["severity"] == "high", "应取最高严重度"
+
+
+def test_reset_status_clears_counters(source):
+    """世界重建后统计须清零:否则状态条继续显示上一个世界的检出与累计数。
+
+    这些计数只在内存里,重建世界不会动它们;而 evt_scan_NNN 编号会复用,
+    残留记录看起来就像同一条事件重复报了多次。
+    """
+    db, ws = source
+    readings(db)
+    # 数据只有 96 点,季节基线需要 8 天历史;本例考的是统计清零,固定用 cusum
+    service = MonitorService(db, lambda: ws, method="cusum")
+    service.run()
+    assert service.status()["total_created"] == 1
+    assert service.status()["recent"]
+    cleared = service.reset_status()
+    assert cleared["total_created"] == 0
+    assert cleared["scan_count"] == 0
+    assert cleared["recent"] == []
+    assert cleared["last_result"] is None
