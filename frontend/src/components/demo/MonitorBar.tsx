@@ -127,6 +127,20 @@ export function MonitorBar() {
             )}
             · 检出 <span className="text-slate-300">{status.last_created}</span> 起
           </span>
+          {/* 区分"扫了多少"与"跳过多少":只显示"检出 0 起"会让人以为扫描没生效 */}
+          {status.last_result && (
+            <span>
+              扫描 <span className="text-slate-300">{status.last_result.scanned_series}</span> 条
+              {status.last_result.unchanged_series > 0 && (
+                <> · 跳过 <span className="text-slate-500">{status.last_result.unchanged_series}</span> 条(无新数据)</>
+              )}
+              {status.last_result.insufficient_series > 0 && (
+                <> · <span className="text-warn" title="季节基线需要 8 天历史,历史不足的序列本轮不判定">
+                  历史不足 {status.last_result.insufficient_series} 条
+                </span></>
+              )}
+            </span>
+          )}
           <span>
             {status.enabled && status.next_scan_ms
               ? <>下次扫描 <span className="text-accent">{fmtCountdown(status.next_scan_ms - now)}</span> 后</>

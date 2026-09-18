@@ -268,3 +268,22 @@ def test_scheduler_can_be_enabled_after_disabled_start(source, monkeypatch):
         assert service.status()["next_scan_at"] is None
     finally:
         service.stop()
+
+
+def test_dedupe_detections_keeps_one_per_series():
+    """同一(断面,指标)只留一条,取最早触发时刻与最高严重度。
+
+    seasonal 会对同一次抬升报出多个越限采样点;不去重会让 affected_stations
+    按采样点膨胀(实测一次污染存了 90 条),传播关系配对开销也随点数平方增长。
+    """
+    dets = [
+        {"station_id": "st_01", "indicator": "cod", "ts": 300, "severity": "medium", "zscore": 3.0},
+        {"station_id": "st_01", "indicator": "cod", "ts": 100, "severity": "high", "zscore": 9.0},
+        {"station_id": "st_01", "indicator": "cod", "ts": 200, "severity": "low", "zscore": 1.0},
+        {"station_id": "st_02", "indicator": "cod", "ts": 150, "severity": "medium", "zscore": 4.0},
+    ]
+    out = monitor._dedupe_detections(dets)
+    assert len(out) == 2, f"应每个(断面,指标)一条,实际 {out}"
+    st1 = next(d for d in out if d["station_id"] == "st_01")
+    assert st1["ts"] == 100, "应取最早触发时刻"
+    assert st1["severity"] == "high", "应取最高严重度"

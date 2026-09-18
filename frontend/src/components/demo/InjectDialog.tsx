@@ -11,13 +11,14 @@ export function InjectDialog({ onClose }: { onClose: () => void }) {
   const [etype, setEtype] = useState<Exclude<EventType, 'detected'>>('sudden')
   const [source, setSource] = useState('')
   const [severity, setSeverity] = useState<Severity>('medium')
+  const [silent, setSilent] = useState(false)
   const [busy, setBusy] = useState(false)
 
   const submit = async () => {
     if (!source) return
     setBusy(true)
     try {
-      await injectEvent({ etype, source_id: source, severity })
+      await injectEvent({ etype, source_id: source, severity, notify: !silent })
       await refresh()
       onClose()
     } catch (e) {
@@ -73,13 +74,28 @@ export function InjectDialog({ onClose }: { onClose: () => void }) {
             <option value="high">严重</option>
           </select>
         </label>
+        <label className="flex cursor-pointer items-start gap-2 rounded border border-edge bg-ink/60 p-2">
+          <input
+            type="checkbox"
+            checked={silent}
+            onChange={(e) => setSilent(e.target.checked)}
+            className="mt-0.5 accent-sky-400"
+          />
+          <span className="text-xs text-slate-300">
+            静默注入（只排污，不报警）
+            <span className="mt-0.5 block text-slate-500">
+              污染进入河网但不生成告警，注入后点顶部「📡 立即扫描」，
+              由监测 Agent 自己从时序里发现并报警
+            </span>
+          </span>
+        </label>
         <div className="flex gap-2 pt-1">
           <button
             onClick={submit}
             disabled={busy || !source}
             className="flex-1 rounded bg-danger px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-400 disabled:opacity-50"
           >
-            {busy ? '注入中…' : '注入'}
+            {busy ? '注入中…' : silent ? '静默注入' : '注入'}
           </button>
           <button
             onClick={onClose}

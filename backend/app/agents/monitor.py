@@ -42,6 +42,27 @@ def _already_alerted(conn, station_id: str, indicator: str, onset: int,
     return False
 
 
+def _dedupe_detections(detections: list[dict]) -> list[dict]:
+    """同一(断面,指标)只留一条:取最早触发时刻与最高严重度。
+
+    seasonal 等方法会对同一次抬升报出多个越限采样点,不去重会让波及清单按
+    采样点膨胀(实测一次污染在 affected_stations 里存了 90 条),也让传播关系
+    配对的开销随点数平方增长。
+    """
+    best: dict[tuple[str, str], dict] = {}
+    for d in detections:
+        key = (d["station_id"], d["indicator"])
+        cur = best.get(key)
+        if cur is None:
+            best[key] = dict(d)
+            continue
+        if d["ts"] < cur["ts"]:
+            cur["ts"], cur["zscore"] = d["ts"], d["zscore"]
+        if _SEV_RANK.get(d["severity"], 0) > _SEV_RANK.get(cur["severity"], 0):
+            cur["severity"] = d["severity"]
+    return list(best.values())
+
+
 def _next_scan_seq(conn) -> int:
     rows = conn.execute("SELECT id FROM events WHERE id LIKE 'evt_scan_%'").fetchall()
     return max((int(m.group(1)) for row in rows
@@ -129,7 +150,7 @@ def scan(db_path: str, ws: dict, window_h: int = 24, method: str = "cusum", *,
 
         # 一次污染会同时顶起多个断面,逐条建事件会在告警面板刷出好几条;
         # 按河网传播关系合并,一条污染只报一条事件(见 group_detections)
-        for group in group_detections(ws, detections):
+        for group in group_detections(ws, _dedupe_detections(detections)):
             stations = sorted({d["station_id"] for d in group})
             indicators = sorted({d["indicator"] for d in group})
             onset = min(d["ts"] for d in group)
