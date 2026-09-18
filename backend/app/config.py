@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from dotenv import dotenv_values
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +40,11 @@ class Settings(BaseSettings):
     # 服务
     host: str = "127.0.0.1"
     port: int = 8000
+
+    monitor_enabled: bool = False
+    monitor_interval_s: int = Field(default=300, ge=10, le=86400)
+    monitor_window_h: int = Field(default=24, ge=1, le=2160)
+    monitor_method: Literal["cusum", "ewma", "threesigma", "seasonal"] = "cusum"
 
     # 支持按 Agent 覆盖 LLM 配置的 Agent 名(与 graph.py 中节点分组一致)
     LLM_AGENTS: ClassVar[tuple[str, ...]] = (

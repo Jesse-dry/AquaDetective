@@ -43,6 +43,13 @@ CREATE TABLE IF NOT EXISTS readings (
   PRIMARY KEY (station_id, ts, indicator)
 );
 CREATE INDEX IF NOT EXISTS idx_readings_station ON readings(station_id, ts);
+CREATE INDEX IF NOT EXISTS idx_readings_monitor ON readings(station_id, indicator, ts);
+CREATE TABLE IF NOT EXISTS monitor_cursors (
+  station_id TEXT NOT NULL,
+  indicator TEXT NOT NULL,
+  last_ts INTEGER NOT NULL,
+  PRIMARY KEY (station_id, indicator)
+);
 CREATE TABLE IF NOT EXISTS events (
   id TEXT PRIMARY KEY,
   station_id TEXT NOT NULL,

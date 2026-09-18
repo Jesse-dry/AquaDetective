@@ -8,7 +8,7 @@ export function eventLabel(id: string): string {
   const m = id.match(/^evt_?0*(\d+)$/i)
   if (m) return `事件${Number(m[1])}`
   // 其余 evt_ 前缀(监测自动生成等),可读兜底
-  if (/^evt_/i.test(id)) return '现场注入事件'
+  if (/^evt_/i.test(id)) return '监测告警'
   return id
 }
 
@@ -69,6 +69,7 @@ export const ETYPE_LABEL: Record<string, string> = {
   sudden: '突发泄漏',
   periodic: '夜间偷排',
   gradual: '逐渐恶化',
+  detected: '监测异常',
 }
 
 export const etypeLabel = (t: string): string => ETYPE_LABEL[t] ?? t

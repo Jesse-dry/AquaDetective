@@ -85,6 +85,8 @@ app/
 | GET | /stations/{id}/eem | 断面"现场"EEM 荧光矩阵 |
 | GET | /series?station=&indicator=&from=&to= | 时序数据 |
 | GET | /events?status= | 污染事件列表 |
+| POST | /monitor/scan | 立即扫描水质时序并生成告警 |
+| GET | /monitor/status | 定时监测配置、运行状态和最近结果 |
 | POST | /events/{id}/investigate | 触发溯源调查 |
 | GET | /investigations/{id} | 调查状态 |
 | GET | /investigations/{id}/report | Markdown 报告 |
@@ -94,3 +96,45 @@ app/
 | WS | /ws?investigation_id= | 推理过程流式推送 |
 
 坐标说明：流域节点坐标为示意图坐标（公里），后续可替换为真实经纬度。
+
+## 监测运行
+
+告警面板的“立即扫描”调用 `POST /api/v1/monitor/scan`，无需请求体。扫描生成
+`etype=detected`、`truth_source=NULL` 的事件，刷新后可点击“开始侦查”。监测不调用
+LLM，也不会自动发起调查。Mock 模式禁用扫描按钮。
+
+默认仅手动扫描。后台定时扫描在 `backend/.env` 配置后重启服务：
+
+```dotenv
+AQ_MONITOR_ENABLED=true
+AQ_MONITOR_INTERVAL_S=300
+AQ_MONITOR_WINDOW_H=24
+AQ_MONITOR_METHOD=cusum
+```
+
+启用后在服务启动时扫描一次，此后每次完成后等待指定间隔；关闭服务时停止任务。
+方法支持 `cusum`、`ewma`、`threesigma`、`seasonal`。建议单个 Uvicorn worker 运行
+定时任务；多个 worker 各自维护调度和状态，但 SQLite 事务可避免重复写入告警。
+
+窗口以每条断面/指标序列的最新观测时间为终点，不以系统当前时间为终点。
+默认窗口 24 小时；低频序列自动补足至少 48 个样本（3σ 至少 144 个，季节检测
+还需按实测采样间隔补足 8 个日周期）。历史总量不足则跳过并计入
+`insufficient_series`，不会把“无法检测”当作正常水质。界面显示最新观测时间，
+历史数据扫描不代表实时数据已经接入。
+
+`monitor_cursors` 持久化每条序列的扫描进度；同一断面、同一指标在 48 小时内的
+告警按所有处置状态去重。已有数据不变时不会重扫，新增观测才推进扫描。
+修改历史值或检测参数后，如需重新评估历史，请在隔离评测库中调用
+`scan_for_events()`（不使用在线进度）。重置世界会同时清空监测进度。
+离线评测函数保留原有列表返回类型。
+
+接口结果包含 `created_count`、`events`、`scanned_series`、`unchanged_series`、
+`insufficient_series`、`extended_series`、`latest_data_ts`；公开时间戳均为毫秒。
+同一服务已有扫描进行时返回 HTTP 409，扫描失败返回 HTTP 500 并记录服务日志；
+定时任务失败后会在下一周期重试。告警与扫描进度在同一事务中提交。
+
+CNEMC 抓取任务仍负责文件存档。要监测真实数据，需要先将观测写入运行数据库的
+`readings`，并在流域配置中注册对应断面和指标。监测模块只写告警，不生成事件级
+EEM 或污染源真值。目前调查流程在缺少事件级指纹时仍会回退到背景观测，这种
+调查结果只能辅助排查，不能当作真实污染源已被证实。检测阈值也需用目标断面的
+真实数据校准。

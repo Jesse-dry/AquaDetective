@@ -23,6 +23,26 @@ def test_cusum_ignores_flat():
     assert out == [], "平直序列不应误报"
 
 
+def test_cusum_quantized_baseline_does_not_explode_when_mad_is_zero():
+    baseline = np.array([0.003, 0.003, 0.002, 0.003, 0.003,
+                         0.003, 0.004, 0.003, 0.003, 0.003])
+    x = np.tile(baseline, 10)
+    ts = np.arange(len(x)) * 900
+    assert detect_cusum(x, ts) == []
+    x[-8:] = 0.03
+    out = detect_cusum(x, ts)
+    assert any(a["idx"] >= 92 and a["severity"] == "high" for a in out)
+
+
+def test_cusum_reports_escalation_after_an_earlier_weak_crossing():
+    x = np.tile([9.5, 10.5], 50)
+    x[30:60] = 10.8
+    x[60:] = 30
+    out = detect_cusum(x, np.arange(len(x)) * 900)
+    assert any(a["severity"] == "low" and a["idx"] < 60 for a in out)
+    assert any(a["severity"] == "high" and a["idx"] >= 60 for a in out)
+
+
 def test_threesigma_detects_spike():
     x, ts = _series()
     x[500] = 25.0

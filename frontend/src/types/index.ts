@@ -70,7 +70,7 @@ export interface SeriesResponse {
 
 // ---------- /events ----------
 export type Severity = 'low' | 'medium' | 'high'
-export type EventType = 'sudden' | 'periodic' | 'gradual'
+export type EventType = 'sudden' | 'periodic' | 'gradual' | 'detected'
 export type EventStatus = 'open' | 'investigating' | 'resolved'
 
 export interface PollutionEvent {

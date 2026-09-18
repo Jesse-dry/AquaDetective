@@ -6,7 +6,7 @@ export const resetWorld = (seed?: number) =>
   apiPost<{ ok: boolean }>(`/simulate/reset${seed !== undefined ? `?seed=${seed}` : ''}`)
 
 export interface InjectBody {
-  etype: EventType
+  etype: Exclude<EventType, 'detected'>
   source_id: string
   severity: Severity
 }

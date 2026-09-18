@@ -335,6 +335,8 @@ AquaDetective/
 | GET | `/stations/{id}/eem?event_id=` | 断面"现场"EEM 荧光矩阵（61×71） |
 | GET | `/series?station=&indicator=&from=&to=` | 断面时序数据(from/to 毫秒 epoch) |
 | GET | `/events?status=` | 污染事件列表（告警面板） |
+| POST | `/monitor/scan` | 立即扫描观测并生成监测告警 |
+| GET | `/monitor/status` | 监测配置、运行状态与最近结果 |
 | POST | `/events/{id}/investigate` | 触发溯源调查 |
 | GET | `/investigations/{id}` | 调查状态与推理记录 |
 | GET | `/investigations/{id}/report` | Markdown 溯源报告 |
@@ -366,7 +368,7 @@ AquaDetective/
   真实断面异常端到端溯源演示(钓邾大桥氨氮→锡北污水厂,指纹+拓扑双证据);
   真实许可证指纹向量接入溯源系统;CNEMC 前向存档 GitHub Actions 定时工作流
 - 📋 **后续规划**：法规 RAG 向量检索化、置信度校准曲线、Cuyahoga 基准溯源评测、
-  监测 Agent 接入季节基线检测、Docker 部署与鉴权(详见 `docs/后续开发计划.md` §10 剩余缺口)
+  真实数据持续入库与监测阈值校准、Docker 部署与鉴权(详见 `docs/后续开发计划.md` §10 剩余缺口)
 
 ## 团队
 

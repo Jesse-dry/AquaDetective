@@ -43,7 +43,7 @@ def run(settings_=settings, days: int = 90, seed: int | None = None) -> dict:
     ws = watershed_builder.save_watershed(settings_.watershed_config_abs)
     conn = get_conn(str(settings_.db_path_abs))
     init_db(conn)
-    for tbl in ["readings", "event_observations", "events", "investigations", "fingerprints",
+    for tbl in ["monitor_cursors", "readings", "event_observations", "events", "investigations", "fingerprints",
                 "enterprises", "stations", "edges", "nodes"]:
         conn.execute(f"DELETE FROM {tbl}")
     conn.executemany(

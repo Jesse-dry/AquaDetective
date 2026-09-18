@@ -7,7 +7,9 @@ import numpy as np
 def _robust_sigma(x: np.ndarray) -> float:
     med = float(np.median(x))
     mad = float(np.median(np.abs(x - med)))
-    return max(mad * 1.4826, 1e-9)
+    # Rounded sensor values can have zero MAD despite a nonzero noise spread.
+    sigma = mad * 1.4826
+    return max(sigma if sigma > 1e-9 else float(np.std(x)), 1e-9)
 
 
 def _severity(z: float, ratio: float) -> str:
@@ -50,7 +52,7 @@ def detect_threesigma(x: np.ndarray, ts: np.ndarray, window: int = 144, k: float
 
 def detect_cusum(x: np.ndarray, ts: np.ndarray, k: float = 0.5, h: float = 7.0,
                  warmup: float = 0.1) -> list[dict]:
-    """双侧 CUSUM，返回每次越过阈值 h 的触发点。
+    """双侧 CUSUM，返回阈值越过及浓度首次达到基线两倍的触发点。
 
     目标值（mu/std）从前 warmup 比例的数据建立，避免事件本身污染基线。
     h=7σ 为演示标定：约 2000 点噪声窗口内无误报，4σ 阶跃 2 点内触发。
@@ -65,7 +67,9 @@ def detect_cusum(x: np.ndarray, ts: np.ndarray, k: float = 0.5, h: float = 7.0,
         sp = max(0.0, sp + (x[i] - mu) / std - k)
         sn = max(0.0, sn - (x[i] - mu) / std - k)
         z[i] = max(sp, sn)
-        if z[i] > h and (i == 0 or z[i - 1] <= h):
+        # A weak crossing must not hide a later concentration doubling.
+        doubled = x[i] >= 2 * max(mu, 1e-9) and (i == 0 or x[i - 1] < 2 * max(mu, 1e-9))
+        if z[i] > h and (i == 0 or z[i - 1] <= h or doubled):
             triggers.append(i)
     baseline = np.full(len(x), mu)
     return _pack(x, ts, np.array(triggers), baseline, z / h)

@@ -11,6 +11,7 @@ import { IS_MOCK } from '../../api/client'
 import { MockStream } from '../../ws/mockStream'
 import { InvestigationConnection } from '../../ws/connection'
 import { Popconfirm } from '../ui/Popconfirm'
+import { MonitorControl } from './MonitorControl'
 import type { Severity } from '../../types'
 import { eventLabel, stationLabel, indicatorLabel, etypeLabel, SEVERITY_LABEL } from '../../utils/labels'
 
@@ -107,6 +108,7 @@ export function AlertList() {
   return (
     <div className="flex h-full flex-col gap-2 overflow-y-auto p-3">
       <h2 className="text-sm font-semibold text-slate-200">🚨 告警事件</h2>
+      <MonitorControl />
       {sortedEvents.length === 0 && (
         <p className="py-6 text-center text-sm text-slate-500">暂无事件</p>
       )}
@@ -135,7 +137,7 @@ export function AlertList() {
           <div className="flex items-center justify-between gap-2 pr-5">
             {/* 标题不换行(否则窄栏里"事件1"会被拆成两行),右侧类型/严重度可折行 */}
             <span className="shrink-0 whitespace-nowrap text-sm font-semibold text-slate-100">
-              {eventLabel(ev.id)}
+              {ev.etype === 'detected' ? '监测告警' : eventLabel(ev.id)}
             </span>
             <span className="text-right text-xs text-slate-400">
               {etypeLabel(ev.etype)} · {SEVERITY_LABEL[ev.severity] ?? ev.severity}

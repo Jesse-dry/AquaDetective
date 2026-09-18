@@ -8,7 +8,7 @@ import type { EventType, Severity } from '../../types'
 export function InjectDialog({ onClose }: { onClose: () => void }) {
   const enterprises = useWatershedStore((s) => s.data?.enterprises ?? [])
   const refresh = useAlertStore((s) => s.refresh)
-  const [etype, setEtype] = useState<EventType>('sudden')
+  const [etype, setEtype] = useState<Exclude<EventType, 'detected'>>('sudden')
   const [source, setSource] = useState('')
   const [severity, setSeverity] = useState<Severity>('medium')
   const [busy, setBusy] = useState(false)
@@ -38,7 +38,7 @@ export function InjectDialog({ onClose }: { onClose: () => void }) {
           事件类型
           <select
             value={etype}
-            onChange={(e) => setEtype(e.target.value as EventType)}
+            onChange={(e) => setEtype(e.target.value as Exclude<EventType, 'detected'>)}
             className="mt-1 w-full rounded border border-edge bg-ink px-2 py-1 text-sm text-slate-200"
           >
             <option value="sudden">突发泄漏</option>
