@@ -64,7 +64,8 @@ async def start_investigation(event_id: str):
 
     threading.Thread(
         target=run_investigation,
-        args=(inv_id, ev, get_llm(), get_db_path(), get_watershed(), push, done),
+        # 传 get_llm 工厂:各节点按 Agent 取客户端(未配 AQ_LLM_<AGENT>_* 时等同全局默认)
+        args=(inv_id, ev, get_llm, get_db_path(), get_watershed(), push, done),
         daemon=True).start()
     return {"investigation_id": inv_id, "event_id": event_id, "status": "running"}
 

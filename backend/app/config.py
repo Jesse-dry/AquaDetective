@@ -1,9 +1,22 @@
 """全局配置：环境变量前缀 AQ_，支持 .env 文件。"""
-from pathlib import Path
+from __future__ import annotations
 
+import os
+from pathlib import Path
+from typing import ClassVar
+
+from dotenv import dotenv_values
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# .env 原始键值(pydantic 只解析已声明的字段,自定义的按 Agent 覆盖变量在此读取)
+_ENV_FILE = dotenv_values(BASE_DIR / ".env")
+
+
+def _env(key: str, default: str | None = None) -> str | None:
+    """读取配置:真实环境变量优先,其次 .env 文件(与 pydantic-settings 行为一致)。"""
+    return os.environ.get(key) or _ENV_FILE.get(key) or default
 
 
 class Settings(BaseSettings):
@@ -26,6 +39,33 @@ class Settings(BaseSettings):
     # 服务
     host: str = "127.0.0.1"
     port: int = 8000
+
+    # 支持按 Agent 覆盖 LLM 配置的 Agent 名(与 graph.py 中节点分组一致)
+    LLM_AGENTS: ClassVar[tuple[str, ...]] = (
+        "investigator", "compliance", "responder", "reporter")
+
+    def llm_profile(self, agent: str | None = None) -> dict:
+        """返回某 Agent 的 LLM 配置:全局默认 + `AQ_LLM_<AGENT>_*` 覆盖。
+
+        agent=None 返回全局默认;传入 agent 名(如 "reporter")时,
+        用 AQ_LLM_REPORTER_API_KEY / _BASE_URL / _MODEL / _TIMEOUT_S 覆盖对应字段。
+        未配置任何覆盖项时,返回结果与全局默认完全一致(即维持现状)。
+        """
+        profile: dict = {
+            "base_url": self.llm_base_url,
+            "api_key": self.llm_api_key,
+            "model": self.llm_model,
+            "timeout_s": self.llm_timeout_s,
+        }
+        if not agent:
+            return profile
+        prefix = f"AQ_LLM_{agent.upper()}_"
+        for env_key, field in (("API_KEY", "api_key"), ("BASE_URL", "base_url"),
+                               ("MODEL", "model"), ("TIMEOUT_S", "timeout_s")):
+            val = _env(prefix + env_key)
+            if val:
+                profile[field] = float(val) if field == "timeout_s" else val
+        return profile
 
     @property
     def db_path_abs(self) -> Path:

@@ -120,8 +120,58 @@ npm run test         # vitest(store 与 WS 消息守卫单测)
 
 ### 配置 LLM（可选）
 
-复制 `backend/.env.example` 为 `.env`，填入 OpenAI 兼容接口的 `AQ_LLM_API_KEY` /
-`AQ_LLM_BASE_URL`（支持本地模型如 Ollama）。**不配置也能跑**——自动使用模板推理降级。
+复制 `backend/.env.example` 为 `.env`，填入 OpenAI 兼容接口的三项即可，**所有 Agent 共用**：
+
+```bash
+cd backend && cp .env.example .env
+```
+
+```env
+AQ_LLM_BASE_URL=https://api.deepseek.com/v1
+AQ_LLM_API_KEY=sk-你的key
+AQ_LLM_MODEL=deepseek-chat
+AQ_LLM_TIMEOUT_S=30
+```
+
+常见 OpenAI 兼容服务（以各家官方文档为准）：
+
+| 服务 | `AQ_LLM_BASE_URL` | `AQ_LLM_MODEL` 示例 |
+|---|---|---|
+| OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+| DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
+| 阿里通义 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus` |
+| 智谱 GLM | `https://open.bigmodel.cn/api/paas/v4` | `glm-4` |
+| 月之暗面 Kimi | `https://api.moonshot.cn/v1` | `moonshot-v1-8k` |
+| 本地 Ollama | `http://localhost:11434/v1` | `qwen2.5:7b`（key 随便填） |
+
+**不配置也能跑**——自动使用模板推理降级，完整调查流程照常工作。
+改完 `.env` 需**手动重启后端**（`--reload` 只监听 `.py` 文件）。
+
+#### 按 Agent 覆盖（可选）
+
+默认所有 Agent 共用上面这套配置。若想让不同 Agent 走不同模型／不同服务，
+用 `AQ_LLM_<AGENT>_*` 覆盖对应字段（可覆盖 `API_KEY` / `BASE_URL` / `MODEL` / `TIMEOUT_S`）：
+
+| Agent 名 | 覆盖哪些节点 |
+|---|---|
+| `INVESTIGATOR` | 溯源侦探：事件解析、假设生成、证据校核、结论 |
+| `COMPLIANCE` | 法规 Agent |
+| `RESPONDER` | 处置 Agent |
+| `REPORTER` | 报告 Agent |
+
+```env
+# 溯源侦探用推理更强的模型
+AQ_LLM_INVESTIGATOR_MODEL=deepseek-reasoner
+# 报告 Agent 用便宜的就够
+AQ_LLM_REPORTER_MODEL=deepseek-chat
+# 法规 Agent 走本地模型（不联网）
+AQ_LLM_COMPLIANCE_BASE_URL=http://localhost:11434/v1
+AQ_LLM_COMPLIANCE_API_KEY=ollama
+AQ_LLM_COMPLIANCE_MODEL=qwen2.5:7b
+```
+
+未填写的字段自动回落到全局默认值；**一项都不配时，各 Agent 与全局配置完全一致**（即维持现状）。
+实现见 `backend/app/config.py` 的 `llm_profile(agent)` 与 `backend/app/context.py` 的 `get_llm(agent)`。
 
 ### 快速体验（不启动服务）
 

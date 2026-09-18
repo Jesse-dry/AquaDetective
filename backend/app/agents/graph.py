@@ -19,30 +19,35 @@ def _route_verify(state: dict) -> str:
 
 
 def build_graph(llm, db_path: str, ws: dict):
+    """llm 可以是 LLMClient(所有节点共用),也可以是 (agent) -> LLMClient 的工厂,
+    工厂形式下各节点使用对应 Agent 的客户端(见 Settings.llm_profile 的按 Agent 覆盖)。"""
     from langgraph.graph import END, START, StateGraph
 
     from .state import InvestigationState
 
+    def client(agent: str):
+        return llm(agent) if callable(llm) else llm
+
     def n_parse(state):
-        return parse_event(state, llm, db_path, ws)
+        return parse_event(state, client("investigator"), db_path, ws)
 
     def n_gen(state):
-        return generate_hypotheses(state, llm, db_path, ws)
+        return generate_hypotheses(state, client("investigator"), db_path, ws)
 
     def n_verify(state):
-        return verify_hypotheses(state, llm, db_path, ws)
+        return verify_hypotheses(state, client("investigator"), db_path, ws)
 
     def n_conclude(state):
-        return conclude(state, llm, db_path, ws)
+        return conclude(state, client("investigator"), db_path, ws)
 
     def n_compliance(state):
-        return compliance_review(state, llm, db_path, ws)
+        return compliance_review(state, client("compliance"), db_path, ws)
 
     def n_responder(state):
-        return response_plan(state, llm, db_path, ws)
+        return response_plan(state, client("responder"), db_path, ws)
 
     def n_reporter(state):
-        return build_report(state, llm, db_path, ws)
+        return build_report(state, client("reporter"), db_path, ws)
 
     g = StateGraph(InvestigationState)
     g.add_node("parse_event", n_parse)
