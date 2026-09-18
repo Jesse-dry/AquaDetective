@@ -1,9 +1,22 @@
 import { apiGet, apiPost } from './client'
-import type { PollutionEvent } from '../types'
+import type { AffectedStation, PollutionEvent } from '../types'
 
-// 后端原始事件行:indicators 可能是 JSON 字符串,onset_ts 为毫秒级 epoch
-interface RawEvent extends Omit<PollutionEvent, 'indicators'> {
+// 后端原始事件行:indicators / affected_stations 可能是 JSON 字符串,
+// onset_ts 为毫秒级 epoch
+interface RawEvent extends Omit<PollutionEvent, 'indicators' | 'affected_stations'> {
   indicators: string | string[]
+  affected_stations?: string | AffectedStation[] | null
+}
+
+function parseJsonArray<T>(raw: string | T[] | null | undefined): T[] | undefined {
+  if (!raw) return undefined
+  if (Array.isArray(raw)) return raw
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as T[]) : undefined
+  } catch {
+    return undefined
+  }
 }
 
 function normalize(ev: RawEvent): PollutionEvent {
@@ -17,7 +30,12 @@ function normalize(ev: RawEvent): PollutionEvent {
       indicators = [ev.indicators]
     }
   }
-  return { ...ev, indicators, onset_ts: ev.onset_ts }
+  return {
+    ...ev,
+    indicators,
+    affected_stations: parseJsonArray<AffectedStation>(ev.affected_stations),
+    onset_ts: ev.onset_ts,
+  }
 }
 
 // GET /events?status=

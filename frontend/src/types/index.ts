@@ -73,15 +73,24 @@ export type Severity = 'low' | 'medium' | 'high'
 export type EventType = 'sudden' | 'periodic' | 'gradual' | 'detected'
 export type EventStatus = 'open' | 'investigating' | 'resolved'
 
+// 合并事件记录的单个波及断面(监测 Agent 按传播关系合并同一次污染)
+export interface AffectedStation {
+  station_id: string
+  indicator: string
+  ts: number // 秒级 epoch(后端内部单位)
+  severity: Severity
+}
+
 export interface PollutionEvent {
   id: string
-  station_id: string
+  station_id: string // 事件锚点断面(合并事件为最上游断面)
   indicators: string[] // 后端可能给 JSON 字符串,api 层已归一化为数组
   onset_ts: number // API 毫秒级 epoch
   severity: Severity
   etype: EventType
   truth_source?: string
   status: EventStatus
+  affected_stations?: AffectedStation[] // 未合并的事件为 null/缺失
 }
 
 // ---------- /investigations ----------

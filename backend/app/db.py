@@ -52,13 +52,15 @@ CREATE TABLE IF NOT EXISTS monitor_cursors (
 );
 CREATE TABLE IF NOT EXISTS events (
   id TEXT PRIMARY KEY,
-  station_id TEXT NOT NULL,
+  station_id TEXT NOT NULL,      -- 事件锚点断面（合并事件为最上游断面）
   indicators TEXT NOT NULL,      -- JSON 数组
   onset_ts INTEGER NOT NULL,
   severity TEXT NOT NULL,        -- low|medium|high
-  etype TEXT NOT NULL,           -- sudden|periodic|gradual
+  etype TEXT NOT NULL,           -- sudden|periodic|gradual|detected
   truth_source TEXT,             -- Ground Truth 企业 id（演示验证用，可为空）
-  status TEXT DEFAULT 'open'     -- open|investigating|resolved
+  status TEXT DEFAULT 'open',    -- open|investigating|resolved
+  affected_stations TEXT         -- JSON: [{station_id,indicator,ts,severity}]
+                                 -- 合并事件记录波及断面；未合并为 NULL
 );
 CREATE TABLE IF NOT EXISTS event_observations (
   event_id TEXT PRIMARY KEY REFERENCES events(id),
@@ -84,8 +86,23 @@ def get_conn(db_path: str) -> sqlite3.Connection:
     return conn
 
 
+# 增量列迁移:(表名, 列名, 列定义)。CREATE TABLE IF NOT EXISTS 不会给已存在的
+# 表补列,故老库需显式 ALTER。加列幂等,重复执行无副作用
+_MIGRATIONS = [
+    ("events", "affected_stations", "TEXT"),
+]
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    for table, column, decl in _MIGRATIONS:
+        cols = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+        if cols and column not in cols:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
+    _migrate(conn)
     conn.commit()
 
 

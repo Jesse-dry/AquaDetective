@@ -10,10 +10,36 @@ import numpy as np
 
 from ..db import get_conn
 from ..engine.anomaly import detect, significant
+from ..engine.topology import group_detections, upstream_most
 
 
 METHODS = {"cusum", "ewma", "threesigma", "seasonal"}
 _SCAN_ID_RE = re.compile(r"^evt_scan_(\d+)$")
+
+# 合并后的事件严重度取组内最高:按最重的那条报
+_SEV_RANK = {"low": 0, "medium": 1, "high": 2}
+
+
+def _already_alerted(conn, station_id: str, indicator: str, onset: int,
+                     window_s: int = 48 * 3600) -> bool:
+    """该(断面,指标)在 onset 前后 48h 内是否已报过(任何状态)。
+
+    合并后的事件只落在锚点断面上,其余断面记在 affected_stations 里,
+    只看 events.station_id 会让下游断面在下一轮重复报警。
+    """
+    rows = conn.execute(
+        "SELECT station_id, indicators, affected_stations FROM events "
+        "WHERE onset_ts BETWEEN ? AND ?",
+        (onset - window_s, onset + window_s)).fetchall()
+    for row in rows:
+        if row["affected_stations"]:
+            pairs = {(a["station_id"], a["indicator"])
+                     for a in json.loads(row["affected_stations"])}
+        else:
+            pairs = {(row["station_id"], i) for i in json.loads(row["indicators"])}
+        if (station_id, indicator) in pairs:
+            return True
+    return False
 
 
 def _next_scan_seq(conn) -> int:
@@ -33,6 +59,7 @@ def scan(db_path: str, ws: dict, window_h: int = 24, method: str = "cusum", *,
         raise ValueError("Invalid monitoring method or window (1..2160 hours)")
     result = {"events": [], "scanned_series": 0, "unchanged_series": 0,
               "insufficient_series": 0, "extended_series": 0, "latest_data_ts": None}
+    detections: list[dict] = []
     with closing(get_conn(db_path)) as conn, conn:
         conn.execute("BEGIN IMMEDIATE")
         seq = _next_scan_seq(conn)
@@ -87,29 +114,44 @@ def scan(db_path: str, ws: dict, window_h: int = 24, method: str = "cusum", *,
                     if method == "seasonal" and onset < int(ts[min(period * 7, len(ts) - 1)]):
                         continue
                     # Suppress the same indicator within 48h, even after resolution.
-                    existing = conn.execute(
-                        "SELECT indicators FROM events WHERE station_id=? "
-                        "AND onset_ts BETWEEN ? AND ?",
-                        (st["id"], onset - 48 * 3600, onset + 48 * 3600)).fetchall()
-                    if any(ind in json.loads(row["indicators"]) for row in existing):
+                    if _already_alerted(conn, st["id"], ind, onset):
                         continue
-                    ev_id = f"evt_scan_{seq:03d}"
-                    seq += 1
-                    conn.execute(
-                        "INSERT INTO events "
-                        "(id,station_id,indicators,onset_ts,severity,etype,truth_source,status) "
-                        "VALUES (?,?,?,?,?,'detected',NULL,'open')",
-                        (ev_id, st["id"], json.dumps([ind]), onset, anomaly["severity"]))
-                    result["events"].append({
-                        "id": ev_id, "station_id": st["id"], "indicator": ind,
-                        "ts": onset, "severity": anomaly["severity"],
-                        "zscore": anomaly["zscore"],
+                    # 先只收集,等全部序列扫完再按传播关系合并成事件
+                    detections.append({
+                        "station_id": st["id"], "indicator": ind, "ts": onset,
+                        "severity": anomaly["severity"], "zscore": anomaly["zscore"],
                     })
                 if incremental:
                     conn.execute(
                         "INSERT INTO monitor_cursors (station_id,indicator,last_ts) VALUES (?,?,?) "
                         "ON CONFLICT(station_id,indicator) DO UPDATE SET last_ts=excluded.last_ts",
                         (st["id"], ind, latest))
+
+        # 一次污染会同时顶起多个断面,逐条建事件会在告警面板刷出好几条;
+        # 按河网传播关系合并,一条污染只报一条事件(见 group_detections)
+        for group in group_detections(ws, detections):
+            stations = sorted({d["station_id"] for d in group})
+            indicators = sorted({d["indicator"] for d in group})
+            onset = min(d["ts"] for d in group)
+            severity = max((d["severity"] for d in group),
+                           key=lambda s: _SEV_RANK.get(s, 0))
+            ev_id = f"evt_scan_{seq:03d}"
+            seq += 1
+            affected = [{"station_id": d["station_id"], "indicator": d["indicator"],
+                         "ts": d["ts"], "severity": d["severity"]} for d in group]
+            conn.execute(
+                "INSERT INTO events "
+                "(id,station_id,indicators,onset_ts,severity,etype,truth_source,status,"
+                "affected_stations) VALUES (?,?,?,?,?,'detected',NULL,'open',?)",
+                (ev_id, upstream_most(ws, stations), json.dumps(indicators), onset,
+                 severity, json.dumps(affected, ensure_ascii=False)))
+            result["events"].append({
+                "id": ev_id, "station_id": upstream_most(ws, stations),
+                "indicator": indicators[0], "indicators": indicators,
+                "stations": stations, "n_stations": len(stations),
+                "ts": onset, "severity": severity, "affected": affected,
+                "zscore": group[0]["zscore"],
+            })
     return result
 
 

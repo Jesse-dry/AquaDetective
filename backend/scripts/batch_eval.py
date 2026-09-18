@@ -131,15 +131,20 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
 
         # 注入时序(告警断面 = 真实首达断面,与 seed 相同逻辑)
         conn = get_conn(db)
-        apply_event(conn, ws, spec, t_min, rng)
+        summary = apply_event(conn, ws, spec, t_min, rng)
         conn.commit()
         conn.close()
         alert = alert_station_for(ws, ent["id"]) or ws["stations"][0]["id"]
+        # 本次注入实际污染到的断面(峰值增量为正),用于"有没有发现这次污染"的口径
+        polluted = {s["station_id"] for s in summary if s["peak_delta"] > 0}
 
-        # 监测 Agent 扫描:线上告警由它产生,故注入后先扫再建事件行。
-        # 检出率口径 = 真实首达断面出现在本轮新告警里(而非"扫到了任何东西")
+        # 监测 Agent 扫描:线上告警由它产生,故注入后先扫再建事件行
         detected = scan_for_events(db, ws, window_h=24)
-        hit = any(d["station_id"] == alert for d in detected)
+        # 合并后一条事件覆盖多个断面,故取全部波及断面
+        alerted = {st for d in detected for st in d.get("stations", [d["station_id"]])}
+        # 严格口径:最有溯源价值的首达断面被检出;宽松口径:任一受污染断面被检出
+        hit = alert in alerted
+        hit_any = bool(alerted & polluted)
 
         # 清掉本轮监测告警,再用同一断面建调查用事件行(走与线上一致的调查链路)
         conn = get_conn(db)
@@ -186,7 +191,8 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
         results.append({
             "round": i + 1, "etype": etype, "severity": sev,
             "truth": ent["id"], "truth_name": ent["name"],
-            "alert_station": alert, "detected": hit,
+            "alert_station": alert, "detected": hit, "detected_any": hit_any,
+            "polluted_stations": sorted(polluted),
             "n_hypotheses": len(hyps),
             "recall_upstream": truth in [h["target_id"] for h in hyps],
             "rank": rank,
@@ -219,13 +225,15 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
     locked = sum(r["locked"] for r in results)
     recall_up = sum(r["recall_upstream"] for r in results)
     detected_n = sum(r["detected"] for r in results)
+    detected_any_n = sum(r["detected_any"] for r in results)
     mrr = sum(1.0 / r["rank"] for r in results if r["rank"]) / n
     confs = [r["confidence"] for r in results if r["locked"]]
     errs = [r["travel_err_h"] for r in results if r["travel_err_h"] is not None]
 
     print("\n===== 汇总指标 =====")
     print(f"轮数:              {n}")
-    print(f"预警检出率:        {detected_n}/{n} = {detected_n/n:.0%}")
+    print(f"预警检出率(首达断面): {detected_n}/{n} = {detected_n/n:.0%}")
+    print(f"预警检出率(任一受污染断面): {detected_any_n}/{n} = {detected_any_n/n:.0%}")
     print(f"上游候选召回率:    {recall_up}/{n} = {recall_up/n:.0%}")
     print(f"Top-1 命中率:      {top1}/{n} = {top1/n:.0%}")
     print(f"Top-3 命中率:      {top3}/{n} = {top3/n:.0%}")
@@ -245,7 +253,9 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
         t1 = sum(r["top1"] for r in sub)
         lk = sum(r["locked"] for r in sub)
         de = sum(r["detected"] for r in sub)
-        print(f"{et:8s}: 检出 {de}/{len(sub)} ({de/len(sub):.0%}), "
+        da = sum(r["detected_any"] for r in sub)
+        print(f"{et:8s}: 检出(首达) {de}/{len(sub)} ({de/len(sub):.0%}), "
+              f"检出(任一) {da}/{len(sub)} ({da/len(sub):.0%}), "
               f"Top-1 {t1}/{len(sub)} ({t1/len(sub):.0%}), "
               f"锁定 {lk}/{len(sub)} ({lk/len(sub):.0%})")
 
@@ -256,11 +266,13 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
         "methodology": {
             "round_isolation": "SQLite backup restored before every injection",
             "detection": "First arrival station appears in new alerts within the latest 24 hours",
+            "detection_any_station": "Any polluted station appears in new alerts within the latest 24 hours",
             "investigation": "All injected events investigated independently of detection",
             "sampling": "Seed 42; random enterprise; cyclic type/severity pairs",
         },
         "summary": {
             "detection_rate": detected_n / n,
+            "detection_rate_any_station": detected_any_n / n,
             "upstream_recall": recall_up / n,
             "top1": top1 / n, "top3": top3 / n,
             "locked": locked / n, "mrr": round(mrr, 4),

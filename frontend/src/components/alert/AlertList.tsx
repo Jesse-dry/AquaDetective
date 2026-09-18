@@ -12,7 +12,9 @@ import { MockStream } from '../../ws/mockStream'
 import { InvestigationConnection } from '../../ws/connection'
 import { Popconfirm } from '../ui/Popconfirm'
 import type { Severity } from '../../types'
-import { eventLabel, stationLabel, indicatorLabel, etypeLabel, SEVERITY_LABEL } from '../../utils/labels'
+import {
+  eventLabel, stationLabel, stationShort, indicatorLabel, etypeLabel, SEVERITY_LABEL,
+} from '../../utils/labels'
 
 // 告警面板:新事件闪烁,点击触发调查(Mock 模式回放 mock 推理流)
 const SEVERITY_STYLE: Record<Severity, string> = {
@@ -144,6 +146,18 @@ export function AlertList() {
           <p className="mt-1 text-xs text-slate-400">
             {stationLabel(ev.station_id)} · {ev.indicators.map(indicatorLabel).join('/')}
           </p>
+          {/* 监测 Agent 按传播关系合并同一次污染:锚点是最上游断面,这里列出波及断面 */}
+          {ev.affected_stations && ev.affected_stations.length > 1 && (
+            <p
+              className="mt-0.5 text-xs text-accent/80"
+              title={ev.affected_stations
+                .map((a) => `${stationLabel(a.station_id)} ${indicatorLabel(a.indicator)}`)
+                .join(' / ')}
+            >
+              波及 {ev.affected_stations.length} 个断面 ·{' '}
+              {[...new Set(ev.affected_stations.map((a) => stationShort(a.station_id)))].join('/')}
+            </p>
+          )}
           <p className="text-xs text-slate-500">
             {new Date(ev.onset_ts).toLocaleString('zh-CN')}
           </p>
