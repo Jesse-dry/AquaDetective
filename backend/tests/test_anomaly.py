@@ -108,3 +108,33 @@ def test_significant_judges_by_peak_not_trigger_point():
     x = np.concatenate([np.full(50, 0.003), np.linspace(0.003, 10.0, 50)])
     trigger = {"idx": 50, "value": 0.0031, "baseline": 0.003, "severity": "high"}
     assert significant([trigger], x)
+
+
+def test_seasonal_needs_enough_history_to_judge():
+    """历史同刻样本不足时不得判定:单个样本会让 std=0、z 发散(实测 3% 偏离判高风险)。"""
+    x = np.array([10.0] * 96 + [10.3] * 96)  # 第 2 天同一时刻只比第 1 天高 3%
+    ts = np.arange(len(x)) * 900
+    out = detect_seasonal(x, ts, period=96, days=7)
+    assert out == [], "只有 1 个历史同刻样本,std 不可靠,不应报警"
+
+
+def test_seasonal_z_is_finite_with_constant_history():
+    """历史同刻完全相同时 z 不得发散。"""
+    x = np.full(96 * 5, 5.0)
+    x[96 * 4 + 3] = 5.05
+    ts = np.arange(len(x)) * 900
+    for a in detect_seasonal(x, ts, period=96):
+        assert np.isfinite(a["zscore"]) and abs(a["zscore"]) < 1e6
+
+
+def test_cusum_severity_reflects_deviation_not_cumulative_statistic():
+    """严重度须反映触发点的偏离幅度:CUSUM 统计量是累积量,拿它当 z 会让
+    medium 永不出现(触发时 z/h≈1),报警门槛退化成"浓度翻倍才报"。"""
+    rng = np.random.default_rng(5)
+    x = rng.normal(20.0, 1.0, 400)
+    x[200:] += 4.0  # 4σ 阶跃,未翻倍
+    out = detect_cusum(x, np.arange(400) * 900)
+    later = [a for a in out if a["idx"] >= 200]
+    assert later, "应检出阶跃"
+    assert any(a["severity"] == "medium" for a in later), \
+        f"4σ 阶跃应为 medium,实际 {[a['severity'] for a in later]}"

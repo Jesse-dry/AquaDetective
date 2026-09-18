@@ -106,7 +106,12 @@ def detect_cusum(x: np.ndarray, ts: np.ndarray, k: float = 0.5, h: float = 7.0,
         if z[i] > h and (i == 0 or z[i - 1] <= h or doubled):
             triggers.append(i)
     baseline = np.full(len(x), mu)
-    return _pack(x, ts, np.array(triggers), baseline, z / h)
+    # 严重度按触发点的偏离量(以基线稳健标准差为单位)判定。
+    # 不能拿 CUSUM 统计量当 z:它是累积量,触发时恒在阈值 h 附近(z/h≈1),
+    # 而 _severity 要 |z|>=3 才算 medium —— 结果 medium 永不出现,
+    # high 只在浓度翻倍(ratio>=2)时出现,报警门槛实际退化成"翻倍才报"。
+    dev_z = (x - mu) / std
+    return _pack(x, ts, np.array(triggers), baseline, dev_z)
 
 
 def detect_ewma(x: np.ndarray, ts: np.ndarray, lam: float = 0.3, k: float = 3.0) -> list[dict]:
@@ -126,26 +131,39 @@ def detect_ewma(x: np.ndarray, ts: np.ndarray, lam: float = 0.3, k: float = 3.0)
 
 
 def detect_seasonal(x: np.ndarray, ts: np.ndarray, period: int = 96, days: int = 7,
-                    k: float = 3.0) -> list[dict]:
-    """与历史同期（前 days 天同一时刻）比较。"""
+                    k: float = 3.0, min_hist: int = 3) -> list[dict]:
+    """与历史同期（前 days 天同一时刻）比较。
+
+    历史同刻样本少于 min_hist 个的位置不参与判定:样本太少时标准差不可靠,
+    单个样本更会让 std=0、z 发散到 1e12 量级(实测把 3% 的正常偏离判成高风险)。
+    std 取历史样本的稳健尺度,并以"序列自身的高频噪声"与"量化分辨率"兜底:
+    前者防止小样本下 MAD 退化为 0(连续型指标如 cod 会因此虚高到 z=200+),
+    后者防止量化数据(如 cr6 只有三档)出现同样的问题。
+    """
     n = len(x)
+    hf = _robust_sigma(np.diff(x)) / np.sqrt(2) if len(x) > 1 else 0.0
+    floor = max(_resolution(x), hf)
     baseline = np.zeros(n)
-    std = np.zeros(n)
+    z = np.zeros(n)
+    idx: list[int] = []
     for i in range(n):
         j = i - period
         hist = []
         while j >= 0 and len(hist) < days:
             hist.append(x[j])
             j -= period
-        if hist:
-            baseline[i] = float(np.mean(hist))
-            std[i] = max(float(np.std(hist)), 1e-12)
-        else:
+        if len(hist) < min_hist:
+            # 历史不足:基线取自身,偏离恒为 0,即不判定
             baseline[i] = float(x[i])
-            std[i] = 1e-12
-    z = (x - baseline) / std
-    idx = np.where(np.abs(z) > k)[0]
-    return _pack(x, ts, idx, baseline, z)
+            continue
+        hist_a = np.asarray(hist, dtype=float)
+        base = float(np.mean(hist_a))
+        sd = max(_robust_sigma(hist_a), floor, 1e-12)
+        baseline[i] = base
+        z[i] = (x[i] - base) / sd
+        if abs(z[i]) > k:
+            idx.append(i)
+    return _pack(x, ts, np.array(idx, dtype=int), baseline, z)
 
 
 def detect(x: np.ndarray, ts: np.ndarray, method: str = "cusum", **kw) -> list[dict]:

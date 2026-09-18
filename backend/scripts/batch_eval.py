@@ -111,6 +111,21 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
     t_min = np.arange(0, total_min + 15, 15)
     last_day = total_min // 1440
 
+    # 干净基线上本来就报出的告警(常驻误报):归因检出率要把它扣掉,
+    # 否则任何注入都"自动命中",数字虚高
+    def _alarmed_pairs(events=None):
+        """扫描结果覆盖的 (断面,指标) 集合(合并事件按波及断面展开)。"""
+        events = scan_for_events(db, ws, window_h=24) if events is None else events
+        return {(a["station_id"], a["indicator"])
+                for e in events
+                for a in (e.get("affected") or [{"station_id": e["station_id"],
+                                                 "indicator": i}
+                                                for i in e.get("indicators", [])])}
+
+    _copy_database(baseline, db)
+    chronic = _alarmed_pairs()
+    print(f"干净基线常驻告警: {len(chronic)} 个(断面,指标)")
+
     ents = [e for e in ws["enterprises"]]
     results = []
     print(f"===== 批量评测: {rounds} 轮(注入窗口: 最近 24h)=====")
@@ -119,7 +134,10 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
         # Restore the same baseline each round; injected readings never accumulate.
         _copy_database(baseline, db)
         etype = ETYPES[i % len(ETYPES)]
-        sev = SEVERITIES[i % len(SEVERITIES)]
+        # 严重度用不同模数,与类型解绑:若两者同用 i%3,则突发恒为 low、
+        # 周期恒为 medium、渐变恒为 high,分类型数字实际是(类型,严重度)组合数,
+        # 既分不清类型差异也分不清严重度差异
+        sev = SEVERITIES[(i // len(ETYPES)) % len(SEVERITIES)]
         ent = ents[int(rng.integers(len(ents)))]
         # onset_day:必须落在监测扫描窗口(最近 24h)内,否则测的不是检出能力
         onset_day = last_day
@@ -142,9 +160,15 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
         detected = scan_for_events(db, ws, window_h=24)
         # 合并后一条事件覆盖多个断面,故取全部波及断面
         alerted = {st for d in detected for st in d.get("stations", [d["station_id"]])}
+        alerted_pairs = _alarmed_pairs(detected)
         # 严格口径:最有溯源价值的首达断面被检出;宽松口径:任一受污染断面被检出
         hit = alert in alerted
         hit_any = bool(alerted & polluted)
+        # 归因口径:扣掉干净基线上本来就报的常驻告警,只算本次注入带来的新检出
+        new_pairs = alerted_pairs - chronic
+        hit_attr = any((alert, ind) in new_pairs for ind in
+                       {s["indicator"] for s in summary
+                        if s["station_id"] == alert and s["peak_delta"] > 0})
 
         # 清掉本轮监测告警,再用同一断面建调查用事件行(走与线上一致的调查链路)
         conn = get_conn(db)
@@ -192,6 +216,7 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
             "round": i + 1, "etype": etype, "severity": sev,
             "truth": ent["id"], "truth_name": ent["name"],
             "alert_station": alert, "detected": hit, "detected_any": hit_any,
+            "detected_attributable": hit_attr,
             "polluted_stations": sorted(polluted),
             "n_hypotheses": len(hyps),
             "recall_upstream": truth in [h["target_id"] for h in hyps],
@@ -226,6 +251,7 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
     recall_up = sum(r["recall_upstream"] for r in results)
     detected_n = sum(r["detected"] for r in results)
     detected_any_n = sum(r["detected_any"] for r in results)
+    detected_attr_n = sum(r["detected_attributable"] for r in results)
     mrr = sum(1.0 / r["rank"] for r in results if r["rank"]) / n
     confs = [r["confidence"] for r in results if r["locked"]]
     errs = [r["travel_err_h"] for r in results if r["travel_err_h"] is not None]
@@ -234,6 +260,7 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
     print(f"轮数:              {n}")
     print(f"预警检出率(首达断面): {detected_n}/{n} = {detected_n/n:.0%}")
     print(f"预警检出率(任一受污染断面): {detected_any_n}/{n} = {detected_any_n/n:.0%}")
+    print(f"预警检出率(归因,扣常驻告警): {detected_attr_n}/{n} = {detected_attr_n/n:.0%}")
     print(f"上游候选召回率:    {recall_up}/{n} = {recall_up/n:.0%}")
     print(f"Top-1 命中率:      {top1}/{n} = {top1/n:.0%}")
     print(f"Top-3 命中率:      {top3}/{n} = {top3/n:.0%}")
@@ -254,10 +281,33 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
         lk = sum(r["locked"] for r in sub)
         de = sum(r["detected"] for r in sub)
         da = sum(r["detected_any"] for r in sub)
+        dat = sum(r["detected_attributable"] for r in sub)
         print(f"{et:8s}: 检出(首达) {de}/{len(sub)} ({de/len(sub):.0%}), "
+              f"检出(归因) {dat}/{len(sub)} ({dat/len(sub):.0%}), "
               f"检出(任一) {da}/{len(sub)} ({da/len(sub):.0%}), "
               f"Top-1 {t1}/{len(sub)} ({t1/len(sub):.0%}), "
               f"锁定 {lk}/{len(sub)} ({lk/len(sub):.0%})")
+
+    print("\n===== 按严重度分组(与类型已解绑)=====")
+    for sv in SEVERITIES:
+        sub = [r for r in results if r["severity"] == sv]
+        if not sub:
+            continue
+        de = sum(r["detected"] for r in sub)
+        t1 = sum(r["top1"] for r in sub)
+        print(f"{sv:8s}: 检出(首达) {de}/{len(sub)} ({de/len(sub):.0%}), "
+              f"Top-1 {t1}/{len(sub)} ({t1/len(sub):.0%})")
+
+    print("\n===== 按类型×严重度(每格样本数少,仅用于归因)=====")
+    for et in ETYPES:
+        cells = []
+        for sv in SEVERITIES:
+            sub = [r for r in results if r["etype"] == et and r["severity"] == sv]
+            if not sub:
+                continue
+            de = sum(r["detected"] for r in sub)
+            cells.append(f"{sv} {de}/{len(sub)}")
+        print(f"{et:8s}: " + " | ".join(cells))
 
     # 落盘评测报告
     out = {
@@ -273,6 +323,8 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
         "summary": {
             "detection_rate": detected_n / n,
             "detection_rate_any_station": detected_any_n / n,
+            "detection_rate_attributable": detected_attr_n / n,
+            "chronic_alerts": len(chronic),
             "upstream_recall": recall_up / n,
             "top1": top1 / n, "top3": top3 / n,
             "locked": locked / n, "mrr": round(mrr, 4),

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T20:36:45+0800",
+  "generated_at": "2026-09-18T21:18:10+0800",
   "rounds": 30,
   "methodology": {
     "round_isolation": "SQLite backup restored before every injection",
@@ -9,8 +9,10 @@
     "sampling": "Seed 42; random enterprise; cyclic type/severity pairs"
   },
   "summary": {
-    "detection_rate": 0.2,
-    "detection_rate_any_station": 0.3,
+    "detection_rate": 0.6666666666666666,
+    "detection_rate_any_station": 0.9666666666666667,
+    "detection_rate_attributable": 0.3,
+    "chronic_alerts": 8,
     "upstream_recall": 0.8666666666666667,
     "top1": 0.7333333333333333,
     "top3": 0.8666666666666667,
@@ -32,6 +34,7 @@
       "alert_station": "st_02",
       "detected": true,
       "detected_any": true,
+      "detected_attributable": true,
       "polluted_stations": [
         "st_02",
         "st_03",
@@ -50,17 +53,18 @@
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.04
+      "duration_s": 0.09
     },
     {
       "round": 2,
       "etype": "periodic",
-      "severity": "medium",
+      "severity": "low",
       "truth": "ent_14",
       "truth_name": "丰润酿造",
       "alert_station": "st_07",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_07"
       ],
@@ -75,17 +79,18 @@
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.15
+      "duration_s": 0.18
     },
     {
       "round": 3,
       "etype": "gradual",
-      "severity": "high",
+      "severity": "low",
       "truth": "ent_12",
       "truth_name": "味全食品",
       "alert_station": "st_04",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_04",
         "st_05",
@@ -108,12 +113,13 @@
     {
       "round": 4,
       "etype": "sudden",
-      "severity": "low",
+      "severity": "medium",
       "truth": "ent_08",
       "truth_name": "东升化工",
       "alert_station": "st_03",
       "detected": true,
       "detected_any": true,
+      "detected_attributable": true,
       "polluted_stations": [
         "st_03",
         "st_04",
@@ -141,8 +147,9 @@
       "truth": "ent_08",
       "truth_name": "东升化工",
       "alert_station": "st_03",
-      "detected": false,
+      "detected": true,
       "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_03",
         "st_04",
@@ -166,12 +173,13 @@
     {
       "round": 6,
       "etype": "gradual",
-      "severity": "high",
+      "severity": "medium",
       "truth": "ent_16",
       "truth_name": "城西污水处理厂",
       "alert_station": "st_08",
       "detected": false,
-      "detected_any": false,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_02",
         "st_03",
@@ -197,12 +205,13 @@
     {
       "round": 7,
       "etype": "sudden",
-      "severity": "low",
+      "severity": "high",
       "truth": "ent_02",
       "truth_name": "耀光金属表面处理",
       "alert_station": "st_02",
       "detected": true,
       "detected_any": true,
+      "detected_attributable": true,
       "polluted_stations": [
         "st_02",
         "st_03",
@@ -226,12 +235,13 @@
     {
       "round": 8,
       "etype": "periodic",
-      "severity": "medium",
+      "severity": "high",
       "truth": "ent_13",
       "truth_name": "绿源食品",
       "alert_station": "st_09",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": true,
       "polluted_stations": [
         "st_04",
         "st_05",
@@ -245,7 +255,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.792,
+      "confidence": 0.79,
       "status": "resolved",
       "travel_pred_h": 8.33,
       "travel_true_h": 8.33277661795407,
@@ -260,7 +270,8 @@
       "truth_name": "彩云印染厂",
       "alert_station": "st_09",
       "detected": false,
-      "detected_any": false,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_04",
         "st_05",
@@ -290,6 +301,7 @@
       "alert_station": "st_02",
       "detected": true,
       "detected_any": true,
+      "detected_attributable": true,
       "polluted_stations": [
         "st_02",
         "st_03",
@@ -313,12 +325,13 @@
     {
       "round": 11,
       "etype": "periodic",
-      "severity": "medium",
+      "severity": "low",
       "truth": "ent_10",
       "truth_name": "新宇制药",
       "alert_station": "st_05",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_05",
         "st_06",
@@ -330,7 +343,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.62,
+      "confidence": 0.623,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
@@ -340,12 +353,13 @@
     {
       "round": 12,
       "etype": "gradual",
-      "severity": "high",
+      "severity": "low",
       "truth": "ent_18",
       "truth_name": "滨江污水处理厂",
       "alert_station": "st_01",
       "detected": false,
-      "detected_any": false,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_01",
         "st_02",
@@ -371,12 +385,13 @@
     {
       "round": 13,
       "etype": "sudden",
-      "severity": "low",
+      "severity": "medium",
       "truth": "ent_14",
       "truth_name": "丰润酿造",
       "alert_station": "st_07",
       "detected": true,
       "detected_any": true,
+      "detected_attributable": true,
       "polluted_stations": [
         "st_07"
       ],
@@ -391,7 +406,7 @@
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.13
+      "duration_s": 0.14
     },
     {
       "round": 14,
@@ -402,6 +417,7 @@
       "alert_station": "st_07",
       "detected": false,
       "detected_any": false,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_07"
       ],
@@ -421,12 +437,13 @@
     {
       "round": 15,
       "etype": "gradual",
-      "severity": "high",
+      "severity": "medium",
       "truth": "ent_13",
       "truth_name": "绿源食品",
       "alert_station": "st_09",
       "detected": false,
-      "detected_any": false,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_04",
         "st_05",
@@ -450,12 +467,13 @@
     {
       "round": 16,
       "etype": "sudden",
-      "severity": "low",
+      "severity": "high",
       "truth": "ent_15",
       "truth_name": "城东污水处理厂",
       "alert_station": "st_06",
       "detected": false,
-      "detected_any": false,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_06",
         "st_07"
@@ -471,17 +489,18 @@
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
       "travel_err_h": 0.1,
-      "duration_s": 0.03
+      "duration_s": 0.04
     },
     {
       "round": 17,
       "etype": "periodic",
-      "severity": "medium",
+      "severity": "high",
       "truth": "ent_10",
       "truth_name": "新宇制药",
       "alert_station": "st_05",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_05",
         "st_06",
@@ -507,8 +526,9 @@
       "truth": "ent_03",
       "truth_name": "蓝海电镀园",
       "alert_station": "st_05",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_05",
         "st_06",
@@ -534,8 +554,9 @@
       "truth": "ent_16",
       "truth_name": "城西污水处理厂",
       "alert_station": "st_08",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": true,
       "polluted_stations": [
         "st_02",
         "st_03",
@@ -558,12 +579,13 @@
     {
       "round": 20,
       "etype": "periodic",
-      "severity": "medium",
+      "severity": "low",
       "truth": "ent_09",
       "truth_name": "恒泰精细化工",
       "alert_station": "st_09",
-      "detected": false,
+      "detected": true,
       "detected_any": true,
+      "detected_attributable": true,
       "polluted_stations": [
         "st_04",
         "st_05",
@@ -577,22 +599,23 @@
       "top1": false,
       "top3": true,
       "locked": false,
-      "confidence": 0.647,
+      "confidence": 0.648,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.74446764091858,
       "travel_err_h": 0.04,
-      "duration_s": 0.12
+      "duration_s": 0.13
     },
     {
       "round": 21,
       "etype": "gradual",
-      "severity": "high",
+      "severity": "low",
       "truth": "ent_10",
       "truth_name": "新宇制药",
       "alert_station": "st_05",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_05",
         "st_06",
@@ -609,17 +632,18 @@
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
       "travel_err_h": 0.1,
-      "duration_s": 0.04
+      "duration_s": 0.03
     },
     {
       "round": 22,
       "etype": "sudden",
-      "severity": "low",
+      "severity": "medium",
       "truth": "ent_07",
       "truth_name": "绿洲纸业",
       "alert_station": "st_10",
       "detected": true,
       "detected_any": true,
+      "detected_attributable": true,
       "polluted_stations": [
         "st_06",
         "st_07",
@@ -636,7 +660,7 @@
       "travel_pred_h": 2.78,
       "travel_true_h": 2.74446764091858,
       "travel_err_h": 0.04,
-      "duration_s": 0.02
+      "duration_s": 0.01
     },
     {
       "round": 23,
@@ -647,6 +671,7 @@
       "alert_station": "st_09",
       "detected": false,
       "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_04",
         "st_05",
@@ -670,12 +695,13 @@
     {
       "round": 24,
       "etype": "gradual",
-      "severity": "high",
+      "severity": "medium",
       "truth": "ent_17",
       "truth_name": "高新污水处理厂",
       "alert_station": "st_04",
       "detected": false,
-      "detected_any": false,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_04",
         "st_05",
@@ -698,12 +724,13 @@
     {
       "round": 25,
       "etype": "sudden",
-      "severity": "low",
+      "severity": "high",
       "truth": "ent_15",
       "truth_name": "城东污水处理厂",
       "alert_station": "st_06",
       "detected": false,
-      "detected_any": false,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_06",
         "st_07"
@@ -719,17 +746,18 @@
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
       "travel_err_h": 0.1,
-      "duration_s": 0.03
+      "duration_s": 0.04
     },
     {
       "round": 26,
       "etype": "periodic",
-      "severity": "medium",
+      "severity": "high",
       "truth": "ent_12",
       "truth_name": "味全食品",
       "alert_station": "st_04",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_04",
         "st_05",
@@ -756,8 +784,9 @@
       "truth": "ent_08",
       "truth_name": "东升化工",
       "alert_station": "st_03",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_03",
         "st_04",
@@ -776,7 +805,7 @@
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.03
+      "duration_s": 0.04
     },
     {
       "round": 28,
@@ -786,7 +815,8 @@
       "truth_name": "城东污水处理厂",
       "alert_station": "st_06",
       "detected": false,
-      "detected_any": false,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_06",
         "st_07"
@@ -807,12 +837,13 @@
     {
       "round": 29,
       "etype": "periodic",
-      "severity": "medium",
+      "severity": "low",
       "truth": "ent_10",
       "truth_name": "新宇制药",
       "alert_station": "st_05",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_05",
         "st_06",
@@ -824,7 +855,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.605,
+      "confidence": 0.608,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
@@ -834,12 +865,13 @@
     {
       "round": 30,
       "etype": "gradual",
-      "severity": "high",
+      "severity": "low",
       "truth": "ent_08",
       "truth_name": "东升化工",
       "alert_station": "st_03",
-      "detected": false,
-      "detected_any": false,
+      "detected": true,
+      "detected_any": true,
+      "detected_attributable": false,
       "polluted_stations": [
         "st_03",
         "st_04",
