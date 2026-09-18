@@ -100,8 +100,8 @@ python -m app.data.seed
 uvicorn app.main:app --reload --port 8000
 # API 文档: http://127.0.0.1:8000/docs
 
-# 3) 跑测试（22 个引擎/数据单测）
-pytest tests                 # 或 python scripts/run_tests.py（无 pytest 依赖的轻量 runner）
+# 3) 跑测试（66 个后端测试：引擎纯函数 / 监测调度 / 真值隔离 / 评测口径）
+pytest tests
 ```
 
 ### 启动前端
@@ -117,6 +117,15 @@ npm run dev          # http://localhost:5173
 npm run build        # tsc 类型检查 + 生产构建
 npm run test         # vitest(store 与 WS 消息守卫单测)
 ```
+
+### 快速体验（不启动服务）
+
+```bash
+# 直接跑一遍"偷排事件 → 侦探推理 → 锁定 → 报告"全链路
+python scripts/smoke_investigate.py evt_001
+```
+
+</details>
 
 ### 配置 LLM（可选）
 
@@ -211,14 +220,6 @@ AQ_MONITOR_METHOD=seasonal # 检测方法:cusum|ewma|threesigma|seasonal(默认 
 实测：一次注入在 5 个断面、2 个指标上共 9 条检出 → **1 条事件**，锚点为真值首达断面；
 连续复扫不再新增。
 
-### 快速体验（不启动服务）
-
-```bash
-# 直接跑一遍"偷排事件 → 侦探推理 → 锁定 → 报告"全链路
-python scripts/smoke_investigate.py evt_001
-```
-
-</details>
 
 ## 演示故事线（三条预置事件）
 
@@ -233,7 +234,7 @@ python scripts/smoke_investigate.py evt_001
 
 ## 验证结果
 
-- 后端测试 **60/60 通过**(`cd backend && python -m pytest tests`;含引擎纯函数、
+- 后端测试 **66/66 通过**(`cd backend && python -m pytest tests`;含引擎纯函数、
   监测调度与并发去重、真值隔离、评测口径)
 - 模拟观测先独立落库，调查引擎不读取 `truth_source`；真值只用于调查结束后的评测
 - 三条预置事件全部正确锁定真凶：**耀光金属 78% / 恒泰化工 79% / 城东污水厂 77%**(模板推理模式实测)
