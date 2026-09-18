@@ -16,7 +16,10 @@ W = {"eem": 0.40, "pollutant": 0.25, "pattern": 0.20, "strength": 0.15}
 # 通俗化标签:面向普通观众的中文映射(只影响展示文本,不影响数值逻辑)
 INDICATOR_CN = {"cod": "化学需氧量", "ammonia": "氨氮", "tp": "总磷", "cr6": "六价铬",
                 "ph": "pH值", "do": "溶解氧", "codmn": "高锰酸盐指数"}
-ETYPE_CN = {"sudden": "突发泄漏", "periodic": "夜间偷排", "gradual": "逐渐恶化"}
+# detected = 监测 Agent 自动检出的事件,类型尚未判定(突发/偷排/渐变要靠侦查给出)
+ETYPE_CN = {"sudden": "突发泄漏", "periodic": "夜间偷排", "gradual": "逐渐恶化",
+            "detected": "类型待定"}
+_KNOWN_ETYPES = ("sudden", "periodic", "gradual")
 INDUSTRY_CN = {"electroplating": "电镀", "dyeing": "印染", "paper": "造纸",
                "chemical": "化工", "pharma": "制药", "food": "食品", "wwtp": "污水处理厂"}
 SEVERITY_CN = {"high": "严重(需立即处置)", "medium": "中等(持续关注)", "low": "轻微(等结果)"}
@@ -56,7 +59,15 @@ def parse_event(state: dict, llm, db_path: str, ws: dict) -> dict:
     # 通俗化文本(我的)+ epoch_ms 转 evidence(队友的),两者合并
     inds_cn = _indicators_cn(ev)
     station_cn = _station_cn(ws, ev["station_id"])
-    etype_cn = ETYPE_CN.get(ev["etype"], ev["etype"])
+    # 只有已知类型才说"疑似";监测自动检出的事件类型未知,不能说成"疑似「detected」"。
+    # 注意不能用 `in ETYPE_CN` 判断:detected 也在表里(供报告/处置复用)
+    etype = ev["etype"]
+    if etype in _KNOWN_ETYPES:
+        kind_cn = f"异常类型疑似「{ETYPE_CN[etype]}」"
+    elif etype == "detected":
+        kind_cn = "异常类型待定（监测自动检出）"
+    else:
+        kind_cn = "异常类型待定"  # 未知编码不原样抛给用户
     sev_cn = SEVERITY_CN.get(ev["severity"], ev["severity"])
     from datetime import datetime, timezone, timedelta
     tz = timezone(timedelta(hours=8))
@@ -69,7 +80,7 @@ def parse_event(state: dict, llm, db_path: str, ws: dict) -> dict:
     stream.append({"type": "step", "data": {
         "step_id": "parse", "phase": "事件解析",
         "clue": f"{station_cn} 检出异常：{inds_cn}",
-        "reasoning": f"异常类型疑似「{etype_cn}」，严重度「{sev_cn}」，"
+        "reasoning": f"{kind_cn}，严重度「{sev_cn}」，"
                      f"首达时间 {onset_cn}。开始排查上游污染源。",
         "evidence": [{"kind": "event", "value": event_evidence}],
         "status": "verified"}})

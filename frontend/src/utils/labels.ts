@@ -71,7 +71,9 @@ export const ETYPE_LABEL: Record<string, string> = {
   sudden: '突发泄漏',
   periodic: '夜间偷排',
   gradual: '逐渐恶化',
-  detected: '监测异常',
+  // 监测 Agent 自动检出:类型尚未判定(突发/偷排/渐变要靠侦查给出)。
+  // 不写"监测异常"——卡片标题已是"监测告警N",类型栏再写监测就重复了
+  detected: '类型待定',
 }
 
 export const etypeLabel = (t: string): string => ETYPE_LABEL[t] ?? t
