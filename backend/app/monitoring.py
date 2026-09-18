@@ -16,7 +16,7 @@ class ScanBusy(Exception):
 
 class MonitorService:
     def __init__(self, db_path, watershed, *, enabled=False, interval_s=300,
-                 window_h=24, method="cusum"):
+                 window_h=24, method="seasonal"):
         self.db_path = db_path
         self.watershed = watershed
         self.enabled = enabled

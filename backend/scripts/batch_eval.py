@@ -115,7 +115,7 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
     # 否则任何注入都"自动命中",数字虚高
     def _alarmed_pairs(events=None):
         """扫描结果覆盖的 (断面,指标) 集合(合并事件按波及断面展开)。"""
-        events = scan_for_events(db, ws, window_h=24) if events is None else events
+        events = scan_for_events(db, ws, window_h=24, method=settings.monitor_method) if events is None else events
         return {(a["station_id"], a["indicator"])
                 for e in events
                 for a in (e.get("affected") or [{"station_id": e["station_id"],
@@ -157,7 +157,7 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
         polluted = {s["station_id"] for s in summary if s["peak_delta"] > 0}
 
         # 监测 Agent 扫描:线上告警由它产生,故注入后先扫再建事件行
-        detected = scan_for_events(db, ws, window_h=24)
+        detected = scan_for_events(db, ws, window_h=24, method=settings.monitor_method)
         # 合并后一条事件覆盖多个断面,故取全部波及断面
         alerted = {st for d in detected for st in d.get("stations", [d["station_id"]])}
         alerted_pairs = _alarmed_pairs(detected)
@@ -314,6 +314,7 @@ def _evaluate(rounds: int, baseline: str, db: str, output_path: Path | None) -> 
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "rounds": n,
         "methodology": {
+            "monitor_method": settings.monitor_method,
             "round_isolation": "SQLite backup restored before every injection",
             "detection": "First arrival station appears in new alerts within the latest 24 hours",
             "detection_any_station": "Any polluted station appears in new alerts within the latest 24 hours",

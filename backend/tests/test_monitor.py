@@ -158,6 +158,9 @@ def test_api_creates_visible_events_and_uses_milliseconds(source, monkeypatch):
     monkeypatch.setattr(main, "get_db_path", lambda: db)
     monkeypatch.setattr(main, "get_watershed", lambda: ws)
     monkeypatch.setattr(main.settings, "monitor_enabled", False)
+    # 本例考的是 API 契约(毫秒时间戳/计数/409/参数校验),与默认检测方法无关;
+    # 数据只有 96 个点,季节基线需要 8 天(768 点)历史,故显式固定为 cusum
+    monkeypatch.setattr(main.settings, "monitor_method", "cusum")
     monkeypatch.setattr(main.investigate, "get_db_path", lambda: db)
     with TestClient(main.app) as client:
         assert client.get("/api/v1/monitor/status").json()["last_result"] is None

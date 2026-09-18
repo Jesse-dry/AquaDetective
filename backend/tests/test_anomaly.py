@@ -138,3 +138,26 @@ def test_cusum_severity_reflects_deviation_not_cumulative_statistic():
     assert later, "应检出阶跃"
     assert any(a["severity"] == "medium" for a in later), \
         f"4σ 阶跃应为 medium,实际 {[a['severity'] for a in later]}"
+
+
+def test_seasonal_ignores_slow_drift():
+    """缓慢趋势不应被当成持续异常:同刻基线天然吸收日尺度的漂移。
+
+    纯趋势序列上,晚期检出不得多于噪声本身在 3σ 阈值下的期望(192 点约 0~2 个),
+    远少于"把趋势当异常"时的数量。
+    """
+    rng = np.random.default_rng(7)
+    n = 96 * 10
+    x = 20.0 + np.arange(n) / 96 * 0.04 + rng.normal(0, 0.15, n)
+    late = [a for a in detect_seasonal(x, np.arange(n) * 900, period=96) if a["idx"] >= 96 * 8]
+    assert len(late) <= 3, f"趋势泄漏过多:{[(a['idx'], round(a['zscore'], 1)) for a in late]}"
+
+
+def test_seasonal_still_detects_step_on_trending_series():
+    """同刻基线吸收趋势的同时,仍要能检出真实阶跃。"""
+    rng = np.random.default_rng(8)
+    n = 96 * 10
+    x = 20.0 + np.arange(n) / 96 * 0.04 + rng.normal(0, 0.15, n)
+    x[96 * 8 + 20:] += 3.0                     # 3 mg/L 阶跃
+    out = detect_seasonal(x, np.arange(n) * 900, period=96)
+    assert any(a["idx"] >= 96 * 8 + 20 for a in out), "阶跃应被检出"

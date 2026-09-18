@@ -131,14 +131,25 @@ def detect_ewma(x: np.ndarray, ts: np.ndarray, lam: float = 0.3, k: float = 3.0)
 
 
 def detect_seasonal(x: np.ndarray, ts: np.ndarray, period: int = 96, days: int = 7,
-                    k: float = 3.0, min_hist: int = 3) -> list[dict]:
-    """与历史同期（前 days 天同一时刻）比较。
+                    k: float = 4.5, min_hist: int = 3) -> list[dict]:
+    """与历史同期（前 days 天同一时刻）比较,这是唯一能区分"昼夜规律"与"污染"的基线。
 
-    历史同刻样本少于 min_hist 个的位置不参与判定:样本太少时标准差不可靠,
-    单个样本更会让 std=0、z 发散到 1e12 量级(实测把 3% 的正常偏离判成高风险)。
-    std 取历史样本的稳健尺度,并以"序列自身的高频噪声"与"量化分辨率"兜底:
-    前者防止小样本下 MAD 退化为 0(连续型指标如 cod 会因此虚高到 z=200+),
-    后者防止量化数据(如 cr6 只有三档)出现同样的问题。
+    两处必须的稳健化处理:
+
+    1. 历史同刻样本少于 min_hist 个的位置不参与判定 —— 样本太少时标准差不可靠,
+       单个样本更会让 std=0、z 发散到 1e12 量级(实测把 3% 的正常偏离判成高风险)。
+    2. std 以"序列自身高频噪声"与"量化分辨率"兜底:前者防止小样本下 MAD 退化为 0
+       (连续型指标如 cod 会因此虚高到 z=200+),后者防止量化数据(如 cr6 只有三档)
+       出现同样的问题。
+
+    基线用同刻均值。曾试过对同刻历史拟合线性趋势并外推到当天以消除趋势泄漏,
+    实测反而把干净数据的常驻误报从 9 个(断面,指标)推到 23~26 个 —— 外推到
+    样本区间之外会放大噪声(杠杆效应),基线比均值更不稳。
+
+    k 默认 4.5(而非 3.0):本项目的模拟序列日内极差达均值的 40%,干净数据上
+    3.0 会常驻报出 9 个(断面,指标)的告警。实测权衡(30 轮评测):
+    k=3.0 → 误报 9 / 归因检出 73%;k=4.0 → 1 / 73%;k=4.5 → 0 / 70%;k=5.0 → 0 / 57%。
+    真实污染偏离远大于此,故抬高阈值几乎不损检出,却能把误报清零。
     """
     n = len(x)
     hf = _robust_sigma(np.diff(x)) / np.sqrt(2) if len(x) > 1 else 0.0
@@ -147,6 +158,7 @@ def detect_seasonal(x: np.ndarray, ts: np.ndarray, period: int = 96, days: int =
     z = np.zeros(n)
     idx: list[int] = []
     for i in range(n):
+        # 由近及远收集历史同刻样本:hist[0] 是昨天同刻
         j = i - period
         hist = []
         while j >= 0 and len(hist) < days:
@@ -156,9 +168,9 @@ def detect_seasonal(x: np.ndarray, ts: np.ndarray, period: int = 96, days: int =
             # 历史不足:基线取自身,偏离恒为 0,即不判定
             baseline[i] = float(x[i])
             continue
-        hist_a = np.asarray(hist, dtype=float)
-        base = float(np.mean(hist_a))
-        sd = max(_robust_sigma(hist_a), floor, 1e-12)
+        h = np.asarray(hist, dtype=float)
+        base = float(np.mean(h))
+        sd = max(_robust_sigma(h), floor, 1e-12)
         baseline[i] = base
         z[i] = (x[i] - base) / sd
         if abs(z[i]) > k:

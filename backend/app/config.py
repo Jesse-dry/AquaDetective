@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     monitor_enabled: bool = True
     monitor_interval_s: int = Field(default=300, ge=10, le=86400)
     monitor_window_h: int = Field(default=24, ge=1, le=2160)
-    monitor_method: Literal["cusum", "ewma", "threesigma", "seasonal"] = "cusum"
+    monitor_method: Literal["cusum", "ewma", "threesigma", "seasonal"] = "seasonal"
 
     # 支持按 Agent 覆盖 LLM 配置的 Agent 名(与 graph.py 中节点分组一致)
     LLM_AGENTS: ClassVar[tuple[str, ...]] = (
