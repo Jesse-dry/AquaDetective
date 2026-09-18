@@ -29,17 +29,21 @@
   .body { flex: 1; display: grid; grid-template-columns: 1.05fr .95fr; gap: 34px; margin-top: 28px; }
   h2 { font-size: 16px; font-weight: 600; color: #334155; margin-bottom: 16px; }
   h2 em { font-style: normal; color: #94a3b8; font-size: 13px; margin-left: 8px; }
-  .bars { display: flex; flex-direction: column; gap: 18px; }
+  /* 两个指标口径不同,分成两组画,各自带标题,避免读者把两组数字混读 */
+  .metric { margin-bottom: 14px; }
+  .metric-name { font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 8px; }
+  .metric-name span { font-weight: 400; color: #94a3b8; margin-left: 6px; font-size: 12px; }
+  .bars { display: flex; flex-direction: column; gap: 12px; }
   .bar-row { display: grid; grid-template-columns: 92px 1fr 54px; align-items: center; gap: 12px; }
   .bar-row .lbl { font-size: 14px; color: #334155; }
   /* 关键:span 默认 inline,必须 block 才能让 width/height 生效 */
   .bar-track { display: block; height: 22px; background: #eef2f7; border-radius: 6px; overflow: hidden; }
   .bar-fill { display: block; height: 100%; border-radius: 6px; }
   .bar-row .num { font-size: 15px; font-weight: 600; text-align: right; color: #0f172a; }
-  .notes { margin-top: 22px; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+  .notes { margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
   .notes li { list-style: none; font-size: 13px; color: #64748b; line-height: 1.9; }
   .notes li b { color: #334155; font-weight: 600; }
-  .funnel { display: flex; flex-direction: column; gap: 10px; }
+  .funnel { display: flex; flex-direction: column; gap: 14px; }
   .fstep { display: flex; align-items: center; gap: 12px; }
   .fstep .n { width: 44px; text-align: right; font-size: 17px; font-weight: 700; color: #0284c7; }
   .fstep .t { flex: 1; font-size: 13px; color: #334155; }
@@ -50,7 +54,7 @@
 <body>
   <div class="head">
     <h1>批量评测 · 30 轮<span>随机事件注入</span></h1>
-    <p>企业随机 · 类型/严重度固定轮换 · 末日注入 · 每轮恢复基线 | 调查引擎不读取真值</p>
+    <p>企业随机 · 类型与严重度解绑轮换 · 末日注入 · 每轮恢复 SQLite 基线 | 调查引擎不读取真值</p>
   </div>
 
   <div class="kpis">
@@ -62,29 +66,50 @@
 
   <div class="body">
     <div>
-      <h2>按事件类型的 Top-1 命中率 <em>分类型分层统计(检出率 突发100% / 偷排80% / 渐变30%)</em></h2>
-      <div class="bars">
-        <div class="bar-row">
-          <span class="lbl">突发泄漏</span>
-          <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#0284c7,#38bdf8)"></span></span>
-          <span class="num">80%</span>
+      <h2>分类型表现 <em>两个指标口径不同,分开画;每组各三根柱子</em></h2>
+      <div class="metric">
+        <div class="metric-name">预警检出率 <span>首达断面在 24h 窗口内被检出</span></div>
+        <div class="bars">
+          <div class="bar-row">
+            <span class="lbl">突发泄漏</span>
+            <span class="bar-track"><span class="bar-fill" style="width:100%;background:linear-gradient(90deg,#0284c7,#38bdf8)"></span></span>
+            <span class="num">100%</span>
+          </div>
+          <div class="bar-row">
+            <span class="lbl">夜间偷排</span>
+            <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#0284c7,#38bdf8)"></span></span>
+            <span class="num">80%</span>
+          </div>
+          <div class="bar-row">
+            <span class="lbl">逐渐恶化</span>
+            <span class="bar-track"><span class="bar-fill" style="width:30%;background:linear-gradient(90deg,#d97706,#f59e0b)"></span></span>
+            <span class="num">30%</span>
+          </div>
         </div>
-        <div class="bar-row">
-          <span class="lbl">夜间偷排</span>
-          <span class="bar-track"><span class="bar-fill" style="width:60%;background:linear-gradient(90deg,#0284c7,#38bdf8)"></span></span>
-          <span class="num">60%</span>
-        </div>
-        <div class="bar-row">
-          <span class="lbl">逐渐恶化</span>
-          <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#d97706,#f59e0b)"></span></span>
-          <span class="num">80%</span>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Top-1 命中率 <span>溯源结论排名第一</span></div>
+        <div class="bars">
+          <div class="bar-row">
+            <span class="lbl">突发泄漏</span>
+            <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></span></span>
+            <span class="num">80%</span>
+          </div>
+          <div class="bar-row">
+            <span class="lbl">夜间偷排</span>
+            <span class="bar-track"><span class="bar-fill" style="width:60%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></span></span>
+            <span class="num">60%</span>
+          </div>
+          <div class="bar-row">
+            <span class="lbl">逐渐恶化</span>
+            <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></span></span>
+            <span class="num">80%</span>
+          </div>
         </div>
       </div>
       <ul class="notes">
-        <li>· 传播时间误差:<b>均值 0.04h / 最大 0.10h</b>(30/30 有效样本)</li>
-        <li>· 上游候选召回率 <b>87%</b>,最终锁定命中率 <b>73%</b></li>
-        <li>· 检出率 <b>70%</b>(任一受污染断面 77%)，且<b>干净数据零误报</b>——检出率只有配上误报数才有意义</li>
-        <li>· 关键在<b>同刻基线</b>：干净序列日内极差达均值 40%，日内基线分不开昼夜规律与污染(检出仅 30% 且需靠"翻倍"兜误报)</li>
+        <li>· 检出率 <b>70%</b>(任一受污染断面 77%)、<b>干净数据零误报</b>;上游召回 <b>87%</b>、锁定 <b>73%</b></li>
+        <li>· 传播时间误差 <b>0.04h / 0.10h</b>(30/30);渐变型检出仅 30% 是当前最大短板</li>
       </ul>
     </div>
     <div>
