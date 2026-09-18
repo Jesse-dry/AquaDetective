@@ -10,7 +10,9 @@
 设计要点:
 - 评测走与线上完全相同的调查链路(节点函数直调,LLM=None 模板降级,无副作用落盘)
 - 真值隔离:调查引擎只拿观测数据,truth_source 仅在本脚本内做对答案
-- 每轮注入后回滚 readings(避免污染叠加影响后续轮次)
+- 全程在演示库的**副本**上跑(注入会写 readings),演示库保持干净可复现
+- 检出率口径:注入时点落在监测扫描窗口(最近 24h)内,且以真实首达断面是否被
+  检出为准(不是"扫到了任何东西")
 
 用法:
     python scripts/batch_eval.py [轮数]   # 默认 12 轮
@@ -18,7 +20,10 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import sys
+import tempfile
 import time
 from pathlib import Path
 from uuid import uuid4
@@ -68,7 +73,11 @@ def run_investigation(event_row: dict, db: str, ws: dict) -> dict:
 
 def main(rounds: int = 12) -> None:
     ensure_db(settings)
-    db, ws = get_db_path(), get_watershed()
+    # 在数据库副本上评测:注入会写 readings,不碰演示库(线上库保持干净可复现)
+    src = get_db_path()
+    db = str(Path(tempfile.gettempdir()) / f"aqua_eval_{os.getpid()}.db")
+    shutil.copyfile(src, db)
+    ws = get_watershed()
     rng = np.random.default_rng(42)
 
     # 注入时间轴:与 seed 完全一致的全程 t_min(相对分钟,0 起,15min 步长)。
@@ -89,18 +98,29 @@ def main(rounds: int = 12) -> None:
         etype = ETYPES[i % len(ETYPES)]
         sev = SEVERITIES[i % len(SEVERITIES)]
         ent = ents[int(rng.integers(len(ents)))]
-        # onset_day:数据起点起的绝对天数,随机在末段 15 天(留 5 天传播余量)
-        onset_day = last_day - 15 + int(rng.integers(0, 15))
+        # onset_day:必须落在监测扫描窗口(最近 24h)内,否则测的不是检出能力
+        onset_day = last_day
 
         spec = {"etype": etype, "source_id": ent["id"], "severity": sev,
                 "onset_day": onset_day, "duration_d": 3}
         if etype == "sudden":
             spec["mass_kg"] = 80.0
 
-        # 注入 → 生成事件行(告警断面 = 真实首达断面,与 seed 相同逻辑)
+        # 注入时序(告警断面 = 真实首达断面,与 seed 相同逻辑)
         conn = get_conn(db)
         apply_event(conn, ws, spec, t_min, rng)
+        conn.commit()
+        conn.close()
         alert = alert_station_for(ws, ent["id"]) or ws["stations"][0]["id"]
+
+        # 监测 Agent 扫描:线上告警由它产生,故注入后先扫再建事件行。
+        # 检出率口径 = 真实首达断面出现在本轮新告警里(而非"扫到了任何东西")
+        detected = scan_for_events(db, ws, window_h=24)
+        hit = any(d["station_id"] == alert for d in detected)
+
+        # 清掉本轮监测告警,再用同一断面建调查用事件行(走与线上一致的调查链路)
+        conn = get_conn(db)
+        conn.execute("DELETE FROM events WHERE id LIKE 'evt_scan_%'")
         ev_id = f"evalevt_{i:03d}"
         # onset 绝对时间 = T0 + 相对分钟×60(与 readings.ts 同基准)
         onset_ts = T0 + spec["onset_day"] * 1440 * 60
@@ -113,9 +133,6 @@ def main(rounds: int = 12) -> None:
         upsert_event_observation(conn, ws, ev_id, alert, ent["id"], 42 + i)
         conn.commit()
         conn.close()
-
-        # 监测 Agent 扫描(预警检出率口径:窗口内该断面出现新告警)
-        detected = scan_for_events(db, ws, window_h=24)
 
         # 完整调查(与线上同链路)
         conn = get_conn(db)
@@ -146,7 +163,7 @@ def main(rounds: int = 12) -> None:
         results.append({
             "round": i + 1, "etype": etype, "severity": sev,
             "truth": ent["id"], "truth_name": ent["name"],
-            "alert_station": alert, "detected": bool(detected),
+            "alert_station": alert, "detected": hit,
             "n_hypotheses": len(hyps),
             "recall_upstream": truth in [h["target_id"] for h in hyps],
             "rank": rank,
@@ -204,7 +221,9 @@ def main(rounds: int = 12) -> None:
             continue
         t1 = sum(r["top1"] for r in sub)
         lk = sum(r["locked"] for r in sub)
-        print(f"{et:8s}: Top-1 {t1}/{len(sub)} ({t1/len(sub):.0%}), "
+        de = sum(r["detected"] for r in sub)
+        print(f"{et:8s}: 检出 {de}/{len(sub)} ({de/len(sub):.0%}), "
+              f"Top-1 {t1}/{len(sub)} ({t1/len(sub):.0%}), "
               f"锁定 {lk}/{len(sub)} ({lk/len(sub):.0%})")
 
     # 落盘评测报告
@@ -228,6 +247,11 @@ def main(rounds: int = 12) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n评测报告已写入: {out_path}")
+
+    for suffix in ("", "-wal", "-shm"):  # 清掉本轮评测库副本
+        p = Path(db + suffix)
+        if p.exists():
+            p.unlink()
 
 
 if __name__ == "__main__":
