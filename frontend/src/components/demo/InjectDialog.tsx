@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { injectEvent } from '../../api/simulate'
 import { useWatershedStore } from '../../store/watershedStore'
 import { useAlertStore } from '../../store/alertStore'
@@ -29,9 +29,11 @@ export function InjectDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      {/* 宽度用 w-full + max-w:窗口窄于 320px 时收窄而不是横向溢出;
+          max-h + overflow:窗口再矮也不会把弹窗顶出可视区 */}
       <div
-        className="w-80 space-y-3 rounded-lg border border-edge bg-panel p-4"
+        className="max-h-[90vh] w-full max-w-[20rem] space-y-3 overflow-y-auto rounded-lg border border-edge bg-panel p-4"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-sm font-semibold text-slate-100">💉 手动注入污染事件</h3>
@@ -47,21 +49,7 @@ export function InjectDialog({ onClose }: { onClose: () => void }) {
             <option value="gradual">渐变恶化</option>
           </select>
         </label>
-        <label className="block text-xs text-slate-400">
-          污染源企业
-          <select
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            className="mt-1 w-full rounded border border-edge bg-ink px-2 py-1 text-sm text-slate-200"
-          >
-            <option value="">请选择…</option>
-            {enterprises.map((ent) => (
-              <option key={ent.id} value={ent.id}>
-                {ent.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <EnterprisePicker value={source} onChange={setSource} enterprises={enterprises} />
         <label className="block text-xs text-slate-400">
           严重程度
           <select
@@ -104,6 +92,93 @@ export function InjectDialog({ onClose }: { onClose: () => void }) {
             取消
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// 企业选择器:18 家企业用原生 <select> 时,下拉浮层由浏览器绘制、不受弹窗约束,
+// 会溢到窗口外;改成受控下拉,列表限高可滚动、可搜索、长名截断
+function EnterprisePicker({
+  value, onChange, enterprises,
+}: {
+  value: string
+  onChange: (id: string) => void
+  enterprises: { id: string; name: string }[]
+}) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const boxRef = useRef<HTMLDivElement>(null)
+  const selected = enterprises.find((e) => e.id === value)
+
+  // 点击外部 / Esc 关闭
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const kw = query.trim()
+  const list = kw ? enterprises.filter((e) => e.name.includes(kw) || e.id.includes(kw)) : enterprises
+
+  return (
+    <div className="block text-xs text-slate-400" ref={boxRef}>
+      <span>污染源企业</span>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="mt-1 flex w-full items-center justify-between gap-2 rounded border border-edge bg-ink px-2 py-1 text-left text-sm"
+        >
+          <span className={`truncate ${selected ? 'text-slate-200' : 'text-slate-500'}`}>
+            {selected?.name ?? '请选择…'}
+          </span>
+          <span className="shrink-0 text-slate-500">▾</span>
+        </button>
+        {open && (
+          <div className="absolute z-10 mt-1 w-full rounded border border-edge bg-panel shadow-lg">
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="输入企业名筛选…"
+              className="w-full border-b border-edge bg-ink px-2 py-1 text-sm text-slate-200 outline-none"
+            />
+            {/* 限高可滚动,且不超过窗口高度的 40% */}
+            <ul className="max-h-[min(12rem,40vh)] overflow-y-auto py-1">
+              {list.map((ent) => (
+                <li key={ent.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(ent.id)
+                      setOpen(false)
+                      setQuery('')
+                    }}
+                    className={`block w-full truncate px-2 py-1 text-left text-sm hover:bg-edge ${
+                      ent.id === value ? 'text-accent' : 'text-slate-200'
+                    }`}
+                  >
+                    {ent.name}
+                  </button>
+                </li>
+              ))}
+              {list.length === 0 && (
+                <li className="px-2 py-1 text-xs text-slate-500">无匹配企业</li>
+              )}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   )
