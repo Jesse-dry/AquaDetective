@@ -79,7 +79,25 @@ else
   log "检查 Python 依赖..."
   if ! "$PY" -c "import fastapi, uvicorn" 2>/dev/null; then
     log "安装后端依赖(首次)..."
-    (cd "$BACKEND_DIR" && "$PY" -m pip install -e ".[dev]" -q)
+    # 按 requirements.lock 的已验证版本装,而不是解析 pyproject 的版本区间:
+    # 区间会拉到更新的版本,可能没有对应平台的 wheel 而转去源码编译 ——
+    # 实测 Windows + 较新 Python 上 pandas 走 meson 源码构建失败
+    if [[ -f "$BACKEND_DIR/requirements.lock" ]]; then
+      (cd "$BACKEND_DIR" && "$PY" -m pip install -r requirements.lock -q \
+        && "$PY" -m pip install -e . --no-deps -q) || {
+        err "后端依赖安装失败"
+        {
+          echo "  多数情况是当前 Python 版本过新,依赖尚无对应 wheel(会转源码编译)。"
+          echo "  建议换用 3.12 / 3.13:"
+          echo "    Windows: winget install Python.Python.3.12 && cd backend && py -3.12 -m venv .venv"
+          echo "    macOS  : brew install python@3.12"
+          echo "  或手动:cd backend && \"$PY\" -m pip install -r requirements.lock"
+        } >&2
+        exit 1
+      }
+    else
+      (cd "$BACKEND_DIR" && "$PY" -m pip install -e ".[dev]" -q)
+    fi
   fi
 
   # 数据库不存在时自动构建(同 seed 可复现)
