@@ -1,0 +1,4 @@
+# app/ingest/ 数据导入器的额外依赖(演示与测试不需要)。
+# 安装:pip install -r requirements-ingest.lock -r requirements.lock
+#      pip install -e ".[ingest]"
+pandas==3.0.5

@@ -111,6 +111,9 @@ cd backend
 pip install -r requirements.lock
 pip install -e . --no-deps
 
+# 仅数据导入器(app/ingest/)需要 pandas,演示与测试都不需要:
+# pip install -r requirements-ingest.lock
+
 # 开发依赖也可直接解析安装
 # pip install -e ".[dev]"
 

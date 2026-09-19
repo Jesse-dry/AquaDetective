@@ -8,7 +8,6 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "langgraph>=0.2,<0.3",
     "numpy>=1.26",
-    "pandas>=2.2",
     "scipy>=1.11",
     "networkx>=3.2",
     "pydantic>=2.7",
@@ -18,7 +17,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.5"]
+# 演示与测试不需要 pandas:它只被 app/ingest/ 这个独立导入器 CLI 使用,
+# 服务启动链不加载它。独立成 extra 后,演示环境不会因它的平台 wheel 问题装不上。
+dev = ["pytest>=8", "ruff>=0.5", "pandas>=2.2"]
+ingest = ["pandas>=2.2"]
 data = ["geopandas>=1.0", "pyogrio>=0.10"]
 
 [build-system]

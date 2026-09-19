@@ -29,7 +29,8 @@ jobs:
       - name: Install locked dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.lock
+          # 演示依赖 + 导入器依赖(pandas):test_ingest.py 需要后者
+          python -m pip install -r requirements.lock -r requirements-ingest.lock
           python -m pip install -e . --no-deps
 
       - name: Check critical Python errors

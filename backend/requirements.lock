@@ -1,4 +1,6 @@
 # Generated from the verified Python 3.12 development environment on 2026-08-20.
+# 演示/测试用依赖。pandas 不在其中:它只被 app/ingest/ 导入器使用,见
+# requirements-ingest.lock(演示环境不装它,可避开平台 wheel 缺失导致的源码编译)。
 # Update intentionally after changing backend/pyproject.toml dependencies.
 annotated-doc==0.0.5
 annotated-types==0.8.0
@@ -31,7 +33,6 @@ openai==3.3.1
 orjson==3.12.0
 ormsgpack==1.12.2
 packaging==25.0
-pandas==3.0.5
 pluggy==1.6.0
 pydantic==2.13.4
 pydantic-settings==2.15.0
