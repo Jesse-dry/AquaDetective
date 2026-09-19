@@ -108,10 +108,16 @@ else
 
   if curl -s -o /dev/null --max-time 2 "http://localhost:$BACKEND_PORT/api/v1/events"; then
     ok "后端已在运行(端口 $BACKEND_PORT 复用)"
+    # 复用的是既有进程,不会应用本次的 .env 改动 —— 最容易踩的坑
+    log "  注意:复用既有进程不会应用本次的 .env 改动;改过 .env 请先停止旧服务再启动"
+    log "  自检:curl -s localhost:$BACKEND_PORT/health  (\"llm\":false 表示没读到 API Key)"
   else
     log "启动后端 FastAPI (端口 $BACKEND_PORT)..."
     # --reload:演示/调试期间改后端代码即时生效(否则改了代码不重启=改动不生效)
-    (cd "$BACKEND_DIR" && exec "$PY" -m uvicorn app.main:app --reload --port "$BACKEND_PORT") &
+    # --reload-include .env:配置也只在进程启动时读一次,不带这个的话改了 .env
+    # 服务不会重载(实测踩过:改完 .env 仍走模板降级,因为服务比 .env 早启动 55 分钟)
+    (cd "$BACKEND_DIR" && exec "$PY" -m uvicorn app.main:app --reload \
+        --reload-include .env --port "$BACKEND_PORT") &
     BACK_PID=$!
     wait_http "http://localhost:$BACKEND_PORT/api/v1/events" "后端" 30
   fi

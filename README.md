@@ -178,7 +178,15 @@ AQ_LLM_TIMEOUT_S=30
 | 本地 Ollama | `http://localhost:11434/v1` | `qwen2.5:7b`（key 随便填） |
 
 **不配置也能跑**——自动使用模板推理降级，完整调查流程照常工作。
-改完 `.env` 需**手动重启后端**（`--reload` 只监听 `.py` 文件）。
+
+**改完 `.env` 怎么让它生效**：
+
+- `./start_demo.sh` 启动的后端带 `--reload-include .env`，**保存 `.env` 即自动重载**
+- 手动启动的加同样参数：`uvicorn app.main:app --reload --reload-include .env`
+- 脚本若提示"**复用既有进程**"，说明端口上已有旧服务，它不会应用本次 `.env` 改动 ——
+  需先停掉旧服务再启动
+- **自检**：`curl -s localhost:8000/health` → `"llm":true` 表示已读到 API Key；
+  `false` 说明配置没加载（多为服务比 `.env` 早启动）
 
 #### 按 Agent 覆盖（可选）
 
