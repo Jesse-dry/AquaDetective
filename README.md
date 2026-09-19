@@ -82,6 +82,16 @@ AquaDetective 是一个面向流域水环境管理的智能体系统，模拟真
 - Python **3.11+**、Node 18+
 - 依赖：fastapi、uvicorn、langgraph、numpy、scipy、networkx、pydantic-settings（见 `backend/pyproject.toml`）
 
+**Windows 注意**：`./start_demo.sh` 是 bash 脚本，**cmd / PowerShell 下无法直接运行**（Windows 无 bash，
+且 `.sh` 不是可执行格式）。两种可用方式：
+
+- **Git Bash**（装 Git for Windows 时自带）：`./start_demo.sh` 可直接用。注意此时 Python 是 Windows 版，
+  venv 的解释器在 `.venv/Scripts/python.exe`（不是 `bin/python`）——脚本已按平台两种布局探测
+- **WSL**：`./start_demo.sh` 直接用（本项目的开发环境）
+
+Python 需自行安装（python.org 版并勾选 *Add to PATH*，或 `winget install Python.Python.3.12`）；
+Windows 不自带满足 3.11+ 的 Python。
+
 **macOS 注意**：系统只自带 `python3`（版本 3.9，**不满足 3.11+**），且没有 `python` / `pip`
 命令——它们只存在于虚拟环境里。所以要么 `brew install python@3.12`，要么按下面的步骤建 venv。
 `./start_demo.sh` 会自动探测可用的解释器（优先项目内 `.venv`，其次 `python3`），

@@ -35,11 +35,15 @@ wait_http() { # url 名称 最大秒数
 
 is_wsl() { [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qi microsoft /proc/version 2>/dev/null; }
 
-# 找一个满足 >=3.11 的解释器:优先项目内 venv,其次 python3,最后 python。
+# 找一个满足 >=3.11 的解释器:优先项目内 venv,其次 python3/python,最后 Windows 的 py 启动器。
+# 注意 venv 的解释器路径分平台:POSIX 是 .venv/bin/python,Windows 是 .venv/Scripts/python.exe
+# (Git Bash 下调用的仍是 Windows 版 Python,路径按 Windows 布局)
 # 找到就打印其路径,找不到返回 1
 detect_python() {
   local cand
-  for cand in "$BACKEND_DIR/.venv/bin/python" "$ROOT/.venv/bin/python" python3 python; do
+  for cand in "$BACKEND_DIR/.venv/bin/python" "$ROOT/.venv/bin/python" \
+              "$BACKEND_DIR/.venv/Scripts/python.exe" "$ROOT/.venv/Scripts/python.exe" \
+              python3 python py; do
     command -v "$cand" >/dev/null 2>&1 || continue
     if "$cand" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
       printf '%s' "$cand"; return 0
@@ -65,6 +69,8 @@ else
     {
       echo "  macOS : brew install python@3.12   # 系统自带的 python3 是 3.9,不满足要求"
       echo "  通用  : cd backend && python3 -m venv .venv && .venv/bin/pip install -e ."
+      echo "  Windows: 需在 Git Bash 或 WSL 下运行本脚本(cmd/PowerShell 无 bash);"
+      echo "           装 python.org 版并勾选 Add to PATH,或用 py -3.12 -m venv .venv"
     } >&2
     exit 1
   fi
