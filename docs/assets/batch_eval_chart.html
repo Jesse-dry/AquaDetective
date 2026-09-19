@@ -59,9 +59,9 @@
 
   <div class="kpis">
     <div class="kpi"><div class="v">70<small>%</small></div><div class="k">预警检出率</div></div>
-    <div class="kpi"><div class="v">73<small>%</small></div><div class="k">Top-1 命中率</div></div>
+    <div class="kpi"><div class="v">87<small>%</small></div><div class="k">Top-1 命中率</div></div>
     <div class="kpi alt"><div class="v">87<small>%</small></div><div class="k">Top-3 命中率</div></div>
-    <div class="kpi alt"><div class="v">0.789</div><div class="k">MRR(平均倒数排名)</div></div>
+    <div class="kpi alt"><div class="v">0.867</div><div class="k">MRR(平均倒数排名)</div></div>
   </div>
 
   <div class="body">
@@ -92,23 +92,23 @@
         <div class="bars">
           <div class="bar-row">
             <span class="lbl">突发泄漏</span>
-            <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></span></span>
-            <span class="num">80%</span>
+            <span class="bar-track"><span class="bar-fill" style="width:90%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></span></span>
+            <span class="num">90%</span>
           </div>
           <div class="bar-row">
             <span class="lbl">夜间偷排</span>
-            <span class="bar-track"><span class="bar-fill" style="width:60%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></span></span>
-            <span class="num">60%</span>
+            <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></span></span>
+            <span class="num">80%</span>
           </div>
           <div class="bar-row">
             <span class="lbl">逐渐恶化</span>
-            <span class="bar-track"><span class="bar-fill" style="width:80%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></span></span>
-            <span class="num">80%</span>
+            <span class="bar-track"><span class="bar-fill" style="width:90%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></span></span>
+            <span class="num">90%</span>
           </div>
         </div>
       </div>
       <ul class="notes">
-        <li>· 检出率 <b>70%</b>(任一受污染断面 77%)、<b>干净数据零误报</b>;上游召回 <b>87%</b>、锁定 <b>73%</b></li>
+        <li>· 检出率 <b>70%</b>(任一受污染断面 77%)、<b>干净数据零误报</b>;上游召回 <b>87%</b>、锁定 <b>87%</b></li>
         <li>· 传播时间误差 <b>0.04h / 0.10h</b>(30/30);渐变型检出仅 30% 是当前最大短板</li>
       </ul>
     </div>
@@ -118,8 +118,8 @@
         <div class="fstep"><span class="n">30</span><span class="t">注入随机事件</span><span class="track"><span class="fill" style="width:100%"></span></span></div>
         <div class="fstep"><span class="n">21</span><span class="t">预警检出</span><span class="track"><span class="fill" style="width:70%"></span></span></div>
         <div class="fstep"><span class="n">26</span><span class="t">真凶进入上游候选</span><span class="track"><span class="fill" style="width:87%"></span></span></div>
-        <div class="fstep"><span class="n">22</span><span class="t">排名第一</span><span class="track"><span class="fill" style="width:73%"></span></span></div>
-        <div class="fstep"><span class="n">22</span><span class="t">置信度达标并锁定</span><span class="track"><span class="fill" style="width:73%"></span></span></div>
+        <div class="fstep"><span class="n">26</span><span class="t">排名第一</span><span class="track"><span class="fill" style="width:87%"></span></span></div>
+        <div class="fstep"><span class="n">26</span><span class="t">置信度达标并锁定</span><span class="track"><span class="fill" style="width:87%"></span></span></div>
       </div>
       <ul class="notes">
         <li>· 评测脚本:<b>backend/scripts/batch_eval.py</b>,可复跑</li>

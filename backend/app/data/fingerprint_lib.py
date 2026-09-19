@@ -73,11 +73,19 @@ def observed_pollutants(watershed: dict, station_id: str, seed: int = 0,
     """
     rng = np.random.default_rng(seed)
     if event_source:
-        fp = fingerprint_of(watershed, event_source)
-        if fp is None:
-            raise ValueError(f"enterprise {event_source} 无指纹")
-        vec = {k: max(0.0, v * (1 + 0.08 * rng.normal()))
-               for k, v in fp["pollutants"].items()}
+        # 必须与调查侧比对用的库同源:rank_pollutants 用的是注入真实许可证后的库
+        # (_injected_pollutant_lib)。此处若仍取合成指纹,现场观测与真凶自己在库里的
+        # 向量就对不上 —— 实测彩云印染厂(合成 cod .77/ammonia .13/cr6 .045,
+        # 注入后 {ammonia: 1.0})在污染物通道排到 18 家里的第 17 名,溯源被判给别家。
+        # EEM 通道两侧都用合成谱,所以一直是自洽的,可作对照。
+        lib = _injected_pollutant_lib(watershed)
+        vec = lib.get(event_source)
+        if vec is None:
+            fp = fingerprint_of(watershed, event_source)
+            if fp is None:
+                raise ValueError(f"enterprise {event_source} 无指纹")
+            vec = fp["pollutants"]
+        vec = {k: max(0.0, v * (1 + 0.08 * rng.normal())) for k, v in vec.items()}
     else:
         atten = impact_matrix(watershed)
         fp_by_id = {fp["enterprise_id"]: fp for fp in watershed["fingerprints"]}

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T21:38:35+0800",
+  "generated_at": "2026-09-19T10:17:14+0800",
   "rounds": 30,
   "methodology": {
     "monitor_method": "seasonal",
@@ -15,12 +15,12 @@
     "detection_rate_attributable": 0.7,
     "chronic_alerts": 0,
     "upstream_recall": 0.8666666666666667,
-    "top1": 0.7333333333333333,
+    "top1": 0.8666666666666667,
     "top3": 0.8666666666666667,
-    "locked": 0.7333333333333333,
-    "mrr": 0.7889,
-    "confidence_mean": 0.757,
-    "confidence_min": 0.605,
+    "locked": 0.8666666666666667,
+    "mrr": 0.8667,
+    "confidence_mean": 0.91,
+    "confidence_min": 0.772,
     "travel_err_mean_h": 0.04,
     "travel_err_max_h": 0.1,
     "travel_err_samples": 30
@@ -49,12 +49,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.728,
+      "confidence": 0.945,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.05
+      "duration_s": 0.04
     },
     {
       "round": 2,
@@ -130,16 +130,16 @@
       ],
       "n_hypotheses": 4,
       "recall_upstream": true,
-      "rank": 2,
-      "top1": false,
+      "rank": 1,
+      "top1": true,
       "top3": true,
-      "locked": false,
-      "confidence": 0.778,
+      "locked": true,
+      "confidence": 0.949,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.04
+      "duration_s": 0.03
     },
     {
       "round": 5,
@@ -164,12 +164,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.605,
+      "confidence": 0.8,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.16
+      "duration_s": 0.05
     },
     {
       "round": 6,
@@ -196,7 +196,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.777,
+      "confidence": 0.977,
       "status": "resolved",
       "travel_pred_h": 5.56,
       "travel_true_h": 5.538622129436325,
@@ -226,12 +226,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.714,
+      "confidence": 0.934,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.04
+      "duration_s": 0.03
     },
     {
       "round": 8,
@@ -282,16 +282,16 @@
       ],
       "n_hypotheses": 3,
       "recall_upstream": true,
-      "rank": 3,
-      "top1": false,
+      "rank": 1,
+      "top1": true,
       "top3": true,
-      "locked": false,
-      "confidence": 0.826,
+      "locked": true,
+      "confidence": 0.993,
       "status": "resolved",
       "travel_pred_h": 5.56,
       "travel_true_h": 5.538622129436325,
       "travel_err_h": 0.02,
-      "duration_s": 0.03
+      "duration_s": 0.02
     },
     {
       "round": 10,
@@ -316,12 +316,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.727,
+      "confidence": 0.944,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.04
+      "duration_s": 0.03
     },
     {
       "round": 11,
@@ -344,12 +344,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.623,
+      "confidence": 0.787,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
       "travel_err_h": 0.1,
-      "duration_s": 0.16
+      "duration_s": 0.04
     },
     {
       "round": 12,
@@ -376,7 +376,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.781,
+      "confidence": 0.963,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
@@ -407,7 +407,7 @@
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.13
+      "duration_s": 0.14
     },
     {
       "round": 14,
@@ -485,7 +485,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.818,
+      "confidence": 0.986,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
@@ -513,12 +513,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.624,
+      "confidence": 0.788,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
       "travel_err_h": 0.1,
-      "duration_s": 0.17
+      "duration_s": 0.04
     },
     {
       "round": 18,
@@ -541,12 +541,12 @@
       "top1": false,
       "top3": false,
       "locked": false,
-      "confidence": 0.637,
+      "confidence": 0.655,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.13
+      "duration_s": 0.12
     },
     {
       "round": 19,
@@ -570,7 +570,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.736,
+      "confidence": 0.895,
       "status": "resolved",
       "travel_pred_h": 5.56,
       "travel_true_h": 5.538622129436325,
@@ -596,16 +596,16 @@
       ],
       "n_hypotheses": 3,
       "recall_upstream": true,
-      "rank": 2,
-      "top1": false,
+      "rank": 1,
+      "top1": true,
       "top3": true,
-      "locked": false,
-      "confidence": 0.648,
+      "locked": true,
+      "confidence": 0.798,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.74446764091858,
       "travel_err_h": 0.04,
-      "duration_s": 0.13
+      "duration_s": 0.03
     },
     {
       "round": 21,
@@ -628,12 +628,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.755,
+      "confidence": 0.968,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
       "travel_err_h": 0.1,
-      "duration_s": 0.04
+      "duration_s": 0.03
     },
     {
       "round": 22,
@@ -656,7 +656,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.789,
+      "confidence": 0.945,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.74446764091858,
@@ -682,16 +682,16 @@
       ],
       "n_hypotheses": 3,
       "recall_upstream": true,
-      "rank": 3,
-      "top1": false,
+      "rank": 1,
+      "top1": true,
       "top3": true,
-      "locked": false,
-      "confidence": 0.649,
+      "locked": true,
+      "confidence": 0.793,
       "status": "resolved",
       "travel_pred_h": 5.56,
       "travel_true_h": 5.538622129436325,
       "travel_err_h": 0.02,
-      "duration_s": 0.12
+      "duration_s": 0.03
     },
     {
       "round": 24,
@@ -715,12 +715,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.771,
+      "confidence": 0.979,
       "status": "resolved",
       "travel_pred_h": 0.56,
       "travel_true_h": 0.5490605427974947,
       "travel_err_h": 0.01,
-      "duration_s": 0.03
+      "duration_s": 0.04
     },
     {
       "round": 25,
@@ -742,7 +742,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.818,
+      "confidence": 0.982,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
@@ -801,12 +801,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.736,
+      "confidence": 0.988,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
       "travel_err_h": 0.01,
-      "duration_s": 0.04
+      "duration_s": 0.03
     },
     {
       "round": 28,
@@ -828,12 +828,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.816,
+      "confidence": 0.982,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
       "travel_err_h": 0.1,
-      "duration_s": 0.04
+      "duration_s": 0.03
     },
     {
       "round": 29,
@@ -856,12 +856,12 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.608,
+      "confidence": 0.772,
       "status": "resolved",
       "travel_pred_h": 0,
       "travel_true_h": 0.1,
       "travel_err_h": 0.1,
-      "duration_s": 0.16
+      "duration_s": 0.04
     },
     {
       "round": 30,
@@ -886,7 +886,7 @@
       "top1": true,
       "top3": true,
       "locked": true,
-      "confidence": 0.732,
+      "confidence": 0.982,
       "status": "resolved",
       "travel_pred_h": 2.78,
       "travel_true_h": 2.7943632567849686,
