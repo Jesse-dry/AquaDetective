@@ -164,7 +164,14 @@ AQ_LLM_BASE_URL=https://api.deepseek.com/v1
 AQ_LLM_API_KEY=sk-你的key
 AQ_LLM_MODEL=deepseek-chat
 AQ_LLM_TIMEOUT_S=30
+AQ_LLM_MAX_TOKENS=4096
 ```
+
+> **推理模型注意**：`deepseek-reasoner` / o 系这类模型会**先输出思维链、正文才在后面**。
+> `AQ_LLM_MAX_TOKENS` 给小了会出现「正文为空 + `finish_reason=length`」，表现为**静默降级为
+> 模板推理**（配了 key、`/health` 也是 `llm:true`，但推理流看不出差别）。默认 4096；
+> 若后端日志出现 `LLM 返回空内容(finish_reason=length ...)`，把它调大即可。
+> 调用失败、返回空、返回非 JSON 都会**打 WARNING 日志**（`app/agents/llm.py`），不再静默吞掉。
 
 常见 OpenAI 兼容服务（以各家官方文档为准）：
 
@@ -178,6 +185,13 @@ AQ_LLM_TIMEOUT_S=30
 | 本地 Ollama | `http://localhost:11434/v1` | `qwen2.5:7b`（key 随便填） |
 
 **不配置也能跑**——自动使用模板推理降级，完整调查流程照常工作。
+
+**LLM 在这套系统里只做一件事**：给每个嫌疑企业追加一段推理理由（`generate_hypotheses`，
+全仓库唯一的 LLM 调用点）。推理流里的其余文字——事件解析、证据校核、结论、法规、处置、
+报告——**全部由确定性引擎产出**，这正是「数值与事实不经过大模型」这条铁律的体现。
+
+所以：配了 LLM 之后，推理流**看起来不会有翻天覆地的变化**，差别集中在嫌疑企业后面那段
+理由上；反过来，`/health` 显示 `llm:true` 也不代表调用成功，要看日志或对比理由文字。
 
 **改完 `.env` 怎么让它生效**：
 

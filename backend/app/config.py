@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     llm_api_key: str | None = None
     llm_model: str = "gpt-4o-mini"
     llm_timeout_s: float = 30.0
+    # 推理模型(DeepSeek-R 系、o 系等)会先用大量 token 输出思维链,正文才在后面。
+    # 给小了会出现"返回空内容 + finish_reason=length",表现为静默降级为模板推理
+    llm_max_tokens: int = 4096
     allow_mock_llm: bool = True
 
     # 服务
@@ -62,15 +65,18 @@ class Settings(BaseSettings):
             "api_key": self.llm_api_key,
             "model": self.llm_model,
             "timeout_s": self.llm_timeout_s,
+            "max_tokens": self.llm_max_tokens,
         }
         if not agent:
             return profile
         prefix = f"AQ_LLM_{agent.upper()}_"
         for env_key, field in (("API_KEY", "api_key"), ("BASE_URL", "base_url"),
-                               ("MODEL", "model"), ("TIMEOUT_S", "timeout_s")):
+                               ("MODEL", "model"), ("TIMEOUT_S", "timeout_s"),
+                               ("MAX_TOKENS", "max_tokens")):
             val = _env(prefix + env_key)
             if val:
-                profile[field] = float(val) if field == "timeout_s" else val
+                profile[field] = float(val) if field == "timeout_s" else (
+                    int(val) if field == "max_tokens" else val)
         return profile
 
     @property

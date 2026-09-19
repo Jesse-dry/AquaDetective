@@ -7,8 +7,11 @@
 from __future__ import annotations
 
 import json
+import logging
 
 from ..config import Settings
+
+logger = logging.getLogger(__name__)
 
 
 class LLMClient:
@@ -38,15 +41,24 @@ class LLMClient:
         if not self.client:
             return None
         try:
+            max_tokens = int(self.profile.get("max_tokens", 4096))
             resp = self.client.chat.completions.create(
                 model=self.profile.get("model"),
                 messages=messages,
                 temperature=0.2,
-                max_tokens=900,
+                max_tokens=max_tokens,
                 timeout=self.profile.get("timeout_s", 30.0),
             )
-            text = resp.choices[0].message.content or ""
-            text = text.strip()
+            choice = resp.choices[0]
+            text = (choice.message.content or "").strip()
+            if not text:
+                # 推理模型把 token 全花在思维链上时,正文为空且 finish_reason=length。
+                # 此前静默返回 None,用户只看到"和模板推理一样",无从查起。
+                logger.warning(
+                    "LLM 返回空内容(finish_reason=%s, max_tokens=%d, model=%s):"
+                    "推理模型需要更大的 max_tokens,可调 AQ_LLM_MAX_TOKENS",
+                    choice.finish_reason, max_tokens, self.profile.get("model"))
+                return None
             if text.startswith("```"):
                 text = text.strip("`")
                 if text.startswith("json"):
@@ -54,6 +66,8 @@ class LLMClient:
             data = json.loads(text)
             if isinstance(data, dict):
                 return data
+            logger.warning("LLM 返回的不是 JSON 对象,降级模板推理: %s", text[:200])
             return None
-        except Exception:
+        except Exception as e:
+            logger.warning("LLM 调用失败,降级模板推理: %s: %s", type(e).__name__, e)
             return None
