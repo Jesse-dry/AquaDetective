@@ -68,3 +68,19 @@ def match_pollutants(query_vec: dict, library: dict[str, dict]) -> list[dict]:
         out.append({"enterprise_id": eid,
                     "score": round(sum(sims) / len(sims), 4)})
     return sorted(out, key=lambda r: r["score"], reverse=True)
+
+
+def vector_from_excess(baseline: dict[str, float],
+                       peak: dict[str, float]) -> dict[str, float]:
+    """由实测浓度相对事件前基线的增量,构造特征污染物比例向量。
+
+    在线监测站测的是浓度(cod/氨氮/六价铬/总磷),不是 EEM。监测 Agent 自动检出
+    的事件没有实验室指纹,只能靠这条通道提供证据 —— 若退回"背景混合"观测,
+    各企业得分会挤成一团(实测 EEM 通道前三名 0.973/0.948/0.946),排名等于噪声。
+    """
+    keys = set(baseline) | set(peak)
+    excess = {k: max(0.0, peak.get(k, 0.0) - baseline.get(k, 0.0)) for k in keys}
+    total = sum(excess.values())
+    if total <= 1e-12:
+        return {}
+    return {k: round(v / total, 6) for k, v in excess.items() if v > 0}

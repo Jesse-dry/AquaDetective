@@ -148,6 +148,11 @@ def generate_hypotheses(state: dict, llm, db_path: str, ws: dict) -> dict:
 
 
 def _check_eem(state, h, ev, db_path, ws) -> tuple[float | None, dict]:
+    # 监测 Agent 自动检出的事件没有实验室观测(在线站只测浓度,不出 EEM)。
+    # 此时 match_eem_at 会退回"背景 EEM",各企业得分挤成一团(实测前三
+    # 0.973/0.948/0.946),等于给排名注入噪声 —— 没有证据就不给分。
+    if not tools.observation_exists(db_path, ev.get("id")):
+        return None, {}
     ranked = tools.match_eem_at(db_path, ws, ev["station_id"], ev.get("id"))
     entry = next((r for r in ranked if r["enterprise_id"] == h["target_id"]), None)
     if entry is None:
@@ -162,7 +167,8 @@ def _check_eem(state, h, ev, db_path, ws) -> tuple[float | None, dict]:
 
 
 def _check_pollutant(state, h, ev, db_path, ws) -> tuple[float | None, dict]:
-    ranked = tools.match_pollutants_at(db_path, ws, ev["station_id"], ev.get("id"))
+    ranked = tools.match_pollutants_at(db_path, ws, ev["station_id"], ev.get("id"),
+                                       ev.get("onset_ts"))
     entry = next((r for r in ranked if r["enterprise_id"] == h["target_id"]), None)
     if entry is None:
         return None, {}

@@ -11,6 +11,7 @@ import networkx as nx
 import numpy as np
 
 from ..data.event_observations import load_event_observation
+from ..engine.fingerprint import vector_from_excess
 from ..data.fingerprint_lib import (
     fingerprint_of,
     observed_eem,
@@ -116,9 +117,56 @@ def match_eem_at(db_path: str, ws: dict, station_id: str,
     return rank_eem(q, ws)
 
 
+def observation_exists(db_path: str, event_id: str | None) -> bool:
+    """该事件是否有持久化的现场观测(实验室指纹)。
+
+    监测 Agent 自动检出的事件没有:在线监测站只测浓度,不出 EEM。
+    """
+    if not event_id:
+        return False
+    conn = get_conn(db_path)
+    row = conn.execute("SELECT 1 FROM event_observations WHERE event_id=?",
+                       (event_id,)).fetchone()
+    conn.close()
+    return row is not None
+
+
+def pollutant_vector_from_readings(db_path: str, ws: dict, station_id: str,
+                                   onset_ts: int, baseline_days: int = 7) -> dict:
+    """由断面实测浓度相对事件前基线的增量,构造特征污染物比例向量。
+
+    这是监测类事件唯一的指纹证据来源:没有实验室观测,只能看哪些指标被顶起来了。
+    """
+    st = next((s for s in ws["stations"] if s["id"] == station_id), None)
+    if st is None:
+        return {}
+    conn = get_conn(db_path)
+    baseline: dict[str, float] = {}
+    peak: dict[str, float] = {}
+    for ind in st["indicators"]:
+        rows = conn.execute(
+            "SELECT value FROM readings WHERE station_id=? AND indicator=? AND ts>=? AND ts<?",
+            (station_id, ind, onset_ts - baseline_days * 86400, onset_ts)).fetchall()
+        if len(rows) < 24:
+            continue
+        baseline[ind] = float(np.median([r["value"] for r in rows]))
+        after = conn.execute(
+            "SELECT value FROM readings WHERE station_id=? AND indicator=? AND ts>=? AND ts<?",
+            (station_id, ind, onset_ts, onset_ts + 86400)).fetchall()
+        if after:
+            peak[ind] = float(np.max([r["value"] for r in after]))
+    conn.close()
+    return vector_from_excess(baseline, peak)
+
+
 def match_pollutants_at(db_path: str, ws: dict, station_id: str,
-                        event_id: str | None = None) -> list[dict]:
-    """现场污染物匹配；事件证据来自持久化观测，不读取评测真值。"""
+                        event_id: str | None = None,
+                        onset_ts: int | None = None) -> list[dict]:
+    """现场污染物匹配；事件证据来自持久化观测，不读取评测真值。
+
+    无观测的监测类事件改用实测增量构造向量 —— 此前退回"背景混合"观测,与谁
+    都像,排名等于噪声(实测真凶落选、判给绿源食品)。
+    """
     vec = None
     if event_id:
         conn = get_conn(db_path)
@@ -126,7 +174,9 @@ def match_pollutants_at(db_path: str, ws: dict, station_id: str,
         conn.close()
         if observation and observation["station_id"] == station_id:
             vec = observation["pollutants"]
-    if vec is None:
+    if vec is None and onset_ts is not None:
+        vec = pollutant_vector_from_readings(db_path, ws, station_id, int(onset_ts))
+    if not vec:
         vec = observed_pollutants(ws, station_id, seed=7)
     return rank_pollutants(vec, ws)
 
