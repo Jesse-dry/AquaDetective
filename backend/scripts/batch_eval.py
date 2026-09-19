@@ -87,11 +87,13 @@ def main(rounds: int = 12, output_path: Path | None = None) -> None:
         _copy_database(get_db_path(), baseline)
         # Existing detected events must not suppress the injected test events.
         with closing(get_conn(baseline)) as conn, conn:
+            # 评测必须从干净世界起步:残留的监测告警与手动注入事件会经"48h 去重"
+            # 压制本轮检出、并混进常驻告警口径(实测把归因检出率从 70% 打到 43%)
             conn.execute("DELETE FROM event_observations WHERE event_id IN "
-                         "(SELECT id FROM events WHERE etype='detected')")
+                         "(SELECT id FROM events WHERE etype='detected' OR id LIKE 'evt_inj_%')")
             conn.execute("DELETE FROM investigations WHERE event_id IN "
-                         "(SELECT id FROM events WHERE etype='detected')")
-            conn.execute("DELETE FROM events WHERE etype='detected'")
+                         "(SELECT id FROM events WHERE etype='detected' OR id LIKE 'evt_inj_%')")
+            conn.execute("DELETE FROM events WHERE etype='detected' OR id LIKE 'evt_inj_%'")
             conn.execute("DELETE FROM monitor_cursors")
         _copy_database(baseline, db)
         _evaluate(rounds, baseline, db, output_path)

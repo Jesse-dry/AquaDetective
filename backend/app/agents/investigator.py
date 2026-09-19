@@ -215,11 +215,23 @@ def _check_strength(state, h, ev, db_path, ws) -> tuple[float | None, dict]:
                    "detail": f"传播时间约 {travel}h（12h 时间窗内越近越可疑）"}
 
 
+def _weight_of(wkey: str, eem_ok: bool) -> float:
+    """通道权重;EEM 缺席时把它并给指纹通道(见 verify_hypotheses 的说明)。"""
+    if wkey == "pollutant" and not eem_ok:
+        return W["pollutant"] + W["eem"]
+    return W[wkey]
+
+
 def verify_hypotheses(state: dict, llm, db_path: str, ws: dict) -> dict:
     ev = state["event"]
     hypotheses = list(state["hypotheses"])
     stream = list(state["stream"])
     rnd = int(state.get("round", 1))
+    # 监测 Agent 自动检出的事件没有实验室观测,EEM 通道不参与打分。
+    # 此时把 EEM 的权重并入指纹通道(污染物):指纹证据还在,只是换了来源;
+    # 若让 0.40 凭空消失,可用权重只剩污染物 0.25 + 强度 0.15,拓扑(谁离断面近)
+    # 会占掉近四成,排名被距离主导 —— 实测前四名全是最近的污水处理厂。
+    eem_ok = tools.observation_exists(db_path, ev.get("id"))
     for h in hypotheses:
         if h["status"] != "candidate":
             continue
@@ -230,7 +242,7 @@ def verify_hypotheses(state: dict, llm, db_path: str, ws: dict) -> dict:
             s, evd = fn(state, h, ev, db_path, ws)
             if s is None:
                 continue
-            scored_pairs.append((s, W[wkey]))
+            scored_pairs.append((s, _weight_of(wkey, eem_ok)))
             h["evidence"].append(evd)
             stream.append({"type": "step", "data": {
                 "step_id": f"{h['id']}_{wkey}", "phase": f"证据校核·{wkey}",

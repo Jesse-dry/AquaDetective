@@ -34,3 +34,20 @@ def test_unknown_etype_does_not_leak_raw_code():
     text = _reasoning("some_new_kind")
     assert "some_new_kind" not in text
     assert "待定" in text
+
+
+def test_monitor_event_weight_moves_to_fingerprint_channel():
+    """监测类事件没有实验室观测,EEM 的权重须并入指纹通道。
+
+    否则可用权重只剩污染物 0.25 + 强度 0.15,拓扑(谁离断面近)占掉近四成,
+    排名被距离主导 —— 实测前四名全是最近的污水处理厂,真凶落选。
+    """
+    from app.agents.investigator import W, _weight_of
+
+    assert _weight_of("eem", eem_ok=True) == W["eem"]
+    assert _weight_of("pollutant", eem_ok=True) == W["pollutant"]
+    # EEM 缺席:权重并入污染物通道,总量守恒
+    assert _weight_of("pollutant", eem_ok=False) == W["pollutant"] + W["eem"]
+    # 其余通道不受影响
+    for key in ("pattern", "strength"):
+        assert _weight_of(key, eem_ok=False) == W[key]
