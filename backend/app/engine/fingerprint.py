@@ -1,6 +1,8 @@
 """水质指纹匹配：EEM 合成与相似度（确定性）。"""
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 LEX = np.linspace(200, 500, 61)   # 激发波长 nm
@@ -80,7 +82,11 @@ def vector_from_excess(baseline: dict[str, float],
     """
     keys = set(baseline) | set(peak)
     excess = {k: max(0.0, peak.get(k, 0.0) - baseline.get(k, 0.0)) for k in keys}
-    total = sum(excess.values())
+    # 必须与指纹库同一口径:指纹是 normalize(sqrt(排放浓度))(见 watershed_builder
+    # 的"sqrt 压缩主导指标、放大特征污染物差异"),证据若用原始比例就与库不在一个
+    # 空间,真凶在污染物通道排 17/18。这是口径对齐,不是调参。
+    compressed = {k: math.sqrt(v) for k, v in excess.items()}
+    total = sum(compressed.values())
     if total <= 1e-12:
         return {}
-    return {k: round(v / total, 6) for k, v in excess.items() if v > 0}
+    return {k: round(v / total, 6) for k, v in compressed.items() if v > 0}

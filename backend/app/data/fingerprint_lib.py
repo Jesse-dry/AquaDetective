@@ -73,19 +73,13 @@ def observed_pollutants(watershed: dict, station_id: str, seed: int = 0,
     """
     rng = np.random.default_rng(seed)
     if event_source:
-        # 必须与调查侧比对用的库同源:rank_pollutants 用的是注入真实许可证后的库
-        # (_injected_pollutant_lib)。此处若仍取合成指纹,现场观测与真凶自己在库里的
-        # 向量就对不上 —— 实测彩云印染厂(合成 cod .77/ammonia .13/cr6 .045,
-        # 注入后 {ammonia: 1.0})在污染物通道排到 18 家里的第 17 名,溯源被判给别家。
-        # EEM 通道两侧都用合成谱,所以一直是自洽的,可作对照。
-        lib = _injected_pollutant_lib(watershed)
-        vec = lib.get(event_source)
-        if vec is None:
-            fp = fingerprint_of(watershed, event_source)
-            if fp is None:
-                raise ValueError(f"enterprise {event_source} 无指纹")
-            vec = fp["pollutants"]
-        vec = {k: max(0.0, v * (1 + 0.08 * rng.normal())) for k, v in vec.items()}
+        # 必须与调查侧比对用的库同源。库取流域自带的合成指纹(见 rank_pollutants),
+        # 故现场观测也由合成指纹派生 —— 模拟器给每个企业设定的排放组成就是它。
+        fp = fingerprint_of(watershed, event_source)
+        if fp is None:
+            raise ValueError(f"enterprise {event_source} 无指纹")
+        vec = {k: max(0.0, v * (1 + 0.08 * rng.normal()))
+               for k, v in fp["pollutants"].items()}
     else:
         atten = impact_matrix(watershed)
         fp_by_id = {fp["enterprise_id"]: fp for fp in watershed["fingerprints"]}
@@ -140,6 +134,11 @@ def _real_by_industry() -> dict[str, list[dict]]:
 def _injected_pollutant_lib(watershed: dict) -> dict[str, dict[str, float]]:
     """合成流域指纹库 + 真实许可证指纹按行业轮转覆盖。
 
+    **已不用于溯源排序**(见 rank_pollutants 的说明):它只描述"这个行业排什么",
+    与模拟器给每个企业设定的排放组成不一致,覆盖后读数推导出的证据对不上库。
+    保留实现供对照与后续"真实数据对标"使用,勿在排序路径重新接上。
+
+
     对每个合成企业,若其行业有真实指纹样本,按"合成企业索引 % 该行业真实样本数"
     取一个真实向量替换合成向量(确定性,可复现)。无真实样本的行业保留合成向量。
     """
@@ -162,10 +161,14 @@ def _injected_pollutant_lib(watershed: dict) -> dict[str, dict[str, float]]:
 
 
 def rank_pollutants(query_vec: dict, watershed: dict) -> list[dict]:
-    """现场污染物向量 vs 指纹库(真实许可证指纹注入后)。
+    """现场污染物向量 vs 指纹库。
 
-    注入层用真实许可证主要污染物比例向量覆盖合成值;数值计算仍走
-    engine.match_pollutants(纯函数 min/max 比相似度)。
+    库取**流域自带的合成指纹**,与"模拟排放浓度"和"现场观测"三者同源。
+    此前用真实许可证指纹按行业轮转覆盖逐企业指纹,导致模拟器里出现三套互不
+    一致的组成(合成指纹 / 许可证库 / 排放浓度),从读数推导的证据永远对不上库
+    —— 实测彩云印染厂:读数 ≈ cod 96%,库 = {ammonia: 1.0},真凶在污染物通道
+    排 17/18,监测类事件无法溯源。真实许可证数据改作对标页展示与声明之用。
+    数值计算仍走 engine.match_pollutants(纯函数 min/max 比相似度)。
     """
-    lib = _injected_pollutant_lib(watershed)
+    lib = {fp["enterprise_id"]: fp["pollutants"] for fp in watershed["fingerprints"]}
     return match_pollutants(query_vec, lib)
