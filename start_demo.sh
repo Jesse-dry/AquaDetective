@@ -35,6 +35,22 @@ wait_http() { # url 名称 最大秒数
 
 is_wsl() { [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qi microsoft /proc/version 2>/dev/null; }
 
+# Windows 上 winget/安装包装完 Node 后,Git Bash 常常仍看不到 —— PATH 是启动时
+# 从父进程继承的快照,不重开终端就不会更新。这里在常见安装位置兜底找一次。
+NODE_DIRS=(
+  "/c/Program Files/nodejs" "/c/Program Files (x86)/nodejs"
+  "$HOME/AppData/Local/Programs/nodejs"
+  "/usr/local/bin" "/opt/homebrew/bin"
+)
+
+find_node_dir() {
+  local d
+  for d in "${NODE_DIRS[@]}"; do
+    [[ -x "$d/node" || -x "$d/node.exe" ]] && { printf '%s' "$d"; return 0; }
+  done
+  return 1
+}
+
 # 前端 dev server 需要 Node.js(Vite 5 要求 18+)。脚本此前不检查 node,一路走到
 # 安装那步才报 "node: command not found",看不出该装什么。
 detect_node() {
@@ -70,6 +86,11 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # ---------- 前置检查 ----------
+if ! detect_node && d="$(find_node_dir)"; then
+  export PATH="$d:$PATH"
+  log "在 $d 找到 Node.js,已临时加入 PATH"
+  log "  建议重开终端让 PATH 永久生效,否则每次都要靠这步兜底"
+fi
 if ! detect_node; then
   err "未找到 Node.js 18+（前端 dev server 需要）"
   {
