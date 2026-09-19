@@ -82,6 +82,10 @@ AquaDetective 是一个面向流域水环境管理的智能体系统，模拟真
 - Python **3.11+**、Node 18+
 - 依赖：fastapi、uvicorn、langgraph、numpy、scipy、networkx、pydantic-settings（见 `backend/pyproject.toml`）
 
+**Node.js 注意**：前端 dev server 需要 **Node.js 18+**（Vite 5 的要求）。脚本会在启动前检查，
+缺失时直接给出安装命令而不是走到一半报 `node: command not found`。Windows 上装了 Node 后
+**需要重开终端**让 PATH 生效（Git Bash 不会自动继承）。
+
 **Windows 注意**：`./start_demo.sh` 是 bash 脚本，**cmd / PowerShell 下无法直接运行**（Windows 无 bash，
 且 `.sh` 不是可执行格式）。两种可用方式：
 

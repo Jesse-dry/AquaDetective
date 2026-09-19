@@ -35,6 +35,15 @@ wait_http() { # url 名称 最大秒数
 
 is_wsl() { [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qi microsoft /proc/version 2>/dev/null; }
 
+# 前端 dev server 需要 Node.js(Vite 5 要求 18+)。脚本此前不检查 node,一路走到
+# 安装那步才报 "node: command not found",看不出该装什么。
+detect_node() {
+  command -v node >/dev/null 2>&1 || return 1
+  local major
+  major="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
+  [[ "${major:-0}" -ge 18 ]]
+}
+
 # 找一个满足 >=3.11 的解释器:优先项目内 venv,其次 python3/python,最后 Windows 的 py 启动器。
 # 注意 venv 的解释器路径分平台:POSIX 是 .venv/bin/python,Windows 是 .venv/Scripts/python.exe
 # (Git Bash 下调用的仍是 Windows 版 Python,路径按 Windows 布局)
@@ -59,6 +68,20 @@ cleanup() {
   wait 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
+
+# ---------- 前置检查 ----------
+if ! detect_node; then
+  err "未找到 Node.js 18+（前端 dev server 需要）"
+  {
+    echo "  Windows: winget install OpenJS.NodeJS.LTS    # 或从 nodejs.org 装 LTS"
+    echo "  macOS  : brew install node"
+    echo "  Linux  : 用发行版包管理器或 nvm 装 Node 18+"
+    echo "  装完请重开终端(让 PATH 生效)再运行本脚本。"
+    echo "  只想跑后端 API: cd backend && python -m uvicorn app.main:app --port 8000"
+  } >&2
+  exit 1
+fi
+log "Node.js: $(node -v)"
 
 # ---------- 后端 ----------
 if (( MOCK )); then
